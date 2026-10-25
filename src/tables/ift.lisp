@@ -7,15 +7,17 @@
 
 
 (export
- '(+design-space-segment-size+ +entry-format-flags-child-indices+
-   +entry-format-flags-codepoints-bit-1+ +entry-format-flags-codepoints-bit-2+
-   +entry-format-flags-entry-id-delta+
+ '(+compatibility-id-size+ +design-space-segment-size+
+   +entry-format-flags-child-indices+ +entry-format-flags-codepoints-bit-1+
+   +entry-format-flags-codepoints-bit-2+ +entry-format-flags-entry-id-delta+
    +entry-format-flags-features-and-design-space+ +entry-format-flags-ignored+
    +entry-format-flags-patch-format+ +entry-format-flags-reserved+
    +glyph-keyed-flags-none+ +glyph-keyed-flags-wide-glyph-ids+
    +patch-map-field-presence-flags-cff-charstrings-offset+
    +patch-map-field-presence-flags-cff2-charstrings-offset+
    +table-patch-flags-drop-table+ +table-patch-flags-replace-table+
+   compatibility-id compatibility-id-id0 compatibility-id-id1
+   compatibility-id-id2 compatibility-id-id3 compatibility-id-p
    design-space-segment design-space-segment-axis-tag design-space-segment-end
    design-space-segment-p design-space-segment-start entry-data
    entry-data-child-indices entry-data-child-indices-count
@@ -38,10 +40,8 @@
    glyph-keyed-patch-compatibility-id glyph-keyed-patch-flags
    glyph-keyed-patch-format-table glyph-keyed-patch-max-uncompressed-length
    glyph-keyed-patch-p glyph-patches glyph-patches-glyph-count
-   glyph-patches-glyph-data-offsets glyph-patches-glyph-data-offsets-count
-   glyph-patches-glyph-data-offsets-ref glyph-patches-glyph-ids glyph-patches-p
-   glyph-patches-table-count glyph-patches-tables glyph-patches-tables-count
-   glyph-patches-tables-ref id-string-data id-string-data-id-data
+   glyph-patches-glyph-ids glyph-patches-glyph-ids-start glyph-patches-p
+   glyph-patches-table-count id-string-data id-string-data-id-data
    id-string-data-id-data-bytes id-string-data-id-data-count
    id-string-data-id-data-ref id-string-data-p ift-glyph-data
    ift-glyph-data-data ift-glyph-data-data-bytes ift-glyph-data-data-count
@@ -250,6 +250,40 @@
 
 
 (defstruct
+    (compatibility-id (:include record-ref)
+     (:constructor %make-compatibility-id (%record-font-data %record-offset))))
+
+
+(define-constant +compatibility-id-size+ 16)
+
+
+(declaim
+ (inline compatibility-id-id0 compatibility-id-id1 compatibility-id-id2
+  compatibility-id-id3))
+
+
+(defun compatibility-id-id0 (rec)
+  (declare (type compatibility-id rec))
+  (font-data-read-u32 (record-ref-font-data rec) (record-ref-offset rec)))
+
+
+(defun compatibility-id-id1 (rec)
+  (declare (type compatibility-id rec))
+  (font-data-read-u32 (record-ref-font-data rec) (+ (record-ref-offset rec) 4)))
+
+
+(defun compatibility-id-id2 (rec)
+  (declare (type compatibility-id rec))
+  (font-data-read-u32 (record-ref-font-data rec) (+ (record-ref-offset rec) 8)))
+
+
+(defun compatibility-id-id3 (rec)
+  (declare (type compatibility-id rec))
+  (font-data-read-u32 (record-ref-font-data rec)
+                      (+ (record-ref-offset rec) 12)))
+
+
+(defstruct
     (ift-patch-map (:include table-ref)
      (:constructor %make-ift-patch-map
       (%table-font-data %table-offset %table-length))))
@@ -262,12 +296,12 @@
   ift-patch-map-entry-count ift-patch-map-entries-offset
   ift-patch-map-entries-offset-offset ift-patch-map-entry-id-string-data-offset
   ift-patch-map-entry-id-string-data-offset-offset
-  ift-patch-map-url-template-length ift-patch-map-url-template
-  ift-patch-map-url-template-count ift-patch-map-cff-charstrings-offset
-  ift-patch-map-cff2-charstrings-offset ift-patch-map-format-table-raw
-  ift-patch-map--reserved-0-raw ift-patch-map--reserved-1-raw
-  ift-patch-map--reserved-2-raw ift-patch-map-field-flags-raw
-  ift-patch-map-default-patch-format-raw ift-patch-map-url-template-length-raw))
+  ift-patch-map-url-template-length ift-patch-map-url-template-count
+  ift-patch-map-cff-charstrings-offset ift-patch-map-cff2-charstrings-offset
+  ift-patch-map-format-table-raw ift-patch-map--reserved-0-raw
+  ift-patch-map--reserved-1-raw ift-patch-map--reserved-2-raw
+  ift-patch-map-field-flags-raw ift-patch-map-default-patch-format-raw
+  ift-patch-map-entry-count-raw ift-patch-map-url-template-length-raw))
 
 
 (defun ift-patch-map-format-table (table)
@@ -320,21 +354,38 @@
   (font-data-read-u8 font-data (+ offset 4)))
 
 
+(defun ift-patch-map-compatibility-id (table)
+  "Unique ID that identifies compatible patches."
+  (declare (type ift-patch-map table))
+  (%make-compatibility-id (table-ref-font-data table)
+   (+ (table-ref-offset table) 5)))
+
+
 (defun ift-patch-map-default-patch-format (table)
   "Patch format number for patches referenced by this mapping."
   (declare (type ift-patch-map table))
   (font-data-read-u8 (table-ref-font-data table)
-                     (+ (table-ref-offset table) 5)))
+                     (+ (table-ref-offset table) 21)))
 
 
 (defun ift-patch-map-default-patch-format-raw (font-data offset)
-  (font-data-read-u8 font-data (+ offset 5)))
+  (font-data-read-u8 font-data (+ offset 21)))
+
+
+(defun ift-patch-map-entry-count (table)
+  (declare (type ift-patch-map table))
+  (font-data-read-u24 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 22)))
+
+
+(defun ift-patch-map-entry-count-raw (font-data offset)
+  (font-data-read-u24 font-data (+ offset 22)))
 
 
 (defun ift-patch-map-entries-offset-offset (table)
   (declare (type ift-patch-map table))
   (font-data-read-u32 (table-ref-font-data table)
-                      (+ (table-ref-offset table) 6)))
+                      (+ (table-ref-offset table) 25)))
 
 
 (defun ift-patch-map-entries-offset (table)
@@ -348,7 +399,7 @@
 (defun ift-patch-map-entry-id-string-data-offset-offset (table)
   (declare (type ift-patch-map table))
   (font-data-read-u32 (table-ref-font-data table)
-                      (+ (table-ref-offset table) 10)))
+                      (+ (table-ref-offset table) 29)))
 
 
 (defun ift-patch-map-entry-id-string-data-offset (table)
@@ -362,11 +413,11 @@
 (defun ift-patch-map-url-template-length (table)
   (declare (type ift-patch-map table))
   (font-data-read-u16 (table-ref-font-data table)
-                      (+ (table-ref-offset table) 14)))
+                      (+ (table-ref-offset table) 33)))
 
 
 (defun ift-patch-map-url-template-length-raw (font-data offset)
-  (font-data-read-u16 font-data (+ offset 14)))
+  (font-data-read-u16 font-data (+ offset 33)))
 
 
 (defun ift-patch-map-url-template-count (table)
@@ -376,7 +427,7 @@
 (defun ift-patch-map-url-template-ref (table index)
   (declare (type ift-patch-map table)
            (type (unsigned-byte 32) index))
-  (let ((pos (+ (+ (table-ref-offset table) 16) (* index 1))))
+  (let ((pos (+ (+ (table-ref-offset table) 35) (* index 1))))
     (unless
         (<= (+ pos 1) (+ (table-ref-offset table) (table-ref-length table)))
       (error 'font-out-of-bounds-error :pos pos :size 1 :length
@@ -385,21 +436,21 @@
 
 
 (defun ift-patch-map-url-template-bytes (table)
-  (font-data-slice (table-ref-font-data table) (+ (table-ref-offset table) 16)
+  (font-data-slice (table-ref-font-data table) (+ (table-ref-offset table) 35)
                    (ift-patch-map-url-template-count table)))
 
 
 (defun ift-patch-map-cff-charstrings-offset (table)
   (declare (type ift-patch-map table))
   (font-data-read-u32 (table-ref-font-data table)
-                      (+ (table-ref-offset table) 16
+                      (+ (table-ref-offset table) 35
                          (* (ift-patch-map-url-template-count table) 1))))
 
 
 (defun ift-patch-map-cff2-charstrings-offset (table)
   (declare (type ift-patch-map table))
   (font-data-read-u32 (table-ref-font-data table)
-                      (+ (table-ref-offset table) 20
+                      (+ (table-ref-offset table) 39
                          (* (ift-patch-map-url-template-count table) 1))))
 
 
@@ -407,14 +458,14 @@
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 16 length) (font-data-valid-range-p font-data offset 16))
-    (error 'font-out-of-bounds-error :pos offset :size 16 :length
+  (unless (and (<= 35 length) (font-data-valid-range-p font-data offset 35))
+    (error 'font-out-of-bounds-error :pos offset :size 35 :length
            (font-data-length font-data)))
   (let ((cnt (ift-patch-map-url-template-length-raw font-data offset)))
     (unless
-        (and (<= (+ 16 (* cnt 1)) length)
-             (font-data-valid-range-p font-data offset (+ 16 (* cnt 1))))
-      (error 'font-out-of-bounds-error :pos offset :size (+ 16 (* cnt 1))
+        (and (<= (+ 35 (* cnt 1)) length)
+             (font-data-valid-range-p font-data offset (+ 35 (* cnt 1))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 35 (* cnt 1))
              :length (font-data-length font-data))))
   t)
 
@@ -432,11 +483,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
-(declaim (inline mapping-entries-entry-data mapping-entries-entry-data-count))
+(declaim (inline mapping-entries-entry-data-count))
 
 
 (defun mapping-entries-entry-data-count (table)
-  (max 0 (floor (- (table-ref-length table) (table-ref-offset table)) 1)))
+  (max 0
+       (floor
+        (- (+ (table-ref-offset table) (table-ref-length table))
+           (table-ref-offset table))
+        1)))
 
 
 (defun mapping-entries-entry-data-ref (table index)
@@ -480,11 +535,9 @@
 
 (declaim
  (inline entry-data-format-flags entry-data-feature-count
-  entry-data-feature-tags entry-data-feature-tags-count
-  entry-data-design-space-count entry-data-design-space-segments
+  entry-data-feature-tags-count entry-data-design-space-count
   entry-data-design-space-segments-count entry-data-match-mode-and-count
-  entry-data-child-indices entry-data-child-indices-count
-  entry-data-trailing-data entry-data-trailing-data-count
+  entry-data-child-indices-count entry-data-trailing-data-count
   entry-data-format-flags-raw entry-data-feature-count-raw))
 
 
@@ -547,23 +600,47 @@
     (%make-design-space-segment (table-ref-font-data table) pos)))
 
 
+(defun entry-data-match-mode-and-count (table)
+  (declare (type entry-data table))
+  (font-data-read-u8 (table-ref-font-data table)
+                     (+ (table-ref-offset table) 4
+                        (* (entry-data-design-space-segments-count table) 12)
+                        (* (entry-data-feature-tags-count table) 4))))
+
+
 (defun entry-data-child-indices-count (table &optional count)
   (or count
       (max 0
            (floor
-            (- (table-ref-length table)
-               (+ (table-ref-offset table) 4
+            (- (+ (table-ref-offset table) (table-ref-length table))
+               (+ (table-ref-offset table) 5
                   (* (entry-data-design-space-segments-count table) 12)
                   (* (entry-data-feature-tags-count table) 4)))
-            1))))
+            3))))
+
+
+(defun entry-data-child-indices-ref (table index)
+  (declare (type entry-data table)
+           (type (unsigned-byte 32) index))
+  (let ((pos
+         (+
+          (+ (table-ref-offset table) 5
+             (* (entry-data-design-space-segments-count table) 12)
+             (* (entry-data-feature-tags-count table) 4))
+          (* index 3))))
+    (unless
+        (<= (+ pos 3) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 3 :length
+             (table-ref-length table)))
+    (font-data-read-u24 (table-ref-font-data table) pos)))
 
 
 (defun entry-data-trailing-data-count (table)
   (max 0
        (floor
-        (- (table-ref-length table)
-           (+ (table-ref-offset table) 4
-              (* (entry-data-child-indices-count table) 1)
+        (- (+ (table-ref-offset table) (table-ref-length table))
+           (+ (table-ref-offset table) 5
+              (* (entry-data-child-indices-count table) 3)
               (* (entry-data-design-space-segments-count table) 12)
               (* (entry-data-feature-tags-count table) 4)))
         1)))
@@ -574,8 +651,8 @@
            (type (unsigned-byte 32) index))
   (let ((pos
          (+
-          (+ (table-ref-offset table) 4
-             (* (entry-data-child-indices-count table) 1)
+          (+ (table-ref-offset table) 5
+             (* (entry-data-child-indices-count table) 3)
              (* (entry-data-design-space-segments-count table) 12)
              (* (entry-data-feature-tags-count table) 4))
           (* index 1))))
@@ -588,8 +665,8 @@
 
 (defun entry-data-trailing-data-bytes (table)
   (font-data-slice (table-ref-font-data table)
-                   (+ (table-ref-offset table) 4
-                      (* (entry-data-child-indices-count table) 1)
+                   (+ (table-ref-offset table) 5
+                      (* (entry-data-child-indices-count table) 3)
                       (* (entry-data-design-space-segments-count table) 12)
                       (* (entry-data-feature-tags-count table) 4))
                    (entry-data-trailing-data-count table)))
@@ -624,11 +701,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
-(declaim (inline id-string-data-id-data id-string-data-id-data-count))
+(declaim (inline id-string-data-id-data-count))
 
 
 (defun id-string-data-id-data-count (table)
-  (max 0 (floor (- (table-ref-length table) (table-ref-offset table)) 1)))
+  (max 0
+       (floor
+        (- (+ (table-ref-offset table) (table-ref-length table))
+           (table-ref-offset table))
+        1)))
 
 
 (defun id-string-data-id-data-ref (table index)
@@ -673,9 +754,8 @@
 (declaim
  (inline table-keyed-patch-format-table table-keyed-patch--reserved
   table-keyed-patch-compatibility-id table-keyed-patch-patches-count
-  table-keyed-patch-patch-offsets table-keyed-patch-patch-offsets-count
-  table-keyed-patch-format-table-raw table-keyed-patch--reserved-raw
-  table-keyed-patch-patches-count-raw))
+  table-keyed-patch-patch-offsets-count table-keyed-patch-format-table-raw
+  table-keyed-patch--reserved-raw table-keyed-patch-patches-count-raw))
 
 
 (defun table-keyed-patch-format-table (table)
@@ -698,14 +778,21 @@
   (font-data-read-u32 font-data (+ offset 4)))
 
 
+(defun table-keyed-patch-compatibility-id (table)
+  "Unique ID that identifies compatible patches."
+  (declare (type table-keyed-patch table))
+  (%make-compatibility-id (table-ref-font-data table)
+   (+ (table-ref-offset table) 8)))
+
+
 (defun table-keyed-patch-patches-count (table)
   (declare (type table-keyed-patch table))
   (font-data-read-u16 (table-ref-font-data table)
-                      (+ (table-ref-offset table) 8)))
+                      (+ (table-ref-offset table) 24)))
 
 
 (defun table-keyed-patch-patches-count-raw (font-data offset)
-  (font-data-read-u16 font-data (+ offset 8)))
+  (font-data-read-u16 font-data (+ offset 24)))
 
 
 (defun table-keyed-patch-patch-offsets-count (table)
@@ -715,7 +802,7 @@
 (defun table-keyed-patch-patch-offsets-ref (table index)
   (declare (type table-keyed-patch table)
            (type (unsigned-byte 32) index))
-  (let* ((pos (+ (+ (table-ref-offset table) 10) (* index 4))))
+  (let* ((pos (+ (+ (table-ref-offset table) 26) (* index 4))))
     (unless
         (<= (+ pos 4) (+ (table-ref-offset table) (table-ref-length table)))
       (error 'font-out-of-bounds-error :pos pos :size 4 :length
@@ -730,8 +817,8 @@
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 10 length) (font-data-valid-range-p font-data offset 10))
-    (error 'font-out-of-bounds-error :pos offset :size 10 :length
+  (unless (and (<= 26 length) (font-data-valid-range-p font-data offset 26))
+    (error 'font-out-of-bounds-error :pos offset :size 26 :length
            (font-data-length font-data)))
   t)
 
@@ -751,8 +838,8 @@
 
 (declaim
  (inline table-patch-tag table-patch-flags table-patch-max-uncompressed-length
-  table-patch-brotli-stream table-patch-brotli-stream-count table-patch-tag-raw
-  table-patch-flags-raw table-patch-max-uncompressed-length-raw))
+  table-patch-brotli-stream-count table-patch-tag-raw table-patch-flags-raw
+  table-patch-max-uncompressed-length-raw))
 
 
 (defun table-patch-tag (table)
@@ -786,7 +873,11 @@
 
 
 (defun table-patch-brotli-stream-count (table)
-  (max 0 (floor (- (table-ref-length table) (+ (table-ref-offset table) 9)) 1)))
+  (max 0
+       (floor
+        (- (+ (table-ref-offset table) (table-ref-length table))
+           (+ (table-ref-offset table) 9))
+        1)))
 
 
 (defun table-patch-brotli-stream-ref (table index)
@@ -831,7 +922,7 @@
 (declaim
  (inline glyph-keyed-patch-format-table glyph-keyed-patch--reserved
   glyph-keyed-patch-flags glyph-keyed-patch-compatibility-id
-  glyph-keyed-patch-max-uncompressed-length glyph-keyed-patch-brotli-stream
+  glyph-keyed-patch-max-uncompressed-length
   glyph-keyed-patch-brotli-stream-count glyph-keyed-patch-format-table-raw
   glyph-keyed-patch--reserved-raw glyph-keyed-patch-flags-raw
   glyph-keyed-patch-max-uncompressed-length-raw))
@@ -867,25 +958,34 @@
   (font-data-read-u8 font-data (+ offset 8)))
 
 
+(defun glyph-keyed-patch-compatibility-id (table)
+  (declare (type glyph-keyed-patch table))
+  (%make-compatibility-id (table-ref-font-data table)
+   (+ (table-ref-offset table) 9)))
+
+
 (defun glyph-keyed-patch-max-uncompressed-length (table)
   (declare (type glyph-keyed-patch table))
   (font-data-read-u32 (table-ref-font-data table)
-                      (+ (table-ref-offset table) 9)))
+                      (+ (table-ref-offset table) 25)))
 
 
 (defun glyph-keyed-patch-max-uncompressed-length-raw (font-data offset)
-  (font-data-read-u32 font-data (+ offset 9)))
+  (font-data-read-u32 font-data (+ offset 25)))
 
 
 (defun glyph-keyed-patch-brotli-stream-count (table)
   (max 0
-       (floor (- (table-ref-length table) (+ (table-ref-offset table) 13)) 1)))
+       (floor
+        (- (+ (table-ref-offset table) (table-ref-length table))
+           (+ (table-ref-offset table) 29))
+        1)))
 
 
 (defun glyph-keyed-patch-brotli-stream-ref (table index)
   (declare (type glyph-keyed-patch table)
            (type (unsigned-byte 32) index))
-  (let ((pos (+ (+ (table-ref-offset table) 13) (* index 1))))
+  (let ((pos (+ (+ (table-ref-offset table) 29) (* index 1))))
     (unless
         (<= (+ pos 1) (+ (table-ref-offset table) (table-ref-length table)))
       (error 'font-out-of-bounds-error :pos pos :size 1 :length
@@ -894,7 +994,7 @@
 
 
 (defun glyph-keyed-patch-brotli-stream-bytes (table)
-  (font-data-slice (table-ref-font-data table) (+ (table-ref-offset table) 13)
+  (font-data-slice (table-ref-font-data table) (+ (table-ref-offset table) 29)
                    (glyph-keyed-patch-brotli-stream-count table)))
 
 
@@ -902,8 +1002,8 @@
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 13 length) (font-data-valid-range-p font-data offset 13))
-    (error 'font-out-of-bounds-error :pos offset :size 13 :length
+  (unless (and (<= 29 length) (font-data-valid-range-p font-data offset 29))
+    (error 'font-out-of-bounds-error :pos offset :size 29 :length
            (font-data-length font-data)))
   t)
 
@@ -923,8 +1023,6 @@
 
 (declaim
  (inline glyph-patches-glyph-count glyph-patches-table-count
-  glyph-patches-glyph-ids glyph-patches-tables glyph-patches-tables-count
-  glyph-patches-glyph-data-offsets glyph-patches-glyph-data-offsets-count
   glyph-patches-glyph-count-raw glyph-patches-table-count-raw))
 
 
@@ -947,40 +1045,10 @@
   (font-data-read-u8 font-data (+ offset 4)))
 
 
-(defun glyph-patches-tables-count (table) (glyph-patches-table-count table))
-
-
-(defun glyph-patches-tables-ref (table index)
-  (declare (type glyph-patches table)
-           (type (unsigned-byte 32) index))
-  (let ((pos (+ (+ (table-ref-offset table) 5) (* index 4))))
-    (unless
-        (<= (+ pos 4) (+ (table-ref-offset table) (table-ref-length table)))
-      (error 'font-out-of-bounds-error :pos pos :size 4 :length
-             (table-ref-length table)))
-    (font-data-read-tag-string (table-ref-font-data table) pos)))
-
-
-(defun glyph-patches-glyph-data-offsets-count (table)
-  (+ (* (glyph-patches-glyph-count table) (glyph-patches-table-count table)) 1))
-
-
-(defun glyph-patches-glyph-data-offsets-ref (table index)
-  (declare (type glyph-patches table)
-           (type (unsigned-byte 32) index))
-  (let* ((pos
-          (+
-           (+ (table-ref-offset table) 5
-              (* (glyph-patches-tables-count table) 4))
-           (* index 4))))
-    (unless
-        (<= (+ pos 4) (+ (table-ref-offset table) (table-ref-length table)))
-      (error 'font-out-of-bounds-error :pos pos :size 4 :length
-             (table-ref-length table)))
-    (let ((off (font-data-read-u32 (table-ref-font-data table) pos)))
-      (unless (zerop off)
-        (read-ift-glyph-data (table-ref-font-data table)
-         (+ (table-ref-offset table) off))))))
+(defun glyph-patches-glyph-ids-start (table)
+  "Byte position of the first U16-OR24 element; elements are variable-length."
+  (declare (type glyph-patches table))
+  (+ (table-ref-offset table) 5))
 
 
 (defun sanitize-glyph-patches (font-data offset length)
@@ -990,12 +1058,6 @@
   (unless (and (<= 5 length) (font-data-valid-range-p font-data offset 5))
     (error 'font-out-of-bounds-error :pos offset :size 5 :length
            (font-data-length font-data)))
-  (let ((cnt (glyph-patches-table-count-raw font-data offset)))
-    (unless
-        (and (<= (+ 5 (* cnt 4)) length)
-             (font-data-valid-range-p font-data offset (+ 5 (* cnt 4))))
-      (error 'font-out-of-bounds-error :pos offset :size (+ 5 (* cnt 4))
-             :length (font-data-length font-data))))
   t)
 
 
@@ -1012,11 +1074,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
-(declaim (inline ift-glyph-data-data ift-glyph-data-data-count))
+(declaim (inline ift-glyph-data-data-count))
 
 
 (defun ift-glyph-data-data-count (table)
-  (max 0 (floor (- (table-ref-length table) (table-ref-offset table)) 1)))
+  (max 0
+       (floor
+        (- (+ (table-ref-offset table) (table-ref-length table))
+           (table-ref-offset table))
+        1)))
 
 
 (defun ift-glyph-data-data-ref (table index)

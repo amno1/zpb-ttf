@@ -962,8 +962,6 @@
  (inline math-italics-correction-info-coverage-offset
   math-italics-correction-info-coverage-offset-offset
   math-italics-correction-info-italics-correction-count
-  math-italics-correction-info-italics-correction
-  math-italics-correction-info-italics-correction-array-count
   math-italics-correction-info-italics-correction-count-raw))
 
 
@@ -1041,8 +1039,6 @@
  (inline math-top-accent-attachment-top-accent-coverage-offset
   math-top-accent-attachment-top-accent-coverage-offset-offset
   math-top-accent-attachment-top-accent-attachment-count
-  math-top-accent-attachment-top-accent-attachment
-  math-top-accent-attachment-top-accent-attachment-array-count
   math-top-accent-attachment-top-accent-attachment-count-raw))
 
 
@@ -1120,8 +1116,7 @@
 (declaim
  (inline math-kern-info-math-kern-coverage-offset
   math-kern-info-math-kern-coverage-offset-offset
-  math-kern-info-math-kern-count math-kern-info-math-kern-info-records
-  math-kern-info-math-kern-info-records-count
+  math-kern-info-math-kern-count math-kern-info-math-kern-info-records-count
   math-kern-info-math-kern-count-raw))
 
 
@@ -1198,8 +1193,7 @@
 
 
 (declaim
- (inline math-kern-height-count math-kern-correction-height
-  math-kern-correction-height-count math-kern-kern-values
+ (inline math-kern-height-count math-kern-correction-height-count
   math-kern-kern-values-count math-kern-height-count-raw))
 
 
@@ -1287,9 +1281,7 @@
   math-variants-horiz-glyph-coverage-offset
   math-variants-horiz-glyph-coverage-offset-offset
   math-variants-vert-glyph-count math-variants-horiz-glyph-count
-  math-variants-vert-glyph-construction-offsets
   math-variants-vert-glyph-construction-offsets-count
-  math-variants-horiz-glyph-construction-offsets
   math-variants-horiz-glyph-construction-offsets-count
   math-variants-min-connector-overlap-raw math-variants-vert-glyph-count-raw
   math-variants-horiz-glyph-count-raw))
@@ -1437,7 +1429,6 @@
  (inline math-glyph-construction-glyph-assembly-offset
   math-glyph-construction-glyph-assembly-offset-offset
   math-glyph-construction-variant-count
-  math-glyph-construction-math-glyph-variant-records
   math-glyph-construction-math-glyph-variant-records-count
   math-glyph-construction-variant-count-raw))
 
@@ -1516,8 +1507,7 @@
 
 (declaim
  (inline glyph-assembly-italics-correction glyph-assembly-part-count
-  glyph-assembly-part-records glyph-assembly-part-records-count
-  glyph-assembly-part-count-raw))
+  glyph-assembly-part-records-count glyph-assembly-part-count-raw))
 
 
 (defun glyph-assembly-italics-correction (table)

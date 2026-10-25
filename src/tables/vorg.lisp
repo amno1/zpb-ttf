@@ -47,7 +47,7 @@
 
 (declaim
  (inline vorg-version vorg-default-vert-origin-y vorg-num-vert-origin-y-metrics
-  vorg-vert-origin-y-metrics vorg-vert-origin-y-metrics-count vorg-version-raw
+  vorg-vert-origin-y-metrics-count vorg-version-raw
   vorg-default-vert-origin-y-raw vorg-num-vert-origin-y-metrics-raw))
 
 

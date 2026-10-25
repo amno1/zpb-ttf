@@ -120,8 +120,8 @@
 
 
 (declaim
- (inline glyph-data-entry-num-points glyph-data-entry-anchor-points
-  glyph-data-entry-anchor-points-count glyph-data-entry-num-points-raw))
+ (inline glyph-data-entry-num-points glyph-data-entry-anchor-points-count
+  glyph-data-entry-num-points-raw))
 
 
 (defun glyph-data-entry-num-points (table)

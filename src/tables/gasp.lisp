@@ -88,8 +88,8 @@
 
 
 (declaim
- (inline gasp-version gasp-num-ranges gasp-gasp-ranges gasp-gasp-ranges-count
-  gasp-version-raw gasp-num-ranges-raw))
+ (inline gasp-version gasp-num-ranges gasp-gasp-ranges-count gasp-version-raw
+  gasp-num-ranges-raw))
 
 
 (defun gasp-version (table)

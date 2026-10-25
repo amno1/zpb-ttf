@@ -291,8 +291,8 @@
 
 
 (declaim
- (inline base-tag-list-base-tag-count base-tag-list-baseline-tags
-  base-tag-list-baseline-tags-count base-tag-list-base-tag-count-raw))
+ (inline base-tag-list-base-tag-count base-tag-list-baseline-tags-count
+  base-tag-list-base-tag-count-raw))
 
 
 (defun base-tag-list-base-tag-count (table)
@@ -353,7 +353,6 @@
 
 (declaim
  (inline base-script-list-base-script-count
-  base-script-list-base-script-records
   base-script-list-base-script-records-count
   base-script-list-base-script-count-raw))
 
@@ -417,8 +416,8 @@
 (declaim
  (inline base-script-base-values-offset base-script-base-values-offset-offset
   base-script-default-min-max-offset base-script-default-min-max-offset-offset
-  base-script-base-lang-sys-count base-script-base-lang-sys-records
-  base-script-base-lang-sys-records-count base-script-base-lang-sys-count-raw))
+  base-script-base-lang-sys-count base-script-base-lang-sys-records-count
+  base-script-base-lang-sys-count-raw))
 
 
 (defun base-script-base-values-offset-offset (table)
@@ -511,8 +510,8 @@
 
 (declaim
  (inline base-values-default-baseline-index base-values-base-coord-count
-  base-values-base-coord-offsets base-values-base-coord-offsets-count
-  base-values-default-baseline-index-raw base-values-base-coord-count-raw))
+  base-values-base-coord-offsets-count base-values-default-baseline-index-raw
+  base-values-base-coord-count-raw))
 
 
 (defun base-values-default-baseline-index (table)
@@ -588,8 +587,8 @@
 (declaim
  (inline min-max-min-coord-offset min-max-min-coord-offset-offset
   min-max-max-coord-offset min-max-max-coord-offset-offset
-  min-max-feat-min-max-count min-max-feat-min-max-records
-  min-max-feat-min-max-records-count min-max-feat-min-max-count-raw))
+  min-max-feat-min-max-count min-max-feat-min-max-records-count
+  min-max-feat-min-max-count-raw))
 
 
 (defun min-max-min-coord-offset-offset (table)

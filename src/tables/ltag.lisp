@@ -42,8 +42,8 @@
 
 
 (declaim
- (inline ltag-version ltag-flags ltag-num-tags ltag-tag-ranges
-  ltag-tag-ranges-count ltag-version-raw ltag-flags-raw ltag-num-tags-raw))
+ (inline ltag-version ltag-flags ltag-num-tags ltag-tag-ranges-count
+  ltag-version-raw ltag-flags-raw ltag-num-tags-raw))
 
 
 (defun ltag-version (table)

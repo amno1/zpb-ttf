@@ -194,9 +194,9 @@
 
 (declaim
  (inline cff-header-major cff-header-minor cff-header-hdr-size
-  cff-header-off-size cff-header--padding cff-header--padding-count
-  cff-header-trailing-data cff-header-trailing-data-count cff-header-major-raw
-  cff-header-minor-raw cff-header-hdr-size-raw cff-header-off-size-raw))
+  cff-header-off-size cff-header--padding-count cff-header-trailing-data-count
+  cff-header-major-raw cff-header-minor-raw cff-header-hdr-size-raw
+  cff-header-off-size-raw))
 
 
 (defun cff-header-major (table)
@@ -269,7 +269,7 @@
   "Remaining table data."
   (max 0
        (floor
-        (- (table-ref-length table)
+        (- (+ (table-ref-offset table) (table-ref-length table))
            (+ (table-ref-offset table) 4
               (* (cff-header--padding-count table) 1)))
         1)))
@@ -323,9 +323,8 @@
 
 
 (declaim
- (inline cff-index-count cff-index-off-size cff-index-offsets
-  cff-index-offsets-count cff-index-data cff-index-data-count
-  cff-index-count-raw cff-index-off-size-raw))
+ (inline cff-index-count cff-index-off-size cff-index-offsets-count
+  cff-index-data-count cff-index-count-raw cff-index-off-size-raw))
 
 
 (defun cff-index-count (table)
@@ -376,7 +375,7 @@
   "Array containing the object data."
   (max 0
        (floor
-        (- (table-ref-length table)
+        (- (+ (table-ref-offset table) (table-ref-length table))
            (+ (table-ref-offset table) 3
               (* (cff-index-offsets-count table) 1)))
         1)))
@@ -442,8 +441,8 @@
 
 
 (declaim
- (inline fd-select-format0-format-table fd-select-format0-fds
-  fd-select-format0-fds-count fd-select-format0-format-table-raw))
+ (inline fd-select-format0-format-table fd-select-format0-fds-count
+  fd-select-format0-format-table-raw))
 
 
 (defun fd-select-format0-format-table (table)
@@ -458,7 +457,11 @@
 
 (defun fd-select-format0-fds-count (table)
   "FD selector array (one entry for each glyph)."
-  (max 0 (floor (- (table-ref-length table) (+ (table-ref-offset table) 1)) 1)))
+  (max 0
+       (floor
+        (- (+ (table-ref-offset table) (table-ref-length table))
+           (+ (table-ref-offset table) 1))
+        1)))
 
 
 (defun fd-select-format0-fds-ref (table index)
@@ -504,9 +507,8 @@
 
 (declaim
  (inline fd-select-format3-format-table fd-select-format3-n-ranges
-  fd-select-format3-ranges fd-select-format3-ranges-count
-  fd-select-format3-sentinel fd-select-format3-format-table-raw
-  fd-select-format3-n-ranges-raw))
+  fd-select-format3-ranges-count fd-select-format3-sentinel
+  fd-select-format3-format-table-raw fd-select-format3-n-ranges-raw))
 
 
 (defun fd-select-format3-format-table (table)
@@ -586,9 +588,8 @@
 
 (declaim
  (inline fd-select-format4-format-table fd-select-format4-n-ranges
-  fd-select-format4-ranges fd-select-format4-ranges-count
-  fd-select-format4-sentinel fd-select-format4-format-table-raw
-  fd-select-format4-n-ranges-raw))
+  fd-select-format4-ranges-count fd-select-format4-sentinel
+  fd-select-format4-format-table-raw fd-select-format4-n-ranges-raw))
 
 
 (defun fd-select-format4-format-table (table)
@@ -680,8 +681,8 @@
 
 
 (declaim
- (inline charset-format0-format-table charset-format0-glyph
-  charset-format0-glyph-count charset-format0-format-table-raw))
+ (inline charset-format0-format-table charset-format0-glyph-count
+  charset-format0-format-table-raw))
 
 
 (defun charset-format0-format-table (table)
@@ -696,7 +697,11 @@
 
 (defun charset-format0-glyph-count (table)
   "Glyph name array."
-  (max 0 (floor (- (table-ref-length table) (+ (table-ref-offset table) 1)) 2)))
+  (max 0
+       (floor
+        (- (+ (table-ref-offset table) (table-ref-length table))
+           (+ (table-ref-offset table) 1))
+        2)))
 
 
 (defun charset-format0-glyph-ref (table index)
@@ -735,8 +740,8 @@
 
 
 (declaim
- (inline charset-format1-format-table charset-format1-ranges
-  charset-format1-ranges-count charset-format1-format-table-raw))
+ (inline charset-format1-format-table charset-format1-ranges-count
+  charset-format1-format-table-raw))
 
 
 (defun charset-format1-format-table (table)
@@ -751,7 +756,11 @@
 
 (defun charset-format1-ranges-count (table)
   "Range1 array."
-  (max 0 (floor (- (table-ref-length table) (+ (table-ref-offset table) 1)) 3)))
+  (max 0
+       (floor
+        (- (+ (table-ref-offset table) (table-ref-length table))
+           (+ (table-ref-offset table) 1))
+        3)))
 
 
 (defun charset-format1-ranges-ref (table index)
@@ -790,8 +799,8 @@
 
 
 (declaim
- (inline charset-format2-format-table charset-format2-ranges
-  charset-format2-ranges-count charset-format2-format-table-raw))
+ (inline charset-format2-format-table charset-format2-ranges-count
+  charset-format2-format-table-raw))
 
 
 (defun charset-format2-format-table (table)
@@ -806,7 +815,11 @@
 
 (defun charset-format2-ranges-count (table)
   "Range2 array."
-  (max 0 (floor (- (table-ref-length table) (+ (table-ref-offset table) 1)) 4)))
+  (max 0
+       (floor
+        (- (+ (table-ref-offset table) (table-ref-length table))
+           (+ (table-ref-offset table) 1))
+        4)))
 
 
 (defun charset-format2-ranges-ref (table index)

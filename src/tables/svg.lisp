@@ -127,8 +127,8 @@
 
 
 (declaim
- (inline svg-document-list-num-entries svg-document-list-document-records
-  svg-document-list-document-records-count svg-document-list-num-entries-raw))
+ (inline svg-document-list-num-entries svg-document-list-document-records-count
+  svg-document-list-num-entries-raw))
 
 
 (defun svg-document-list-num-entries (table)

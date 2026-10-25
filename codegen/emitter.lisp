@@ -59,6 +59,7 @@
     (:u16             :size 2 :reader font-data-read-u16)
     (:i16             :size 2 :reader font-data-read-i16)
     (:u24             :size 3 :reader font-data-read-u24)
+    (:i24             :size 3 :reader font-data-read-i24)
     (:glyph-id24      :size 3 :reader font-data-read-u24)
     (:u32             :size 4 :reader font-data-read-u32)
     (:i32             :size 4 :reader font-data-read-i32)
@@ -73,10 +74,22 @@
     (:major-minor     :size 4 :reader font-data-read-u32)
     (:long-date-time  :size 8 :reader font-data-read-u64)))
 
+(defparameter *type-aliases*
+  '(("UINT8" . :u8) ("UINT16" . :u16) ("UINT24" . :u24) ("UINT32" . :u32)
+    ("INT8" . :i8) ("INT16" . :i16) ("INT32" . :i32)
+    ("OFFSET16" . :u16) ("OFFSET24" . :u24) ("OFFSET32" . :u32)
+    ("INT24" . :i24)
+    ("VERSION16DOT16" . :fixed) ("LONGDATETIME" . :long-date-time)
+    ;; Named types that are plain integers on disk.
+    ("LOOKUP-FLAG" . :u16) ("TUPLE-VARIATION-COUNT" . :u16) ("TUPLE-INDEX" . :u16)
+    ("MATCH-MODE-AND-COUNT" . :u8))
+  "Spec spellings of primitive types, mapped onto *PRIMITIVE-TYPES* keys.")
+
 (defun resolve-type-info (type-sym)
-  (when (symbolp type-sym)
+  (when (and type-sym (symbolp type-sym))
     (let* ((name (to-kebab-name type-sym))
-           (key (intern name :keyword))
+           (key (or (cdr (assoc name *type-aliases* :test #'string=))
+                    (intern name :keyword)))
            (prim (cdr (assoc key *primitive-types*))))
       (if prim
           prim
@@ -132,11 +145,65 @@
 (defun resolve-record-size (rec-sym)
   (when (symbolp rec-sym)
     (let ((key (to-kebab-name rec-sym)))
-      (multiple-value-bind (cached found) (gethash key *record-size-cache*)
-        (if found
-            cached
-            (setf (gethash key *record-size-cache*)
-                  (compute-record-size rec-sym)))))))
+      (or (gethash key *record-size-cache*)
+          ;; Only cache successes: a NIL may be due to a record that is
+          ;; registered later, or to an in-progress cycle.
+          (let ((size (compute-record-size rec-sym)))
+            (when size
+              (setf (gethash key *record-size-cache*) size)))))))
+
+(defun array-type-p (ftype)
+  "True for list array specs: (ARRAY elem), (ARRAY-OF elem), (SEQUENCE elem), (REPEATED elem)."
+  (and (consp ftype)
+       (member (to-kebab-name (car ftype)) '("ARRAY" "ARRAY-OF" "SEQUENCE" "REPEATED")
+               :test #'string=)))
+
+(defun computed-array-element (ftype)
+  "For COMPUTED-ARRAY<ELEM<A>> and VAR-LEN-ARRAY<ELEM<A>> symbols, return ELEM as a symbol."
+  (when (and ftype (symbolp ftype))
+    (let* ((s (symbol-name ftype))
+           (lt (position #\< s)))
+      (when (and lt (member (subseq s 0 lt) '("COMPUTED-ARRAY" "VAR-LEN-ARRAY")
+                            :test #'string-equal))
+        (let* ((inner (string-right-trim ">" (subseq s (1+ lt))))
+               (lt2 (position #\< inner)))
+          (intern (if lt2 (subseq inner 0 lt2) inner) (symbol-package ftype)))))))
+
+(defun static-element-size (elem-type)
+  (or (getf (resolve-type-info elem-type) :size)
+      (resolve-record-size elem-type)))
+
+(defun normalize-field-type (ftype)
+  "Rewrite array spellings to (ARRAY elem). Computed arrays of statically
+sized elements become plain arrays; others are returned as (:COMPUTED elem)."
+  (cond
+    ((array-type-p ftype) `(array ,@(cdr ftype)))
+    ((computed-array-element ftype)
+     (let ((elem (computed-array-element ftype)))
+       (if (static-element-size elem)
+           `(array ,elem)
+           `(:computed ,elem))))
+    (t ftype)))
+
+(defun computed-type-p (ftype)
+  (and (consp ftype) (eq (car ftype) :computed)))
+
+(defun defined-names (forms)
+  (loop for f in forms
+        when (and (consp f) (eq (car f) 'defun)) collect (second f)))
+
+(defun filter-declaims (declaims accessor-forms)
+  (let ((defined (defined-names accessor-forms)))
+    (remove-if-not (lambda (n) (member n defined)) declaims)))
+
+(defun format-variant-value (target)
+  "Discriminator value from the :FORMAT attribute of TARGET's fields, if any."
+  (let ((tbl (gethash (to-kebab-name target) *known-tables*)))
+    (when tbl
+      (loop for f in (cddr tbl)
+            for v = (and (consp f) (string-equal (car f) "field")
+                         (get-prop :format (cdddr f)))
+            when (numberp v) return v))))
 
 (defun register-sexp-item (form)
   (when (consp form)
@@ -234,7 +301,9 @@
          (doc (get-prop :doc (cddr form)))
          (fields (remove-if-not (lambda (x) (and (consp x) (string-equal (car x) "field"))) (cddr form)))
          (offset 0)
-         (has-dynamic-array nil)
+         (dynamic-terms '())
+         ;; Name of a preceding field whose size cannot be expressed; no field may follow it.
+         (unplaceable-after nil)
          (declaims '())
          (struct-forms '())
          (accessor-forms '())
@@ -251,26 +320,25 @@
 
     (dolist (f fields)
       (let* ((fname (second f))
-             (ftype (third f))
+             (ftype (normalize-field-type (third f)))
              (fdoc (get-prop :doc (cdddr f)))
              (acc-name (zsym (format nil "~A-~A" struct-name fname)))
-             (tinfo (resolve-type-info ftype)))
+             (tinfo (resolve-type-info ftype))
+             (off-expr (make-offset-form `(record-ref-offset ,var-rec) offset (reverse dynamic-terms))))
+        (when unplaceable-after
+          (error "Field ~A of record ~A follows variable-length field ~A whose size is unknown"
+                 fname name unplaceable-after))
         (pushnew (symbol-name acc-name) *exports* :test #'string=)
         (push acc-name declaims)
         (cond
           ;; 1. Primitive scalar field
           (tinfo
-           (let ((size (getf tinfo :size))
-                 (reader (getf tinfo :reader)))
-             (push `(defun ,acc-name (,var-rec)
-                      ,@(when fdoc (list fdoc))
-                      (declare (type ,struct-name ,var-rec))
-                      (,reader (record-ref-font-data ,var-rec)
-                               ,(if (zerop offset)
-                                    `(record-ref-offset ,var-rec)
-                                    `(+ (record-ref-offset ,var-rec) ,offset))))
-                   accessor-forms)
-             (incf offset size)))
+           (push `(defun ,acc-name (,var-rec)
+                    ,@(when fdoc (list fdoc))
+                    (declare (type ,struct-name ,var-rec))
+                    (,(getf tinfo :reader) (record-ref-font-data ,var-rec) ,off-expr))
+                 accessor-forms)
+           (incf offset (getf tinfo :size)))
 
           ;; 2. Offset field: (offset16 target), (offset24 target), (offset32 target)
           ((and (consp ftype) (search "OFFSET" (to-kebab-name (car ftype))))
@@ -278,108 +346,118 @@
              (push `(defun ,acc-name (,var-rec)
                       ,@(when fdoc (list fdoc))
                       (declare (type ,struct-name ,var-rec))
-                      (,off-reader (record-ref-font-data ,var-rec)
-                                   ,(if (zerop offset)
-                                        `(record-ref-offset ,var-rec)
-                                        `(+ (record-ref-offset ,var-rec) ,offset))))
+                      (,off-reader (record-ref-font-data ,var-rec) ,off-expr))
                    accessor-forms)
              (incf offset off-size)))
 
           ;; 3. Array field: (array elem-type)
-          ((and (consp ftype) (string-equal (to-kebab-name (car ftype)) "ARRAY"))
+          ((array-type-p ftype)
            (let ((elem-type (second ftype)))
-             ;; Check for nested arrays (Item 7)
-             (when (and (consp elem-type) (string-equal (to-kebab-name (car elem-type)) "ARRAY"))
+             (when (array-type-p elem-type)
                (error "Nested array fields not supported: ~S in record ~A" ftype struct-name))
 
              (let* ((count-attr (get-prop :count (cdddr f)))
                     (count-acc (zsym (format nil "~A-COUNT" acc-name)))
                     (ref-acc (zsym (format nil "~A-REF" acc-name)))
                     (elem-tinfo (resolve-type-info elem-type))
+                    (elem-offset-p (and (consp elem-type) (search "OFFSET" (to-kebab-name (car elem-type)))))
                     (elem-bytes (cond
                                   (elem-tinfo (getf elem-tinfo :size))
-                                  ((and (consp elem-type) (search "OFFSET" (to-kebab-name (car elem-type))))
-                                   (nth-value 0 (offset-type-info (car elem-type))))
+                                  (elem-offset-p (nth-value 0 (offset-type-info (car elem-type))))
                                   (t (resolve-record-size elem-type))))
                     (elem-reader (cond
                                    (elem-tinfo (getf elem-tinfo :reader))
-                                   ((and (consp elem-type) (search "OFFSET" (to-kebab-name (car elem-type))))
-                                    (nth-value 1 (offset-type-info (car elem-type))))
+                                   (elem-offset-p (nth-value 1 (offset-type-info (car elem-type))))
                                    (t nil)))
-                    (elem-ctor (when (null elem-reader) (zsym (format nil "%MAKE-~A" elem-type)))))
+                    (elem-ctor (when (null elem-reader) (zsym (format nil "%MAKE-~A" elem-type))))
+                    (internal-fld (and count-attr (symbolp count-attr) (find-field count-attr form))))
+               (unless elem-bytes
+                 (error "Array field ~A of record ~A has element type ~S of unknown size"
+                        fname name elem-type))
                (pushnew (symbol-name count-acc) *exports* :test #'string=)
                (pushnew (symbol-name ref-acc) *exports* :test #'string=)
                ;; Count getter
                (cond
-                 ((and count-attr (symbolp count-attr))
-                  (let ((internal-fld (find-field count-attr form)))
-                    (if internal-fld
-                        (let ((count-fld-acc (zsym (format nil "~A-~A" struct-name count-attr))))
-                          (push `(defun ,count-acc (,var-rec)
-                                   ,@(when fdoc (list fdoc))
-                                   (declare (type ,struct-name ,var-rec))
-                                   (,count-fld-acc ,var-rec))
-                                accessor-forms))
-                        (let ((arg-name (zsym count-attr)))
-                          (push `(defun ,count-acc (,var-rec &optional ,arg-name)
-                                   ,@(when fdoc (list fdoc))
-                                   (declare (type ,struct-name ,var-rec))
-                                   ,arg-name)
-                                accessor-forms)))))
-                 ((numberp count-attr)
+                 (internal-fld
                   (push `(defun ,count-acc (,var-rec)
                            ,@(when fdoc (list fdoc))
                            (declare (type ,struct-name ,var-rec))
+                           (,(zsym (format nil "~A-~A" struct-name count-attr)) ,var-rec))
+                        accessor-forms))
+                 ((numberp count-attr)
+                  (push `(defun ,count-acc (,var-rec)
+                           ,@(when fdoc (list fdoc))
+                           (declare (type ,struct-name ,var-rec) (ignore ,var-rec))
                            ,count-attr)
                         accessor-forms))
                  (t
-                  (push `(defun ,count-acc (,var-rec &optional ,(zsym "COUNT"))
-                           ,@(when fdoc (list fdoc))
-                           (declare (type ,struct-name ,var-rec))
-                           ,(zsym "COUNT"))
-                        accessor-forms)))
+                  (let ((arg-name (zsym (if (and count-attr (symbolp count-attr)) count-attr "COUNT"))))
+                    (push `(defun ,count-acc (,var-rec &optional ,arg-name)
+                             ,@(when fdoc (list fdoc))
+                             (declare (type ,struct-name ,var-rec) (ignore ,var-rec))
+                             ,arg-name)
+                          accessor-forms))))
                ;; Ref getter
-               (let ((bytes (or elem-bytes 1))
-                     (off-expr (if (zerop offset)
-                                   `(record-ref-offset ,var-rec)
-                                   `(+ (record-ref-offset ,var-rec) ,offset))))
-                 (push `(defun ,ref-acc (,var-rec ,var-index)
-                          ,@(when fdoc (list fdoc))
-                          (declare (type ,struct-name ,var-rec) (type (unsigned-byte 32) ,var-index))
-                          (let ((,var-pos (+ ,off-expr (* ,var-index ,bytes))))
-                            ,(if elem-reader
-                                 `(,elem-reader (record-ref-font-data ,var-rec) ,var-pos)
-                                 `(,elem-ctor (record-ref-font-data ,var-rec) ,var-pos))))
-                       accessor-forms))
-               (if (numberp count-attr)
-                   (incf offset (* count-attr (or elem-bytes 1)))
-                   (setf has-dynamic-array t)))))
+               (push `(defun ,ref-acc (,var-rec ,var-index)
+                        ,@(when fdoc (list fdoc))
+                        (declare (type ,struct-name ,var-rec) (type (unsigned-byte 32) ,var-index))
+                        (let ((,var-pos (+ ,off-expr (* ,var-index ,elem-bytes))))
+                          ,(if elem-reader
+                               `(,elem-reader (record-ref-font-data ,var-rec) ,var-pos)
+                               `(,elem-ctor (record-ref-font-data ,var-rec) ,var-pos))))
+                     accessor-forms)
+               (cond
+                 ((numberp count-attr)
+                  (incf offset (* count-attr elem-bytes)))
+                 (internal-fld
+                  (push `(* (,count-acc ,var-rec) ,elem-bytes) dynamic-terms))
+                 (t
+                  (setf unplaceable-after fname))))))
 
-          ;; 4. Nested record or other type (Item 5 fallback in records)
+          ;; 4. Computed array of variable-size elements: expose where it starts.
+          ((computed-type-p ftype)
+           (let ((start-acc (zsym (format nil "~A-START" acc-name))))
+             (pushnew (symbol-name start-acc) *exports* :test #'string=)
+             (push `(defun ,start-acc (,var-rec)
+                      ,(format nil "Byte position of the first ~A element; elements are variable-length."
+                               (to-kebab-name (second ftype)))
+                      (declare (type ,struct-name ,var-rec))
+                      ,off-expr)
+                   accessor-forms)
+             (setf unplaceable-after fname)))
+
+          ;; 5. Nested record
           (t
            (let ((rsize (resolve-record-size ftype)))
-             (when rsize
-               (let ((rec-ctor (zsym (format nil "%MAKE-~A" ftype))))
-                 (push `(defun ,acc-name (,var-rec)
-                          ,@(when fdoc (list fdoc))
-                          (declare (type ,struct-name ,var-rec))
-                          (,rec-ctor (record-ref-font-data ,var-rec)
-                                     ,(if (zerop offset)
-                                          `(record-ref-offset ,var-rec)
-                                          `(+ (record-ref-offset ,var-rec) ,offset))))
-                         accessor-forms)
-                 (incf offset rsize))))))))
+             (cond
+               (rsize
+                (push `(defun ,acc-name (,var-rec)
+                         ,@(when fdoc (list fdoc))
+                         (declare (type ,struct-name ,var-rec))
+                         (,(zsym (format nil "%MAKE-~A" ftype)) (record-ref-font-data ,var-rec) ,off-expr))
+                      accessor-forms)
+                (incf offset rsize))
+               ((and (symbolp ftype) (gethash (to-kebab-name ftype) *known-records*))
+                ;; Variable-size nested record: accessible, but ends the static layout.
+                (push `(defun ,acc-name (,var-rec)
+                         ,@(when fdoc (list fdoc))
+                         (declare (type ,struct-name ,var-rec))
+                         (,(zsym (format nil "%MAKE-~A" ftype)) (record-ref-font-data ,var-rec) ,off-expr))
+                      accessor-forms)
+                (setf unplaceable-after fname))
+               (t
+                (error "Unrecognized type ~S for field ~A of record ~A" (third f) fname name))))))))
 
-    ;; Dynamic array warning (Item 8)
-    (if has-dynamic-array
+    (if (or dynamic-terms unplaceable-after)
         (warn "Record ~A has dynamic array field and cannot compute static size (+~A-SIZE+)" name name)
         (let ((size-const (zsym (format nil "+~A-SIZE+" name))))
           (pushnew (symbol-name size-const) *exports* :test #'string=)
           (push `(define-constant ,size-const ,offset) struct-forms)))
 
-    (append (reverse struct-forms)
-            (when declaims `((declaim (inline ,@(reverse declaims)))))
-            (reverse accessor-forms))))
+    (let ((declaims (filter-declaims declaims accessor-forms)))
+      (append (reverse struct-forms)
+              (when declaims `((declaim (inline ,@(reverse declaims)))))
+              (reverse accessor-forms)))))
 
 (defun emit-format (form)
   (let* ((disc-type (second form))
@@ -418,10 +496,12 @@
       ((string-equal (to-kebab-name name) "PAINT")
        ;; COLRv1 Paint tables formats 1..33
        (let ((cases '()))
-         (loop for v in variants
-               for fmt-val from 1
-               for target = (third v)
-               do (push `(,fmt-val (,(zsym (format nil "READ-~A" target)) ,var-fd ,var-offset ,var-len)) cases))
+         (dolist (v variants)
+           (let* ((target (third v))
+                  (fmt-val (format-variant-value target)))
+             (unless fmt-val
+               (error "Paint variant ~A has no :format discriminator in table ~A" (second v) target))
+             (push `(,fmt-val (,(zsym (format nil "READ-~A" target)) ,var-fd ,var-offset ,var-len)) cases)))
          (list `(defun ,read-fn-name (,var-fd ,var-offset &optional (,var-len (- (font-data-length ,var-fd) ,var-offset)))
                   ,@(when doc (list doc))
                   (declare (ignorable ,var-len))
@@ -436,7 +516,9 @@
            (let* ((vname (symbol-name (second v)))
                   (target (third v))
                   (digits (remove-if-not #'digit-char-p vname))
-                  (fmt-val (when (plusp (length digits)) (parse-integer digits))))
+                  (fmt-val (if (plusp (length digits))
+                               (parse-integer digits)
+                               (format-variant-value target))))
              (unless fmt-val
                (error "Format variant ~A in format ~A has no numeric discriminator" vname name))
              (push `(,fmt-val (,(zsym (format nil "READ-~A" target)) ,var-fd ,var-offset ,var-len)) cases)))
@@ -461,6 +543,8 @@
          (min-size 0)
          (fixed-offset 0)
          (dynamic-terms '())
+         ;; Name of a preceding field whose size cannot be expressed; no field may follow it.
+         (unplaceable-after nil)
          (array-bounds-checks '())
          (declaims '())
          (struct-forms '())
@@ -495,8 +579,8 @@
     (dolist (f fields)
       (let* ((fname (second f))
              (acc-name (zsym (format nil "~A-~A" struct-name fname)))
-             (ftype (third f))
-             (is-array (and (consp ftype) (string-equal (to-kebab-name (car ftype)) "ARRAY")))
+             (ftype (normalize-field-type (third f)))
+             (is-array (array-type-p ftype))
              (is-offset (and (consp ftype) (search "OFFSET" (to-kebab-name (car ftype))))))
         (pushnew (symbol-name acc-name) *exports* :test #'string=)
         (push acc-name declaims)
@@ -511,19 +595,22 @@
 
     (dolist (f fields)
       (let* ((fname (second f))
-             (ftype (third f))
+             (ftype (normalize-field-type (third f)))
              (fdoc (get-prop :doc (cdddr f)))
              (since-ver (get-prop :since-version (cdddr f)))
              (acc-name (zsym (format nil "~A-~A" struct-name fname)))
-             (is-array (and (consp ftype) (string-equal (to-kebab-name (car ftype)) "ARRAY")))
+             (is-array (array-type-p ftype))
              (off-expr (make-offset-form `(table-ref-offset ,var-table) fixed-offset dynamic-terms))
              (raw-off-expr (make-offset-form var-offset fixed-offset dynamic-terms)))
+        (when unplaceable-after
+          (error "Field ~A of table ~A follows variable-length field ~A whose size is unknown"
+                 fname name unplaceable-after))
         (cond
           ;; 1. Array Field
           (is-array
            (let ((inner-type (second ftype)))
              ;; Check for nested arrays (Item 7)
-             (when (and (consp inner-type) (string-equal (to-kebab-name (car inner-type)) "ARRAY"))
+             (when (array-type-p inner-type)
                (error "Nested array fields not supported: ~S in table ~A" ftype struct-name))
 
              (let* ((is-offset-elem (and (consp inner-type) (search "OFFSET" (to-kebab-name (car inner-type)))))
@@ -581,12 +668,12 @@
                      (let ((arg-name (zsym (if (symbolp count-attr) count-attr "COUNT"))))
                        (push `(defun ,count-acc (,var-table &optional ,arg-name)
                                 ,@(when fdoc (list fdoc))
-                                (or ,arg-name (max 0 (floor (- (table-ref-length ,var-table) ,off-expr) ,elem-bytes))))
+                                (or ,arg-name (max 0 (floor (- (+ (table-ref-offset ,var-table) (table-ref-length ,var-table)) ,off-expr) ,elem-bytes))))
                              accessor-forms)))
                     (t
                      (push `(defun ,count-acc (,var-table)
                               ,@(when fdoc (list fdoc))
-                              (max 0 (floor (- (table-ref-length ,var-table) ,off-expr) ,elem-bytes)))
+                              (max 0 (floor (- (+ (table-ref-offset ,var-table) (table-ref-length ,var-table)) ,off-expr) ,elem-bytes)))
                            accessor-forms)))
                   (setf actual-count-call `(,count-acc ,var-table))
                   (push `(* ,actual-count-call ,elem-bytes) dynamic-terms)))
@@ -600,18 +687,22 @@
                      (when internal-fld
                        (let ((raw-fn (zsym (format nil "~A-~A-RAW" struct-name count-attr)))
                              (int-since (get-prop :since-version (cdddr internal-fld))))
-                         (if int-since
+                         ;; The -RAW reader exists only for counts at a static offset.
+                         (cond
+                           ((not (member raw-fn (defined-names accessor-forms))))
+                           (int-since
                              (push `(when (>= ,var-len ,fixed-offset)
                                       (let ((,var-cnt (,raw-fn ,var-fd ,var-offset)))
                                         (unless (and (<= (+ ,fixed-offset (* ,var-cnt ,elem-size)) ,var-len)
                                                      (font-data-valid-range-p ,var-fd ,var-offset (+ ,fixed-offset (* ,var-cnt ,elem-size))))
                                           (error 'font-out-of-bounds-error :pos ,var-offset :size (+ ,fixed-offset (* ,var-cnt ,elem-size)) :length (font-data-length ,var-fd)))))
-                                   array-bounds-checks)
-                             (push `(let ((,var-cnt (,raw-fn ,var-fd ,var-offset)))
+                                   array-bounds-checks))
+                           (t
+                            (push `(let ((,var-cnt (,raw-fn ,var-fd ,var-offset)))
                                       (unless (and (<= (+ ,fixed-offset (* ,var-cnt ,elem-size)) ,var-len)
                                                    (font-data-valid-range-p ,var-fd ,var-offset (+ ,fixed-offset (* ,var-cnt ,elem-size))))
                                         (error 'font-out-of-bounds-error :pos ,var-offset :size (+ ,fixed-offset (* ,var-cnt ,elem-size)) :length (font-data-length ,var-fd))))
-                                   array-bounds-checks)))))))
+                                   array-bounds-checks))))))))
 
                ;; Element getter (Item 4: three-way lookup)
                (cond
@@ -751,19 +842,31 @@
           ((resolve-type-info ftype)
            (let* ((tinfo (resolve-type-info ftype))
                   (size (getf tinfo :size))
-                  (reader (getf tinfo :reader)))
-             (if since-ver
+                  (reader (getf tinfo :reader))
+                  ;; :when-flag (flag-field mask): field is present only when MASK is set.
+                  (when-flag (get-prop :when-flag (cdddr f))))
+             (cond
+               (when-flag
+                (push `(defun ,acc-name (,var-table)
+                         ,@(when fdoc (list fdoc))
+                         (declare (type ,struct-name ,var-table))
+                         (when (logtest ,(second when-flag)
+                                        (,(zsym (format nil "~A-~A" struct-name (first when-flag))) ,var-table))
+                           (,reader (table-ref-font-data ,var-table) ,off-expr)))
+                      accessor-forms))
+               (since-ver
                  (push `(defun ,acc-name (,var-table)
                           ,@(when fdoc (list fdoc))
                           (declare (type ,struct-name ,var-table))
                           (when (>= (table-ref-length ,var-table) ,(+ fixed-offset size))
                             (,reader (table-ref-font-data ,var-table) ,off-expr)))
-                       accessor-forms)
+                       accessor-forms))
+               (t
                  (push `(defun ,acc-name (,var-table)
                           ,@(when fdoc (list fdoc))
                           (declare (type ,struct-name ,var-table))
                           (,reader (table-ref-font-data ,var-table) ,off-expr))
-                       accessor-forms))
+                       accessor-forms)))
              (when (null dynamic-terms)
                (let ((raw-acc (zsym (format nil "~A-~A-RAW" struct-name fname))))
                  (push raw-acc declaims)
@@ -771,22 +874,40 @@
                           (,reader ,var-fd ,raw-off-expr))
                        accessor-forms)))
              (incf fixed-offset size)
-             (when (and (null dynamic-terms) (null since-ver))
+             (when (and (null dynamic-terms) (null since-ver) (null when-flag))
                (incf min-size size))))
 
-          ;; 4. Inline record or structured field (Item 5 fallback in tables)
+          ;; 4. Computed array of variable-size elements: expose where it starts.
+          ((computed-type-p ftype)
+           (let ((start-acc (zsym (format nil "~A-START" acc-name))))
+             (pushnew (symbol-name start-acc) *exports* :test #'string=)
+             (push `(defun ,start-acc (,var-table)
+                      ,(format nil "Byte position of the first ~A element; elements are variable-length."
+                               (to-kebab-name (second ftype)))
+                      (declare (type ,struct-name ,var-table))
+                      ,off-expr)
+                   accessor-forms)
+             (setf unplaceable-after fname)))
+
+          ;; 5. Inline record
           (t
-           (let ((rsize (resolve-record-size ftype)))
-             (when rsize
-               (let ((rec-ctor (zsym (format nil "%MAKE-~A" ftype))))
-                 (push `(defun ,acc-name (,var-table)
-                          ,@(when fdoc (list fdoc))
-                          (declare (type ,struct-name ,var-table))
-                          (,rec-ctor (table-ref-font-data ,var-table) ,off-expr))
-                       accessor-forms)
-                 (incf fixed-offset rsize)
-                 (when (and (null dynamic-terms) (null since-ver))
-                   (incf min-size rsize)))))))))
+           (let ((rsize (resolve-record-size ftype))
+                 (rec-ctor (and (symbolp ftype) (zsym (format nil "%MAKE-~A" ftype)))))
+             (unless (or rsize (and (symbolp ftype) (gethash (to-kebab-name ftype) *known-records*)))
+               (error "Unrecognized type ~S for field ~A of table ~A" (third f) fname name))
+             (push `(defun ,acc-name (,var-table)
+                      ,@(when fdoc (list fdoc))
+                      (declare (type ,struct-name ,var-table))
+                      (,rec-ctor (table-ref-font-data ,var-table) ,off-expr))
+                   accessor-forms)
+             (cond
+               (rsize
+                (incf fixed-offset rsize)
+                (when (and (null dynamic-terms) (null since-ver))
+                  (incf min-size rsize)))
+               (t
+                ;; Variable-size record: accessible, but ends the static layout.
+                (setf unplaceable-after fname))))))))
 
     ;; Sanitize and Read functions
     (push `(defun ,san-name (,var-fd ,var-offset ,var-len)
@@ -802,11 +923,12 @@
              (,ctor-name ,var-fd ,var-offset ,var-len))
           read-forms)
 
-    (append (reverse struct-forms)
-            (when declaims `((declaim (inline ,@(reverse declaims)))))
-            (reverse accessor-forms)
-            (reverse san-forms)
-            (reverse read-forms))))
+    (let ((declaims (filter-declaims declaims accessor-forms)))
+      (append (reverse struct-forms)
+              (when declaims `((declaim (inline ,@(reverse declaims)))))
+              (reverse accessor-forms)
+              (reverse san-forms)
+              (reverse read-forms)))))
 (defun emit-file-forms (items stream filename)
   (let ((*exports* '())
         (*print-case* :downcase)

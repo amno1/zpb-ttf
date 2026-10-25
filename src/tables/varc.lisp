@@ -346,7 +346,6 @@
   multi-item-variation-store-region-list-offset
   multi-item-variation-store-region-list-offset-offset
   multi-item-variation-store-variation-data-count
-  multi-item-variation-store-variation-data-offsets
   multi-item-variation-store-variation-data-offsets-count
   multi-item-variation-store-format-table-raw
   multi-item-variation-store-variation-data-count-raw))
@@ -436,7 +435,6 @@
 
 (declaim
  (inline sparse-variation-region-list-region-count
-  sparse-variation-region-list-region-offsets
   sparse-variation-region-list-region-offsets-count
   sparse-variation-region-list-region-count-raw))
 
@@ -499,7 +497,6 @@
 
 (declaim
  (inline sparse-variation-region-region-axis-count
-  sparse-variation-region-axis-coordinate-offsets
   sparse-variation-region-axis-coordinate-offsets-count
   sparse-variation-region-region-axis-count-raw))
 
@@ -635,7 +632,6 @@
 (declaim
  (inline multi-item-variation-data-format-table
   multi-item-variation-data-region-index-count
-  multi-item-variation-data-region-indices
   multi-item-variation-data-region-indices-count
   multi-item-variation-data-delta-sets-offset
   multi-item-variation-data-delta-sets-offset-offset
@@ -726,8 +722,8 @@
 
 
 (declaim
- (inline condition-list-condition-count condition-list-condition-offsets
-  condition-list-condition-offsets-count condition-list-condition-count-raw))
+ (inline condition-list-condition-count condition-list-condition-offsets-count
+  condition-list-condition-count-raw))
 
 
 (defun condition-list-condition-count (table)

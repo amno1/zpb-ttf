@@ -113,6 +113,14 @@
                  (the (unsigned-byte 24) (ash (aref bytes (the (unsigned-byte 32) (+ abs-pos 1))) 8))
                  (aref bytes (the (unsigned-byte 32) (+ abs-pos 2)))))))
 
+(declaim (inline font-data-read-i24))
+(defun font-data-read-i24 (fd pos)
+  (declare (type font-data fd) (type (unsigned-byte 32) pos) (optimize (speed 3) (safety 1)))
+  (let ((u (font-data-read-u24 fd pos)))
+    (if (logbitp 23 u)
+        (the fixnum (- u 16777216))
+        (the fixnum u))))
+
 (declaim (inline font-data-read-u32))
 (defun font-data-read-u32 (fd pos)
   (declare (type font-data fd) (type (unsigned-byte 32) pos) (optimize (speed 3) (safety 1)))

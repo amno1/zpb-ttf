@@ -93,7 +93,7 @@
 
 (declaim
  (inline feat-version feat-feature-name-count feat--reserved1 feat--reserved2
-  feat-names feat-names-count feat-version-raw feat-feature-name-count-raw
+  feat-names-count feat-version-raw feat-feature-name-count-raw
   feat--reserved1-raw feat--reserved2-raw))
 
 
@@ -186,13 +186,17 @@
       (%table-font-data %table-offset %table-length))))
 
 
-(declaim (inline setting-name-array-settings setting-name-array-settings-count))
+(declaim (inline setting-name-array-settings-count))
 
 
 (defun setting-name-array-settings-count (table &optional n-settings)
   "List of setting names for a feature."
   (or n-settings
-      (max 0 (floor (- (table-ref-length table) (table-ref-offset table)) 4))))
+      (max 0
+           (floor
+            (- (+ (table-ref-offset table) (table-ref-length table))
+               (table-ref-offset table))
+            4))))
 
 
 (defun setting-name-array-settings-ref (table index)

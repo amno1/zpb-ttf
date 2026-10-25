@@ -126,7 +126,7 @@ to the control point of the curve, otherwise set P1 to NIL."
   (map 'vector #'explicit-contour-points (contours glyph)))
 
 (defparameter *empty-contours*
-  (make-array 0 :element-type 't))
+  (make-array 0 :element-type t))
 
 (defparameter *empty-bounding-box*
   (make-array 4 :initial-element 0 :element-type '(signed-byte 16)))
@@ -136,6 +136,12 @@ to the control point of the curve, otherwise set P1 to NIL."
 
 (defun empty-contours ()
   (copy-seq *empty-contours*))
+
+;;; Maximum component nesting depth (cf. maxComponentDepth in 'maxp').
+(defparameter *max-compound-glyph-depth* 16)
+
+(defvar *compound-glyph-stack* '()
+  "Glyph indices of the compound glyphs whose contours are being read.")
 
 ;;; The Glyph class
 
@@ -240,22 +246,20 @@ to the control point of the curve, otherwise set P1 to NIL."
   (:method (string (loader font-loader) &key (kerning t))
     (if (zerop (length string))
         (empty-bounding-box)
-        (let* ((first-glyph (find-glyph (char string 0) loader))
-               (bbox (copy-seq (bounding-box first-glyph)))
+        (let* ((g1 (find-glyph (char string 0) loader))
+               (bbox (copy-seq (bounding-box g1)))
                (x 0))
-          (dotimes (i (1- (length string)))
-            (let* ((c1 (char string i))
-                   (c2 (char string (1+ i)))
-                   (g1 (find-glyph c1 loader))
-                   (g2 (find-glyph c2 loader)))
-              (incf x (advance-width g1))
-              (when kerning
-                (incf x (kerning-offset g1 g2 loader)))
-              (let ((gb (bounding-box g2)))
-                (setf (xmin bbox) (min (xmin bbox) (+ x (xmin gb)))
-                      (ymin bbox) (min (ymin bbox) (ymin gb))
-                      (xmax bbox) (max (xmax bbox) (+ x (xmax gb)))
-                      (ymax bbox) (max (ymax bbox) (+ x (ymax gb)))))))
+          (loop for i from 1 below (length string)
+                for g2 = (find-glyph (char string i) loader)
+                do (incf x (advance-width g1))
+                   (when kerning
+                     (incf x (kerning-offset g1 g2 loader)))
+                   (let ((gb (bounding-box g2)))
+                     (setf (xmin bbox) (min (xmin bbox) (+ x (xmin gb)))
+                           (ymin bbox) (min (ymin bbox) (ymin gb))
+                           (xmax bbox) (max (xmax bbox) (+ x (xmax gb)))
+                           (ymax bbox) (max (ymax bbox) (ymax gb))))
+                   (setf g1 g2))
           bbox))))
 
 ;;; Zero-copy TrueType contour extraction
@@ -298,19 +302,30 @@ to the control point of the curve, otherwise set P1 to NIL."
           (let* ((fd (font-data loader))
                  (pos (+ (offset (table-info "glyf" loader)) g-off))
                  (nc (zpb-otf:font-data-read-i16 fd pos)))
-            (if (minusp nc)
-                (setf (contours glyph) (read-compound-contours-fd loader (+ pos 10)))
-                (setf (contours glyph) (read-simple-contours-fd fd (+ pos 10) nc))))))))
+            (setf (contours glyph)
+                  (cond
+                    ((zerop nc) (empty-contours))
+                    ((minusp nc)
+                     (let ((*compound-glyph-stack* (cons gid *compound-glyph-stack*)))
+                       (read-compound-contours-fd loader (+ pos 10))))
+                    (t (read-simple-contours-fd fd (+ pos 10) nc)))))))))
 
 (defmethod bounding-box :before ((glyph glyph))
   (unless (slot-boundp glyph 'bounding-box)
     (initialize-bounding-box glyph)))
+
+(defmethod code-point :before ((glyph glyph))
+  (unless (slot-boundp glyph 'code-point)
+    (setf (code-point glyph)
+          (font-index-code-point (font-index glyph) (font-loader glyph)))))
 
 (defmethod contours :before ((glyph glyph))
   (unless (slot-boundp glyph 'contours)
     (initialize-contours glyph)))
 
 (defun read-simple-contours-fd (fd pos contour-count)
+  (when (zerop contour-count)
+    (return-from read-simple-contours-fd (empty-contours)))
   (let ((end-pts (make-array contour-count :element-type '(unsigned-byte 16))))
     (dotimes (i contour-count)
       (setf (aref end-pts i) (zpb-otf:font-data-read-u16 fd pos))
@@ -399,15 +414,36 @@ to the control point of the curve, otherwise set P1 to NIL."
             (setf (aref merged i) c)
             (incf i)))))
 
+(defun nth-contour-point (contours-list n)
+  "Return the Nth point counting across CONTOURS-LIST, a list of contour vectors."
+  (dolist (cs contours-list)
+    (loop for c across cs
+          do (if (< n (length c))
+                 (return-from nth-contour-point (aref c n))
+                 (decf n (length c)))))
+  nil)
+
 (defun read-compound-contours-fd (loader pos)
+  (when (> (length *compound-glyph-stack*) *max-compound-glyph-depth*)
+    (error 'unsupported-value
+           :description "Compound glyph nesting too deep"
+           :location (format nil "glyph ~D" (first *compound-glyph-stack*))
+           :actual-value (length *compound-glyph-stack*)
+           :expected-values (list *max-compound-glyph-depth*)))
   (let ((fd (font-data loader))
         (contours-list '()))
     (loop
      (let ((flags (zpb-otf:font-data-read-u16 fd pos))
            (glyph-index (zpb-otf:font-data-read-u16 fd (+ pos 2))))
        (incf pos 4)
+       (when (member glyph-index *compound-glyph-stack*)
+         (error 'unsupported-value
+                :description "Recursive compound glyph"
+                :location (format nil "glyph ~D" (first *compound-glyph-stack*))
+                :actual-value glyph-index
+                :expected-values '("a glyph that does not contain itself")))
        (let* ((sub-glyph (index-glyph glyph-index loader))
-              (contours (if sub-glyph (contours sub-glyph) (empty-contours)))
+              (contours (contours sub-glyph))
               (args-words-p (logbitp 0 flags))
               (args-xy-values-p (logbitp 1 flags))
               (more-components-p (logbitp 5 flags))
@@ -454,6 +490,21 @@ to the control point of the curve, otherwise set P1 to NIL."
                                                                                 (make-control-point (x p) (y p) (on-curve-p p)))
                                                                       c))
                                                        contours))))
+             (unless args-xy-values-p
+               ;; Point matching: move the component so that its point ARG2
+               ;; lands on point ARG1 of the components placed so far.
+               (let ((parent-point (nth-contour-point (reverse contours-list) arg1))
+                     (child-point (nth-contour-point (list transformed) arg2)))
+                 (unless (and parent-point child-point)
+                   (error 'unsupported-value
+                          :description "Compound glyph anchor point out of range"
+                          :location (format nil "glyph ~D" (first *compound-glyph-stack*))
+                          :actual-value (list arg1 arg2)
+                          :expected-values '("existing point indices")))
+                 (let ((dx (- (x parent-point) (x child-point)))
+                       (dy (- (y parent-point) (y child-point))))
+                   (transform-contours (lambda (x y) (values (+ x dx) (+ y dy)))
+                                       transformed))))
              (push transformed contours-list)))
          (unless more-components-p
            (return (merge-contours (nreverse contours-list)))))))))

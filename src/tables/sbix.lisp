@@ -45,9 +45,8 @@
 
 
 (declaim
- (inline sbix-version sbix-flags sbix-num-strikes sbix-strike-offsets
-  sbix-strike-offsets-count sbix-version-raw sbix-flags-raw
-  sbix-num-strikes-raw))
+ (inline sbix-version sbix-flags sbix-num-strikes sbix-strike-offsets-count
+  sbix-version-raw sbix-flags-raw sbix-num-strikes-raw))
 
 
 (defun sbix-version (table)
@@ -132,8 +131,8 @@
 
 
 (declaim
- (inline strike-ppem strike-ppi strike-glyph-data-offsets
-  strike-glyph-data-offsets-count strike-ppem-raw strike-ppi-raw))
+ (inline strike-ppem strike-ppi strike-glyph-data-offsets-count strike-ppem-raw
+  strike-ppi-raw))
 
 
 (defun strike-ppem (table)
@@ -160,8 +159,10 @@
   "Offset from the beginning of the strike data header to bitmap data for an individual glyph ID."
   (or count
       (max 0
-           (floor (- (table-ref-length table) (+ (table-ref-offset table) 4))
-                  4))))
+           (floor
+            (- (+ (table-ref-offset table) (table-ref-length table))
+               (+ (table-ref-offset table) 4))
+            4))))
 
 
 (defun strike-glyph-data-offsets-ref (table index)
@@ -201,9 +202,8 @@
 
 (declaim
  (inline glyph-data-origin-offset-x glyph-data-origin-offset-y
-  glyph-data-graphic-type glyph-data-data glyph-data-data-count
-  glyph-data-origin-offset-x-raw glyph-data-origin-offset-y-raw
-  glyph-data-graphic-type-raw))
+  glyph-data-graphic-type glyph-data-data-count glyph-data-origin-offset-x-raw
+  glyph-data-origin-offset-y-raw glyph-data-graphic-type-raw))
 
 
 (defun glyph-data-origin-offset-x (table)
@@ -240,7 +240,11 @@
 
 (defun glyph-data-data-count (table)
   "The actual embedded graphic data. The total length is inferred from sequential entries in the glyphDataOffsets array and the fixed size (8 bytes) of the preceding fields."
-  (max 0 (floor (- (table-ref-length table) (+ (table-ref-offset table) 8)) 1)))
+  (max 0
+       (floor
+        (- (+ (table-ref-offset table) (table-ref-length table))
+           (+ (table-ref-offset table) 8))
+        1)))
 
 
 (defun glyph-data-data-ref (table index)

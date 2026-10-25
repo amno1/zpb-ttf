@@ -7,14 +7,16 @@
 
 
 (export
- '(+long-metric-size+ hmtx hmtx-extended hmtx-extended-h-metrics
-   hmtx-extended-h-metrics-count hmtx-extended-h-metrics-ref
-   hmtx-extended-left-side-bearings hmtx-extended-left-side-bearings-count
-   hmtx-extended-left-side-bearings-ref hmtx-extended-p hmtx-h-metrics
-   hmtx-h-metrics-count hmtx-h-metrics-ref hmtx-left-side-bearings
-   hmtx-left-side-bearings-count hmtx-left-side-bearings-ref hmtx-p long-metric
-   long-metric-advance long-metric-p long-metric-side-bearing read-hmtx
-   read-hmtx-extended sanitize-hmtx sanitize-hmtx-extended))
+ '(+long-metric-extended-size+ +long-metric-size+ hmtx hmtx-extended
+   hmtx-extended-h-metrics hmtx-extended-h-metrics-count
+   hmtx-extended-h-metrics-ref hmtx-extended-left-side-bearings
+   hmtx-extended-left-side-bearings-count hmtx-extended-left-side-bearings-ref
+   hmtx-extended-p hmtx-h-metrics hmtx-h-metrics-count hmtx-h-metrics-ref
+   hmtx-left-side-bearings hmtx-left-side-bearings-count
+   hmtx-left-side-bearings-ref hmtx-p long-metric long-metric-advance
+   long-metric-extended long-metric-extended-advance long-metric-extended-p
+   long-metric-extended-side-bearing long-metric-p long-metric-side-bearing
+   read-hmtx read-hmtx-extended sanitize-hmtx sanitize-hmtx-extended))
 
 
 (defstruct
@@ -41,19 +43,46 @@
 
 
 (defstruct
+    (long-metric-extended (:include record-ref)
+     (:constructor %make-long-metric-extended
+      (%record-font-data %record-offset))))
+
+
+(define-constant +long-metric-extended-size+ 6)
+
+
+(declaim
+ (inline long-metric-extended-advance long-metric-extended-side-bearing))
+
+
+(defun long-metric-extended-advance (rec)
+  "Advance width/height, in font design units."
+  (declare (type long-metric-extended rec))
+  (font-data-read-u32 (record-ref-font-data rec) (record-ref-offset rec)))
+
+
+(defun long-metric-extended-side-bearing (rec)
+  "Glyph leading (left/top) side bearing, in font design units."
+  (declare (type long-metric-extended rec))
+  (font-data-read-i16 (record-ref-font-data rec) (+ (record-ref-offset rec) 4)))
+
+
+(defstruct
     (hmtx (:include table-ref)
      (:constructor %make-hmtx (%table-font-data %table-offset %table-length))))
 
 
-(declaim
- (inline hmtx-h-metrics hmtx-h-metrics-count hmtx-left-side-bearings
-  hmtx-left-side-bearings-count))
+(declaim (inline hmtx-h-metrics-count hmtx-left-side-bearings-count))
 
 
 (defun hmtx-h-metrics-count (table &optional number-of-h-metrics)
   "Paired advance width/height and left/top side bearing values for each glyph. Records are indexed by glyph ID."
   (or number-of-h-metrics
-      (max 0 (floor (- (table-ref-length table) (table-ref-offset table)) 4))))
+      (max 0
+           (floor
+            (- (+ (table-ref-offset table) (table-ref-length table))
+               (table-ref-offset table))
+            4))))
 
 
 (defun hmtx-h-metrics-ref (table index)
@@ -72,7 +101,7 @@
   "Leading (left/top) side bearings for glyph IDs greater than or equal to numberOfLongMetrics."
   (max 0
        (floor
-        (- (table-ref-length table)
+        (- (+ (table-ref-offset table) (table-ref-length table))
            (+ (table-ref-offset table) (* (hmtx-h-metrics-count table) 4)))
         2)))
 
@@ -115,32 +144,35 @@
 
 
 (declaim
- (inline hmtx-extended-h-metrics hmtx-extended-h-metrics-count
-  hmtx-extended-left-side-bearings hmtx-extended-left-side-bearings-count))
+ (inline hmtx-extended-h-metrics-count hmtx-extended-left-side-bearings-count))
 
 
 (defun hmtx-extended-h-metrics-count (table &optional number-of-h-metrics)
   (or number-of-h-metrics
-      (max 0 (floor (- (table-ref-length table) (table-ref-offset table)) 4))))
+      (max 0
+           (floor
+            (- (+ (table-ref-offset table) (table-ref-length table))
+               (table-ref-offset table))
+            6))))
 
 
 (defun hmtx-extended-h-metrics-ref (table index)
   (declare (type hmtx-extended table)
            (type (unsigned-byte 32) index))
-  (let ((pos (+ (table-ref-offset table) (* index 4))))
+  (let ((pos (+ (table-ref-offset table) (* index 6))))
     (unless
-        (<= (+ pos 4) (+ (table-ref-offset table) (table-ref-length table)))
-      (error 'font-out-of-bounds-error :pos pos :size 4 :length
+        (<= (+ pos 6) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 6 :length
              (table-ref-length table)))
-    (%make-long-metric (table-ref-font-data table) pos)))
+    (%make-long-metric-extended (table-ref-font-data table) pos)))
 
 
 (defun hmtx-extended-left-side-bearings-count (table)
   (max 0
        (floor
-        (- (table-ref-length table)
+        (- (+ (table-ref-offset table) (table-ref-length table))
            (+ (table-ref-offset table)
-              (* (hmtx-extended-h-metrics-count table) 4)))
+              (* (hmtx-extended-h-metrics-count table) 6)))
         2)))
 
 
@@ -150,7 +182,7 @@
   (let ((pos
          (+
           (+ (table-ref-offset table)
-             (* (hmtx-extended-h-metrics-count table) 4))
+             (* (hmtx-extended-h-metrics-count table) 6))
           (* index 2))))
     (unless
         (<= (+ pos 2) (+ (table-ref-offset table) (table-ref-length table)))

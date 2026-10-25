@@ -87,10 +87,9 @@
 (declaim
  (inline cpal-version cpal-num-palette-entries cpal-num-palettes
   cpal-num-color-records cpal-color-records-array-offset
-  cpal-color-records-array-offset-offset cpal-color-record-indices
-  cpal-color-record-indices-count cpal-palette-types-array-offset
-  cpal-palette-types-array-offset-offset cpal-palette-labels-array-offset
-  cpal-palette-labels-array-offset-offset
+  cpal-color-records-array-offset-offset cpal-color-record-indices-count
+  cpal-palette-types-array-offset cpal-palette-types-array-offset-offset
+  cpal-palette-labels-array-offset cpal-palette-labels-array-offset-offset
   cpal-palette-entry-labels-array-offset
   cpal-palette-entry-labels-array-offset-offset cpal-version-raw
   cpal-num-palette-entries-raw cpal-num-palettes-raw

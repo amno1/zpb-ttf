@@ -69,7 +69,7 @@
 
 
 (declaim
- (inline dsig-version dsig-num-signatures dsig-flags dsig-signature-records
+ (inline dsig-version dsig-num-signatures dsig-flags
   dsig-signature-records-count dsig-version-raw dsig-num-signatures-raw
   dsig-flags-raw))
 
@@ -154,7 +154,7 @@
 
 (declaim
  (inline signature-block-format1--reserved1 signature-block-format1--reserved2
-  signature-block-format1-signature-length signature-block-format1-signature
+  signature-block-format1-signature-length
   signature-block-format1-signature-count
   signature-block-format1--reserved1-raw signature-block-format1--reserved2-raw
   signature-block-format1-signature-length-raw))

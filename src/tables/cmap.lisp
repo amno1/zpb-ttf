@@ -232,7 +232,7 @@
       (%record-font-data %record-offset))))
 
 
-(define-constant +variation-selector15-size+ 8)
+(define-constant +variation-selector15-size+ 11)
 
 
 (declaim
@@ -241,14 +241,19 @@
   variation-selector15-non-default-uvs-offset))
 
 
+(defun variation-selector15-var-selector (rec)
+  (declare (type variation-selector15 rec))
+  (font-data-read-u24 (record-ref-font-data rec) (record-ref-offset rec)))
+
+
 (defun variation-selector15-default-uvs-offset (rec)
   (declare (type variation-selector15 rec))
-  (font-data-read-u32 (record-ref-font-data rec) (record-ref-offset rec)))
+  (font-data-read-u32 (record-ref-font-data rec) (+ (record-ref-offset rec) 3)))
 
 
 (defun variation-selector15-non-default-uvs-offset (rec)
   (declare (type variation-selector15 rec))
-  (font-data-read-u32 (record-ref-font-data rec) (+ (record-ref-offset rec) 4)))
+  (font-data-read-u32 (record-ref-font-data rec) (+ (record-ref-offset rec) 7)))
 
 
 (defstruct
@@ -257,7 +262,7 @@
       (%record-font-data %record-offset))))
 
 
-(define-constant +variation-selector-size+ 8)
+(define-constant +variation-selector-size+ 11)
 
 
 (declaim
@@ -265,16 +270,22 @@
   variation-selector-non-default-uvs-offset))
 
 
+(defun variation-selector-var-selector (rec)
+  "Variation selector"
+  (declare (type variation-selector rec))
+  (font-data-read-u24 (record-ref-font-data rec) (record-ref-offset rec)))
+
+
 (defun variation-selector-default-uvs-offset (rec)
   "Offset from the start of the [`Cmap14`] subtable to Default UVS Table. May be NULL."
   (declare (type variation-selector rec))
-  (font-data-read-u32 (record-ref-font-data rec) (record-ref-offset rec)))
+  (font-data-read-u32 (record-ref-font-data rec) (+ (record-ref-offset rec) 3)))
 
 
 (defun variation-selector-non-default-uvs-offset (rec)
   "Offset from the start of the [`Cmap14`] subtable to Non-Default UVS Table. May be NULL."
   (declare (type variation-selector rec))
-  (font-data-read-u32 (record-ref-font-data rec) (+ (record-ref-offset rec) 4)))
+  (font-data-read-u32 (record-ref-font-data rec) (+ (record-ref-offset rec) 7)))
 
 
 (defstruct
@@ -282,10 +293,20 @@
      (:constructor %make-uvs-mapping24 (%record-font-data %record-offset))))
 
 
-(define-constant +uvs-mapping24-size+ 0)
+(define-constant +uvs-mapping24-size+ 6)
 
 
 (declaim (inline uvs-mapping24-unicode-value uvs-mapping24-glyph-id))
+
+
+(defun uvs-mapping24-unicode-value (rec)
+  (declare (type uvs-mapping24 rec))
+  (font-data-read-u24 (record-ref-font-data rec) (record-ref-offset rec)))
+
+
+(defun uvs-mapping24-glyph-id (rec)
+  (declare (type uvs-mapping24 rec))
+  (font-data-read-u24 (record-ref-font-data rec) (+ (record-ref-offset rec) 3)))
 
 
 (defstruct
@@ -293,16 +314,22 @@
      (:constructor %make-uvs-mapping (%record-font-data %record-offset))))
 
 
-(define-constant +uvs-mapping-size+ 2)
+(define-constant +uvs-mapping-size+ 5)
 
 
 (declaim (inline uvs-mapping-unicode-value uvs-mapping-glyph-id))
 
 
+(defun uvs-mapping-unicode-value (rec)
+  "Base Unicode value of the UVS"
+  (declare (type uvs-mapping rec))
+  (font-data-read-u24 (record-ref-font-data rec) (record-ref-offset rec)))
+
+
 (defun uvs-mapping-glyph-id (rec)
   "Glyph ID of the UVS"
   (declare (type uvs-mapping rec))
-  (font-data-read-u16 (record-ref-font-data rec) (record-ref-offset rec)))
+  (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 3)))
 
 
 (defstruct
@@ -310,17 +337,23 @@
      (:constructor %make-unicode-range (%record-font-data %record-offset))))
 
 
-(define-constant +unicode-range-size+ 1)
+(define-constant +unicode-range-size+ 4)
 
 
 (declaim
  (inline unicode-range-start-unicode-value unicode-range-additional-count))
 
 
+(defun unicode-range-start-unicode-value (rec)
+  "First value in this range"
+  (declare (type unicode-range rec))
+  (font-data-read-u24 (record-ref-font-data rec) (record-ref-offset rec)))
+
+
 (defun unicode-range-additional-count (rec)
   "Number of additional values in this range"
   (declare (type unicode-range rec))
-  (font-data-read-u8 (record-ref-font-data rec) (record-ref-offset rec)))
+  (font-data-read-u8 (record-ref-font-data rec) (+ (record-ref-offset rec) 3)))
 
 
 (defstruct
@@ -329,8 +362,8 @@
 
 
 (declaim
- (inline cmap-version cmap-num-tables cmap-encoding-records
-  cmap-encoding-records-count cmap-version-raw cmap-num-tables-raw))
+ (inline cmap-version cmap-num-tables cmap-encoding-records-count
+  cmap-version-raw cmap-num-tables-raw))
 
 
 (defun cmap-version (table)
@@ -397,8 +430,8 @@
 
 
 (declaim
- (inline dmap-version dmap-num-tables dmap-encoding-records
-  dmap-encoding-records-count dmap-version-raw dmap-num-tables-raw))
+ (inline dmap-version dmap-num-tables dmap-encoding-records-count
+  dmap-version-raw dmap-num-tables-raw))
 
 
 (defun dmap-version (table)
@@ -485,7 +518,7 @@
 
 
 (declaim
- (inline cmap0-format-table cmap0-length cmap0-language cmap0-glyph-id-array
+ (inline cmap0-format-table cmap0-length cmap0-language
   cmap0-glyph-id-array-count cmap0-format-table-raw cmap0-length-raw
   cmap0-language-raw))
 
@@ -569,7 +602,7 @@
 
 
 (declaim
- (inline cmap2-format-table cmap2-length cmap2-language cmap2-sub-header-keys
+ (inline cmap2-format-table cmap2-length cmap2-language
   cmap2-sub-header-keys-count cmap2-format-table-raw cmap2-length-raw
   cmap2-language-raw))
 
@@ -648,13 +681,12 @@
 
 (declaim
  (inline cmap4-format-table cmap4-length cmap4-language cmap4-seg-count-x2
-  cmap4-search-range cmap4-entry-selector cmap4-range-shift cmap4-end-code
-  cmap4-end-code-count cmap4-reserved-pad cmap4-start-code
-  cmap4-start-code-count cmap4-id-delta cmap4-id-delta-count
-  cmap4-id-range-offsets cmap4-id-range-offsets-count cmap4-glyph-id-array
-  cmap4-glyph-id-array-count cmap4-format-table-raw cmap4-length-raw
-  cmap4-language-raw cmap4-seg-count-x2-raw cmap4-search-range-raw
-  cmap4-entry-selector-raw cmap4-range-shift-raw))
+  cmap4-search-range cmap4-entry-selector cmap4-range-shift
+  cmap4-end-code-count cmap4-reserved-pad cmap4-start-code-count
+  cmap4-id-delta-count cmap4-id-range-offsets-count cmap4-glyph-id-array-count
+  cmap4-format-table-raw cmap4-length-raw cmap4-language-raw
+  cmap4-seg-count-x2-raw cmap4-search-range-raw cmap4-entry-selector-raw
+  cmap4-range-shift-raw))
 
 
 (defun cmap4-format-table (table)
@@ -824,7 +856,7 @@
   "Glyph index array (arbitrary length)"
   (max 0
        (floor
-        (- (table-ref-length table)
+        (- (+ (table-ref-offset table) (table-ref-length table))
            (+ (table-ref-offset table) 16
               (* (cmap4-id-range-offsets-count table) 2)
               (* (cmap4-id-delta-count table) 2)
@@ -876,9 +908,9 @@
 
 (declaim
  (inline cmap6-format-table cmap6-length cmap6-language cmap6-first-code
-  cmap6-entry-count cmap6-glyph-id-array cmap6-glyph-id-array-count
-  cmap6-format-table-raw cmap6-length-raw cmap6-language-raw
-  cmap6-first-code-raw cmap6-entry-count-raw))
+  cmap6-entry-count cmap6-glyph-id-array-count cmap6-format-table-raw
+  cmap6-length-raw cmap6-language-raw cmap6-first-code-raw
+  cmap6-entry-count-raw))
 
 
 (defun cmap6-format-table (table)
@@ -982,9 +1014,8 @@
 
 (declaim
  (inline cmap8-format-table cmap8-reserved cmap8-length cmap8-language
-  cmap8-is32 cmap8-is32-count cmap8-num-groups cmap8-groups cmap8-groups-count
-  cmap8-format-table-raw cmap8-reserved-raw cmap8-length-raw cmap8-language-raw
-  cmap8-num-groups-raw))
+  cmap8-is32-count cmap8-num-groups cmap8-groups-count cmap8-format-table-raw
+  cmap8-reserved-raw cmap8-length-raw cmap8-language-raw cmap8-num-groups-raw))
 
 
 (defun cmap8-format-table (table)
@@ -1114,10 +1145,9 @@
 
 (declaim
  (inline cmap10-format-table cmap10-reserved cmap10-length cmap10-language
-  cmap10-start-char-code cmap10-num-chars cmap10-glyph-id-array
-  cmap10-glyph-id-array-count cmap10-format-table-raw cmap10-reserved-raw
-  cmap10-length-raw cmap10-language-raw cmap10-start-char-code-raw
-  cmap10-num-chars-raw))
+  cmap10-start-char-code cmap10-num-chars cmap10-glyph-id-array-count
+  cmap10-format-table-raw cmap10-reserved-raw cmap10-length-raw
+  cmap10-language-raw cmap10-start-char-code-raw cmap10-num-chars-raw))
 
 
 (defun cmap10-format-table (table)
@@ -1233,7 +1263,7 @@
 
 (declaim
  (inline cmap12-format-table cmap12-reserved cmap12-length cmap12-language
-  cmap12-num-groups cmap12-groups cmap12-groups-count cmap12-format-table-raw
+  cmap12-num-groups cmap12-groups-count cmap12-format-table-raw
   cmap12-reserved-raw cmap12-length-raw cmap12-language-raw
   cmap12-num-groups-raw))
 
@@ -1340,7 +1370,7 @@
 
 (declaim
  (inline cmap13-format-table cmap13-reserved cmap13-length cmap13-language
-  cmap13-num-groups cmap13-groups cmap13-groups-count cmap13-format-table-raw
+  cmap13-num-groups cmap13-groups-count cmap13-format-table-raw
   cmap13-reserved-raw cmap13-length-raw cmap13-language-raw
   cmap13-num-groups-raw))
 
@@ -1447,8 +1477,8 @@
 
 (declaim
  (inline cmap14-format-table cmap14-length cmap14-num-var-selector-records
-  cmap14-var-selector cmap14-var-selector-count cmap14-format-table-raw
-  cmap14-length-raw cmap14-num-var-selector-records-raw))
+  cmap14-var-selector-count cmap14-format-table-raw cmap14-length-raw
+  cmap14-num-var-selector-records-raw))
 
 
 (defun cmap14-format-table (table)
@@ -1488,6 +1518,18 @@
   (cmap14-num-var-selector-records table))
 
 
+(defun cmap14-var-selector-ref (table index)
+  "Array of VariationSelector records."
+  (declare (type cmap14 table)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (+ (table-ref-offset table) 10) (* index 11))))
+    (unless
+        (<= (+ pos 11) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 11 :length
+             (table-ref-length table)))
+    (%make-variation-selector (table-ref-font-data table) pos)))
+
+
 (defun sanitize-cmap14 (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
@@ -1495,6 +1537,12 @@
   (unless (and (<= 10 length) (font-data-valid-range-p font-data offset 10))
     (error 'font-out-of-bounds-error :pos offset :size 10 :length
            (font-data-length font-data)))
+  (let ((cnt (cmap14-num-var-selector-records-raw font-data offset)))
+    (unless
+        (and (<= (+ 10 (* cnt 11)) length)
+             (font-data-valid-range-p font-data offset (+ 10 (* cnt 11))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 10 (* cnt 11))
+             :length (font-data-length font-data))))
   t)
 
 
@@ -1513,8 +1561,8 @@
 
 (declaim
  (inline cmap15-format-table cmap15-length cmap15-num-var-selector-records
-  cmap15-var-selector cmap15-var-selector-count cmap15-format-table-raw
-  cmap15-length-raw cmap15-num-var-selector-records-raw))
+  cmap15-var-selector-count cmap15-format-table-raw cmap15-length-raw
+  cmap15-num-var-selector-records-raw))
 
 
 (defun cmap15-format-table (table)
@@ -1553,6 +1601,17 @@
   (cmap15-num-var-selector-records table))
 
 
+(defun cmap15-var-selector-ref (table index)
+  (declare (type cmap15 table)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (+ (table-ref-offset table) 10) (* index 11))))
+    (unless
+        (<= (+ pos 11) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 11 :length
+             (table-ref-length table)))
+    (%make-variation-selector15 (table-ref-font-data table) pos)))
+
+
 (defun sanitize-cmap15 (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
@@ -1560,6 +1619,12 @@
   (unless (and (<= 10 length) (font-data-valid-range-p font-data offset 10))
     (error 'font-out-of-bounds-error :pos offset :size 10 :length
            (font-data-length font-data)))
+  (let ((cnt (cmap15-num-var-selector-records-raw font-data offset)))
+    (unless
+        (and (<= (+ 10 (* cnt 11)) length)
+             (font-data-valid-range-p font-data offset (+ 10 (* cnt 11))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 10 (* cnt 11))
+             :length (font-data-length font-data))))
   t)
 
 
@@ -1577,8 +1642,8 @@
 
 
 (declaim
- (inline default-uvs-num-unicode-value-ranges default-uvs-ranges
-  default-uvs-ranges-count default-uvs-num-unicode-value-ranges-raw))
+ (inline default-uvs-num-unicode-value-ranges default-uvs-ranges-count
+  default-uvs-num-unicode-value-ranges-raw))
 
 
 (defun default-uvs-num-unicode-value-ranges (table)
@@ -1596,6 +1661,18 @@
   (default-uvs-num-unicode-value-ranges table))
 
 
+(defun default-uvs-ranges-ref (table index)
+  "Array of UnicodeRange records."
+  (declare (type default-uvs table)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (+ (table-ref-offset table) 4) (* index 4))))
+    (unless
+        (<= (+ pos 4) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 4 :length
+             (table-ref-length table)))
+    (%make-unicode-range (table-ref-font-data table) pos)))
+
+
 (defun sanitize-default-uvs (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
@@ -1603,6 +1680,12 @@
   (unless (and (<= 4 length) (font-data-valid-range-p font-data offset 4))
     (error 'font-out-of-bounds-error :pos offset :size 4 :length
            (font-data-length font-data)))
+  (let ((cnt (default-uvs-num-unicode-value-ranges-raw font-data offset)))
+    (unless
+        (and (<= (+ 4 (* cnt 4)) length)
+             (font-data-valid-range-p font-data offset (+ 4 (* cnt 4))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 4 (* cnt 4))
+             :length (font-data-length font-data))))
   t)
 
 
@@ -1620,8 +1703,8 @@
 
 
 (declaim
- (inline non-default-uvs-num-uvs-mappings non-default-uvs-uvs-mapping
-  non-default-uvs-uvs-mapping-count non-default-uvs-num-uvs-mappings-raw))
+ (inline non-default-uvs-num-uvs-mappings non-default-uvs-uvs-mapping-count
+  non-default-uvs-num-uvs-mappings-raw))
 
 
 (defun non-default-uvs-num-uvs-mappings (table)
@@ -1637,6 +1720,17 @@
   (non-default-uvs-num-uvs-mappings table))
 
 
+(defun non-default-uvs-uvs-mapping-ref (table index)
+  (declare (type non-default-uvs table)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (+ (table-ref-offset table) 4) (* index 5))))
+    (unless
+        (<= (+ pos 5) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 5 :length
+             (table-ref-length table)))
+    (%make-uvs-mapping (table-ref-font-data table) pos)))
+
+
 (defun sanitize-non-default-uvs (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
@@ -1644,6 +1738,12 @@
   (unless (and (<= 4 length) (font-data-valid-range-p font-data offset 4))
     (error 'font-out-of-bounds-error :pos offset :size 4 :length
            (font-data-length font-data)))
+  (let ((cnt (non-default-uvs-num-uvs-mappings-raw font-data offset)))
+    (unless
+        (and (<= (+ 4 (* cnt 5)) length)
+             (font-data-valid-range-p font-data offset (+ 4 (* cnt 5))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 4 (* cnt 5))
+             :length (font-data-length font-data))))
   t)
 
 
@@ -1661,8 +1761,8 @@
 
 
 (declaim
- (inline non-default-uvs24-num-uvs-mappings non-default-uvs24-uvs-mapping
-  non-default-uvs24-uvs-mapping-count non-default-uvs24-num-uvs-mappings-raw))
+ (inline non-default-uvs24-num-uvs-mappings non-default-uvs24-uvs-mapping-count
+  non-default-uvs24-num-uvs-mappings-raw))
 
 
 (defun non-default-uvs24-num-uvs-mappings (table)
@@ -1678,6 +1778,17 @@
   (non-default-uvs24-num-uvs-mappings table))
 
 
+(defun non-default-uvs24-uvs-mapping-ref (table index)
+  (declare (type non-default-uvs24 table)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (+ (table-ref-offset table) 4) (* index 6))))
+    (unless
+        (<= (+ pos 6) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 6 :length
+             (table-ref-length table)))
+    (%make-uvs-mapping24 (table-ref-font-data table) pos)))
+
+
 (defun sanitize-non-default-uvs24 (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
@@ -1685,6 +1796,12 @@
   (unless (and (<= 4 length) (font-data-valid-range-p font-data offset 4))
     (error 'font-out-of-bounds-error :pos offset :size 4 :length
            (font-data-length font-data)))
+  (let ((cnt (non-default-uvs24-num-uvs-mappings-raw font-data offset)))
+    (unless
+        (and (<= (+ 4 (* cnt 6)) length)
+             (font-data-valid-range-p font-data offset (+ 4 (* cnt 6))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 4 (* cnt 6))
+             :length (font-data-length font-data))))
   t)
 
 

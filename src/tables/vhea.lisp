@@ -46,11 +46,11 @@
 (defun vhea-version (table)
   "The major/minor version (1, 0 or 1, 1)"
   (declare (type vhea table))
-  (font-data-read-fixed (table-ref-font-data table) (table-ref-offset table)))
+  (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
 
 
 (defun vhea-version-raw (font-data offset)
-  (font-data-read-fixed font-data offset))
+  (font-data-read-u32 font-data offset))
 
 
 (defun vhea-ascender (table)
@@ -274,11 +274,11 @@
 
 (defun vhea-extended-version (table)
   (declare (type vhea-extended table))
-  (font-data-read-fixed (table-ref-font-data table) (table-ref-offset table)))
+  (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
 
 
 (defun vhea-extended-version-raw (font-data offset)
-  (font-data-read-fixed font-data offset))
+  (font-data-read-u32 font-data offset))
 
 
 (defun vhea-extended-ascender (table)

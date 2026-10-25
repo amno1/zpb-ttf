@@ -52,8 +52,7 @@
 
 (declaim
  (inline meta-version meta-flags meta-reserved meta-data-maps-count
-  meta-data-maps meta-data-maps-array-count meta-version-raw meta-flags-raw
-  meta-reserved-raw meta-data-maps-count-raw))
+  meta-version-raw meta-flags-raw meta-reserved-raw meta-data-maps-count-raw))
 
 
 (defun meta-version (table)

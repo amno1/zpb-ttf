@@ -301,12 +301,11 @@
 
 (declaim
  (inline simple-glyph-number-of-contours simple-glyph-x-min simple-glyph-y-min
-  simple-glyph-x-max simple-glyph-y-max simple-glyph-end-pts-of-contours
-  simple-glyph-end-pts-of-contours-count simple-glyph-instruction-length
-  simple-glyph-instructions simple-glyph-instructions-count
-  simple-glyph-glyph-data simple-glyph-glyph-data-count
-  simple-glyph-number-of-contours-raw simple-glyph-x-min-raw
-  simple-glyph-y-min-raw simple-glyph-x-max-raw simple-glyph-y-max-raw))
+  simple-glyph-x-max simple-glyph-y-max simple-glyph-end-pts-of-contours-count
+  simple-glyph-instruction-length simple-glyph-instructions-count
+  simple-glyph-glyph-data-count simple-glyph-number-of-contours-raw
+  simple-glyph-x-min-raw simple-glyph-y-min-raw simple-glyph-x-max-raw
+  simple-glyph-y-max-raw))
 
 
 (defun simple-glyph-number-of-contours (table)
@@ -421,7 +420,7 @@
   "the raw data for flags & x/y coordinates"
   (max 0
        (floor
-        (- (table-ref-length table)
+        (- (+ (table-ref-offset table) (table-ref-length table))
            (+ (table-ref-offset table) 12
               (* (simple-glyph-instructions-count table) 1)
               (* (simple-glyph-end-pts-of-contours-count table) 2)))
@@ -486,9 +485,8 @@
 (declaim
  (inline composite-glyph-number-of-contours composite-glyph-x-min
   composite-glyph-y-min composite-glyph-x-max composite-glyph-y-max
-  composite-glyph-component-data composite-glyph-component-data-count
-  composite-glyph-number-of-contours-raw composite-glyph-x-min-raw
-  composite-glyph-y-min-raw composite-glyph-x-max-raw
+  composite-glyph-component-data-count composite-glyph-number-of-contours-raw
+  composite-glyph-x-min-raw composite-glyph-y-min-raw composite-glyph-x-max-raw
   composite-glyph-y-max-raw))
 
 
@@ -549,7 +547,10 @@
 (defun composite-glyph-component-data-count (table)
   "component flag glyph index of component"
   (max 0
-       (floor (- (table-ref-length table) (+ (table-ref-offset table) 10)) 1)))
+       (floor
+        (- (+ (table-ref-offset table) (table-ref-length table))
+           (+ (table-ref-offset table) 10))
+        1)))
 
 
 (defun composite-glyph-component-data-ref (table index)

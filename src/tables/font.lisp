@@ -69,10 +69,10 @@
 (declaim
  (inline table-directory-sfnt-version table-directory-num-tables
   table-directory-search-range table-directory-entry-selector
-  table-directory-range-shift table-directory-table-records
-  table-directory-table-records-count table-directory-sfnt-version-raw
-  table-directory-num-tables-raw table-directory-search-range-raw
-  table-directory-entry-selector-raw table-directory-range-shift-raw))
+  table-directory-range-shift table-directory-table-records-count
+  table-directory-sfnt-version-raw table-directory-num-tables-raw
+  table-directory-search-range-raw table-directory-entry-selector-raw
+  table-directory-range-shift-raw))
 
 
 (defun table-directory-sfnt-version (table)
@@ -174,9 +174,9 @@
 
 (declaim
  (inline ttc-header-ttc-tag ttc-header-version ttc-header-num-fonts
-  ttc-header-table-directory-offsets ttc-header-table-directory-offsets-count
-  ttc-header-dsig-tag ttc-header-dsig-length ttc-header-dsig-offset
-  ttc-header-ttc-tag-raw ttc-header-version-raw ttc-header-num-fonts-raw))
+  ttc-header-table-directory-offsets-count ttc-header-dsig-tag
+  ttc-header-dsig-length ttc-header-dsig-offset ttc-header-ttc-tag-raw
+  ttc-header-version-raw ttc-header-num-fonts-raw))
 
 
 (defun ttc-header-ttc-tag (table)

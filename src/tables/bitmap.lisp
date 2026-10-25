@@ -456,16 +456,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
-(declaim
- (inline index-subtable-list-index-subtable-records
-  index-subtable-list-index-subtable-records-count))
+(declaim (inline index-subtable-list-index-subtable-records-count))
 
 
 (defun index-subtable-list-index-subtable-records-count
        (table &optional number-of-index-subtables)
   "Array of IndexSubtableRecords."
   (or number-of-index-subtables
-      (max 0 (floor (- (table-ref-length table) (table-ref-offset table)) 8))))
+      (max 0
+           (floor
+            (- (+ (table-ref-offset table) (table-ref-length table))
+               (table-ref-offset table))
+            8))))
 
 
 (defun index-subtable-list-index-subtable-records-ref (table index)
@@ -505,9 +507,9 @@
 
 (declaim
  (inline index-subtable1-index-format index-subtable1-image-format
-  index-subtable1-image-data-offset index-subtable1-sbit-offsets
-  index-subtable1-sbit-offsets-count index-subtable1-index-format-raw
-  index-subtable1-image-format-raw index-subtable1-image-data-offset-raw))
+  index-subtable1-image-data-offset index-subtable1-sbit-offsets-count
+  index-subtable1-index-format-raw index-subtable1-image-format-raw
+  index-subtable1-image-data-offset-raw))
 
 
 (defun index-subtable1-index-format (table)
@@ -545,8 +547,10 @@
 (defun index-subtable1-sbit-offsets-count (table &optional count)
   (or count
       (max 0
-           (floor (- (table-ref-length table) (+ (table-ref-offset table) 8))
-                  4))))
+           (floor
+            (- (+ (table-ref-offset table) (table-ref-length table))
+               (+ (table-ref-offset table) 8))
+            4))))
 
 
 (defun index-subtable1-sbit-offsets-ref (table index)
@@ -666,9 +670,9 @@
 
 (declaim
  (inline index-subtable3-index-format index-subtable3-image-format
-  index-subtable3-image-data-offset index-subtable3-sbit-offsets
-  index-subtable3-sbit-offsets-count index-subtable3-index-format-raw
-  index-subtable3-image-format-raw index-subtable3-image-data-offset-raw))
+  index-subtable3-image-data-offset index-subtable3-sbit-offsets-count
+  index-subtable3-index-format-raw index-subtable3-image-format-raw
+  index-subtable3-image-data-offset-raw))
 
 
 (defun index-subtable3-index-format (table)
@@ -706,8 +710,10 @@
 (defun index-subtable3-sbit-offsets-count (table &optional count)
   (or count
       (max 0
-           (floor (- (table-ref-length table) (+ (table-ref-offset table) 8))
-                  2))))
+           (floor
+            (- (+ (table-ref-offset table) (table-ref-length table))
+               (+ (table-ref-offset table) 8))
+            2))))
 
 
 (defun index-subtable3-sbit-offsets-ref (table index)
@@ -747,9 +753,9 @@
 (declaim
  (inline index-subtable4-index-format index-subtable4-image-format
   index-subtable4-image-data-offset index-subtable4-num-glyphs
-  index-subtable4-glyph-array index-subtable4-glyph-array-count
-  index-subtable4-index-format-raw index-subtable4-image-format-raw
-  index-subtable4-image-data-offset-raw index-subtable4-num-glyphs-raw))
+  index-subtable4-glyph-array-count index-subtable4-index-format-raw
+  index-subtable4-image-format-raw index-subtable4-image-data-offset-raw
+  index-subtable4-num-glyphs-raw))
 
 
 (defun index-subtable4-index-format (table)
@@ -839,10 +845,9 @@
  (inline index-subtable5-index-format index-subtable5-image-format
   index-subtable5-image-data-offset index-subtable5-image-size
   index-subtable5-big-metrics index-subtable5-num-glyphs
-  index-subtable5-glyph-array index-subtable5-glyph-array-count
-  index-subtable5-index-format-raw index-subtable5-image-format-raw
-  index-subtable5-image-data-offset-raw index-subtable5-image-size-raw
-  index-subtable5-num-glyphs-raw))
+  index-subtable5-glyph-array-count index-subtable5-index-format-raw
+  index-subtable5-image-format-raw index-subtable5-image-data-offset-raw
+  index-subtable5-image-size-raw index-subtable5-num-glyphs-raw))
 
 
 (defun index-subtable5-index-format (table)

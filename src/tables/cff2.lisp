@@ -29,9 +29,8 @@
 
 (declaim
  (inline cff2-header-major-version cff2-header-minor-version
-  cff2-header-header-size cff2-header-top-dict-length cff2-header--padding
-  cff2-header--padding-count cff2-header-top-dict-data
-  cff2-header-top-dict-data-count cff2-header-trailing-data
+  cff2-header-header-size cff2-header-top-dict-length
+  cff2-header--padding-count cff2-header-top-dict-data-count
   cff2-header-trailing-data-count cff2-header-major-version-raw
   cff2-header-minor-version-raw cff2-header-header-size-raw
   cff2-header-top-dict-length-raw))
@@ -136,7 +135,7 @@
   "Remaining table data."
   (max 0
        (floor
-        (- (table-ref-length table)
+        (- (+ (table-ref-offset table) (table-ref-length table))
            (+ (table-ref-offset table) 5
               (* (cff2-header-top-dict-data-count table) 1)
               (* (cff2-header--padding-count table) 1)))
@@ -193,9 +192,8 @@
 
 
 (declaim
- (inline cff2-index-count cff2-index-off-size cff2-index-offsets
-  cff2-index-offsets-count cff2-index-data cff2-index-data-count
-  cff2-index-count-raw cff2-index-off-size-raw))
+ (inline cff2-index-count cff2-index-off-size cff2-index-offsets-count
+  cff2-index-data-count cff2-index-count-raw cff2-index-off-size-raw))
 
 
 (defun cff2-index-count (table)
@@ -246,7 +244,7 @@
   "Array containing the object data."
   (max 0
        (floor
-        (- (table-ref-length table)
+        (- (+ (table-ref-offset table) (table-ref-length table))
            (+ (table-ref-offset table) 5
               (* (cff2-index-offsets-count table) 1)))
         1)))

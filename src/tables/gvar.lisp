@@ -13,26 +13,29 @@
    glyph-variation-data-header-extended-serialized-data-offset-offset
    glyph-variation-data-header-extended-tuple-variation-count
    glyph-variation-data-header-extended-tuple-variation-headers
+   glyph-variation-data-header-extended-tuple-variation-headers-start
    glyph-variation-data-header-p
    glyph-variation-data-header-serialized-data-offset
    glyph-variation-data-header-serialized-data-offset-offset
    glyph-variation-data-header-tuple-variation-count
-   glyph-variation-data-header-tuple-variation-headers gvar gvar-axis-count
-   gvar-extended gvar-extended-axis-count gvar-extended-flags
+   glyph-variation-data-header-tuple-variation-headers
+   glyph-variation-data-header-tuple-variation-headers-start gvar
+   gvar-axis-count gvar-extended gvar-extended-axis-count gvar-extended-flags
    gvar-extended-glyph-count gvar-extended-glyph-variation-data-array-offset
-   gvar-extended-glyph-variation-data-offsets gvar-extended-p
+   gvar-extended-glyph-variation-data-offsets
+   gvar-extended-glyph-variation-data-offsets-start gvar-extended-p
    gvar-extended-shared-tuple-count gvar-extended-shared-tuples-offset
    gvar-extended-shared-tuples-offset-offset gvar-extended-version gvar-flags
    gvar-flags-long-offsets-p gvar-glyph-count
    gvar-glyph-variation-data-array-offset gvar-glyph-variation-data-offsets
-   gvar-p gvar-shared-tuple-count gvar-shared-tuples-offset
-   gvar-shared-tuples-offset-offset gvar-version
+   gvar-glyph-variation-data-offsets-start gvar-p gvar-shared-tuple-count
+   gvar-shared-tuples-offset gvar-shared-tuples-offset-offset gvar-version
    read-glyph-variation-data-header read-glyph-variation-data-header-extended
    read-gvar read-gvar-extended read-shared-tuples
    sanitize-glyph-variation-data-header
    sanitize-glyph-variation-data-header-extended sanitize-gvar
    sanitize-gvar-extended sanitize-shared-tuples shared-tuples shared-tuples-p
-   shared-tuples-tuples))
+   shared-tuples-tuples shared-tuples-tuples-start))
 
 
 (define-constant +gvar-flags-long-offsets+ 1)
@@ -53,10 +56,9 @@
 (declaim
  (inline gvar-version gvar-axis-count gvar-shared-tuple-count
   gvar-shared-tuples-offset gvar-shared-tuples-offset-offset gvar-glyph-count
-  gvar-flags gvar-glyph-variation-data-array-offset
-  gvar-glyph-variation-data-offsets gvar-version-raw gvar-axis-count-raw
-  gvar-shared-tuple-count-raw gvar-glyph-count-raw gvar-flags-raw
-  gvar-glyph-variation-data-array-offset-raw))
+  gvar-flags gvar-glyph-variation-data-array-offset gvar-version-raw
+  gvar-axis-count-raw gvar-shared-tuple-count-raw gvar-glyph-count-raw
+  gvar-flags-raw gvar-glyph-variation-data-array-offset-raw))
 
 
 (defun gvar-version (table)
@@ -140,6 +142,12 @@
   (font-data-read-u32 font-data (+ offset 16)))
 
 
+(defun gvar-glyph-variation-data-offsets-start (table)
+  "Byte position of the first U16-OR32 element; elements are variable-length."
+  (declare (type gvar table))
+  (+ (table-ref-offset table) 20))
+
+
 (defun sanitize-gvar (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
@@ -168,8 +176,8 @@
   gvar-extended-shared-tuple-count gvar-extended-shared-tuples-offset
   gvar-extended-shared-tuples-offset-offset gvar-extended-glyph-count
   gvar-extended-flags gvar-extended-glyph-variation-data-array-offset
-  gvar-extended-glyph-variation-data-offsets gvar-extended-version-raw
-  gvar-extended-axis-count-raw gvar-extended-shared-tuple-count-raw
+  gvar-extended-version-raw gvar-extended-axis-count-raw
+  gvar-extended-shared-tuple-count-raw gvar-extended-glyph-count-raw
   gvar-extended-flags-raw gvar-extended-glyph-variation-data-array-offset-raw))
 
 
@@ -216,32 +224,49 @@
        (+ (table-ref-offset table) off)))))
 
 
-(defun gvar-extended-flags (table)
+(defun gvar-extended-glyph-count (table)
+  "Number of glyphs, equal to numGlyphs in MAXP."
   (declare (type gvar-extended table))
-  (font-data-read-u16 (table-ref-font-data table)
+  (font-data-read-u24 (table-ref-font-data table)
                       (+ (table-ref-offset table) 12)))
 
 
+(defun gvar-extended-glyph-count-raw (font-data offset)
+  (font-data-read-u24 font-data (+ offset 12)))
+
+
+(defun gvar-extended-flags (table)
+  (declare (type gvar-extended table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 15)))
+
+
 (defun gvar-extended-flags-raw (font-data offset)
-  (font-data-read-u16 font-data (+ offset 12)))
+  (font-data-read-u16 font-data (+ offset 15)))
 
 
 (defun gvar-extended-glyph-variation-data-array-offset (table)
   (declare (type gvar-extended table))
   (font-data-read-u32 (table-ref-font-data table)
-                      (+ (table-ref-offset table) 14)))
+                      (+ (table-ref-offset table) 17)))
 
 
 (defun gvar-extended-glyph-variation-data-array-offset-raw (font-data offset)
-  (font-data-read-u32 font-data (+ offset 14)))
+  (font-data-read-u32 font-data (+ offset 17)))
+
+
+(defun gvar-extended-glyph-variation-data-offsets-start (table)
+  "Byte position of the first U16-OR32 element; elements are variable-length."
+  (declare (type gvar-extended table))
+  (+ (table-ref-offset table) 21))
 
 
 (defun sanitize-gvar-extended (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 18 length) (font-data-valid-range-p font-data offset 18))
-    (error 'font-out-of-bounds-error :pos offset :size 18 :length
+  (unless (and (<= 21 length) (font-data-valid-range-p font-data offset 21))
+    (error 'font-out-of-bounds-error :pos offset :size 21 :length
            (font-data-length font-data)))
   t)
 
@@ -259,7 +284,10 @@
       (%table-font-data %table-offset %table-length))))
 
 
-(declaim (inline shared-tuples-tuples))
+(defun shared-tuples-tuples-start (table)
+  "Byte position of the first TUPLE element; elements are variable-length."
+  (declare (type shared-tuples table))
+  (table-ref-offset table))
 
 
 (defun sanitize-shared-tuples (font-data offset length)
@@ -289,13 +317,24 @@
  (inline glyph-variation-data-header-tuple-variation-count
   glyph-variation-data-header-serialized-data-offset
   glyph-variation-data-header-serialized-data-offset-offset
-  glyph-variation-data-header-tuple-variation-headers))
+  glyph-variation-data-header-tuple-variation-count-raw))
+
+
+(defun glyph-variation-data-header-tuple-variation-count (table)
+  "A packed field. The high 4 bits are flags, and the low 12 bits are the number of tuple variation tables for this glyph. The number of tuple variation tables can be any number between 1 and 4095."
+  (declare (type glyph-variation-data-header table))
+  (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
+
+
+(defun glyph-variation-data-header-tuple-variation-count-raw (font-data offset)
+  (font-data-read-u16 font-data offset))
 
 
 (defun glyph-variation-data-header-serialized-data-offset-offset (table)
   "Offset from the start of the GlyphVariationData table to the serialized data"
   (declare (type glyph-variation-data-header table))
-  (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 2)))
 
 
 (defun glyph-variation-data-header-serialized-data-offset (table)
@@ -307,12 +346,18 @@
                        (+ (table-ref-offset table) off)))))
 
 
+(defun glyph-variation-data-header-tuple-variation-headers-start (table)
+  "Byte position of the first TUPLE-VARIATION-HEADER element; elements are variable-length."
+  (declare (type glyph-variation-data-header table))
+  (+ (table-ref-offset table) 4))
+
+
 (defun sanitize-glyph-variation-data-header (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 2 length) (font-data-valid-range-p font-data offset 2))
-    (error 'font-out-of-bounds-error :pos offset :size 2 :length
+  (unless (and (<= 4 length) (font-data-valid-range-p font-data offset 4))
+    (error 'font-out-of-bounds-error :pos offset :size 4 :length
            (font-data-length font-data)))
   t)
 
@@ -334,13 +379,24 @@
  (inline glyph-variation-data-header-extended-tuple-variation-count
   glyph-variation-data-header-extended-serialized-data-offset
   glyph-variation-data-header-extended-serialized-data-offset-offset
-  glyph-variation-data-header-extended-tuple-variation-headers))
+  glyph-variation-data-header-extended-tuple-variation-count-raw))
+
+
+(defun glyph-variation-data-header-extended-tuple-variation-count (table)
+  (declare (type glyph-variation-data-header-extended table))
+  (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
+
+
+(defun glyph-variation-data-header-extended-tuple-variation-count-raw
+       (font-data offset)
+  (font-data-read-u16 font-data offset))
 
 
 (defun glyph-variation-data-header-extended-serialized-data-offset-offset
        (table)
   (declare (type glyph-variation-data-header-extended table))
-  (font-data-read-u24 (table-ref-font-data table) (table-ref-offset table)))
+  (font-data-read-u24 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 2)))
 
 
 (defun glyph-variation-data-header-extended-serialized-data-offset (table)
@@ -353,12 +409,19 @@
                        (+ (table-ref-offset table) off)))))
 
 
+(defun glyph-variation-data-header-extended-tuple-variation-headers-start
+       (table)
+  "Byte position of the first TUPLE-VARIATION-HEADER element; elements are variable-length."
+  (declare (type glyph-variation-data-header-extended table))
+  (+ (table-ref-offset table) 5))
+
+
 (defun sanitize-glyph-variation-data-header-extended (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 3 length) (font-data-valid-range-p font-data offset 3))
-    (error 'font-out-of-bounds-error :pos offset :size 3 :length
+  (unless (and (<= 5 length) (font-data-valid-range-p font-data offset 5))
+    (error 'font-out-of-bounds-error :pos offset :size 5 :length
            (font-data-length font-data)))
   t)
 

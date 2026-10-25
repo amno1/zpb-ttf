@@ -141,7 +141,7 @@
   os2-y-subscript-x-offset os2-y-subscript-y-offset os2-y-superscript-x-size
   os2-y-superscript-y-size os2-y-superscript-x-offset
   os2-y-superscript-y-offset os2-y-strikeout-size os2-y-strikeout-position
-  os2-s-family-class os2-panose-10 os2-panose-10-count os2-ul-unicode-range-1
+  os2-s-family-class os2-panose-10-count os2-ul-unicode-range-1
   os2-ul-unicode-range-2 os2-ul-unicode-range-3 os2-ul-unicode-range-4
   os2-ach-vend-id os2-fs-selection os2-us-first-char-index
   os2-us-last-char-index os2-s-typo-ascender os2-s-typo-descender

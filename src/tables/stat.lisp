@@ -243,16 +243,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
-(declaim
- (inline axis-value-array-axis-value-offsets
-  axis-value-array-axis-value-offsets-count))
+(declaim (inline axis-value-array-axis-value-offsets-count))
 
 
 (defun axis-value-array-axis-value-offsets-count
        (table &optional axis-value-count)
   "Array of offsets to axis value tables, in bytes from the start of the axis value offsets array."
   (or axis-value-count
-      (max 0 (floor (- (table-ref-length table) (table-ref-offset table)) 2))))
+      (max 0
+           (floor
+            (- (+ (table-ref-offset table) (table-ref-length table))
+               (table-ref-offset table))
+            2))))
 
 
 (defun axis-value-array-axis-value-offsets-ref (table index)
@@ -602,9 +604,9 @@
 (declaim
  (inline axis-value-format4-format-table axis-value-format4-axis-count
   axis-value-format4-flags axis-value-format4-value-name-id
-  axis-value-format4-axis-values axis-value-format4-axis-values-count
-  axis-value-format4-format-table-raw axis-value-format4-axis-count-raw
-  axis-value-format4-flags-raw axis-value-format4-value-name-id-raw))
+  axis-value-format4-axis-values-count axis-value-format4-format-table-raw
+  axis-value-format4-axis-count-raw axis-value-format4-flags-raw
+  axis-value-format4-value-name-id-raw))
 
 
 (defun axis-value-format4-format-table (table)

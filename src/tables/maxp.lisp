@@ -46,11 +46,11 @@
 (defun maxp-version (table)
   "The version: 0x00005000 for version 0.5, 0x00010000 for version 1.0."
   (declare (type maxp table))
-  (font-data-read-fixed (table-ref-font-data table) (table-ref-offset table)))
+  (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
 
 
 (defun maxp-version-raw (font-data offset)
-  (font-data-read-fixed font-data offset))
+  (font-data-read-u32 font-data offset))
 
 
 (defun maxp-num-glyphs (table)
@@ -252,8 +252,8 @@
   maxp-extended-max-instruction-defs maxp-extended-max-stack-elements
   maxp-extended-max-size-of-instructions maxp-extended-max-component-elements
   maxp-extended-max-component-depth maxp-extended-version-raw
-  maxp-extended-max-points-raw maxp-extended-max-contours-raw
-  maxp-extended-max-composite-points-raw
+  maxp-extended-num-glyphs-raw maxp-extended-max-points-raw
+  maxp-extended-max-contours-raw maxp-extended-max-composite-points-raw
   maxp-extended-max-composite-contours-raw maxp-extended-max-zones-raw
   maxp-extended-max-twilight-points-raw maxp-extended-max-storage-raw
   maxp-extended-max-function-defs-raw maxp-extended-max-instruction-defs-raw
@@ -265,175 +265,186 @@
 
 (defun maxp-extended-version (table)
   (declare (type maxp-extended table))
-  (font-data-read-fixed (table-ref-font-data table) (table-ref-offset table)))
+  (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
 
 
 (defun maxp-extended-version-raw (font-data offset)
-  (font-data-read-fixed font-data offset))
+  (font-data-read-u32 font-data offset))
+
+
+(defun maxp-extended-num-glyphs (table)
+  "The number of glyphs in the font."
+  (declare (type maxp-extended table))
+  (font-data-read-u24 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 4)))
+
+
+(defun maxp-extended-num-glyphs-raw (font-data offset)
+  (font-data-read-u24 font-data (+ offset 4)))
 
 
 (defun maxp-extended-max-points (table)
   "Maximum points in a non-composite glyph."
   (declare (type maxp-extended table))
-  (when (>= (table-ref-length table) 6)
+  (when (>= (table-ref-length table) 9)
     (font-data-read-u16 (table-ref-font-data table)
-                        (+ (table-ref-offset table) 4))))
+                        (+ (table-ref-offset table) 7))))
 
 
 (defun maxp-extended-max-points-raw (font-data offset)
-  (font-data-read-u16 font-data (+ offset 4)))
+  (font-data-read-u16 font-data (+ offset 7)))
 
 
 (defun maxp-extended-max-contours (table)
   "Maximum contours in a non-composite glyph."
   (declare (type maxp-extended table))
-  (when (>= (table-ref-length table) 8)
+  (when (>= (table-ref-length table) 11)
     (font-data-read-u16 (table-ref-font-data table)
-                        (+ (table-ref-offset table) 6))))
+                        (+ (table-ref-offset table) 9))))
 
 
 (defun maxp-extended-max-contours-raw (font-data offset)
-  (font-data-read-u16 font-data (+ offset 6)))
+  (font-data-read-u16 font-data (+ offset 9)))
 
 
 (defun maxp-extended-max-composite-points (table)
   "Maximum points in a composite glyph."
   (declare (type maxp-extended table))
-  (when (>= (table-ref-length table) 10)
+  (when (>= (table-ref-length table) 13)
     (font-data-read-u16 (table-ref-font-data table)
-                        (+ (table-ref-offset table) 8))))
+                        (+ (table-ref-offset table) 11))))
 
 
 (defun maxp-extended-max-composite-points-raw (font-data offset)
-  (font-data-read-u16 font-data (+ offset 8)))
+  (font-data-read-u16 font-data (+ offset 11)))
 
 
 (defun maxp-extended-max-composite-contours (table)
   "Maximum contours in a composite glyph."
   (declare (type maxp-extended table))
-  (when (>= (table-ref-length table) 12)
+  (when (>= (table-ref-length table) 15)
     (font-data-read-u16 (table-ref-font-data table)
-                        (+ (table-ref-offset table) 10))))
+                        (+ (table-ref-offset table) 13))))
 
 
 (defun maxp-extended-max-composite-contours-raw (font-data offset)
-  (font-data-read-u16 font-data (+ offset 10)))
+  (font-data-read-u16 font-data (+ offset 13)))
 
 
 (defun maxp-extended-max-zones (table)
   "Number of zones used by instructions."
   (declare (type maxp-extended table))
-  (when (>= (table-ref-length table) 14)
+  (when (>= (table-ref-length table) 17)
     (font-data-read-u16 (table-ref-font-data table)
-                        (+ (table-ref-offset table) 12))))
+                        (+ (table-ref-offset table) 15))))
 
 
 (defun maxp-extended-max-zones-raw (font-data offset)
-  (font-data-read-u16 font-data (+ offset 12)))
+  (font-data-read-u16 font-data (+ offset 15)))
 
 
 (defun maxp-extended-max-twilight-points (table)
   "Maximum points in the twilight zone."
   (declare (type maxp-extended table))
-  (when (>= (table-ref-length table) 16)
+  (when (>= (table-ref-length table) 19)
     (font-data-read-u16 (table-ref-font-data table)
-                        (+ (table-ref-offset table) 14))))
+                        (+ (table-ref-offset table) 17))))
 
 
 (defun maxp-extended-max-twilight-points-raw (font-data offset)
-  (font-data-read-u16 font-data (+ offset 14)))
+  (font-data-read-u16 font-data (+ offset 17)))
 
 
 (defun maxp-extended-max-storage (table)
   "Number of storage locations."
   (declare (type maxp-extended table))
-  (when (>= (table-ref-length table) 18)
+  (when (>= (table-ref-length table) 21)
     (font-data-read-u16 (table-ref-font-data table)
-                        (+ (table-ref-offset table) 16))))
+                        (+ (table-ref-offset table) 19))))
 
 
 (defun maxp-extended-max-storage-raw (font-data offset)
-  (font-data-read-u16 font-data (+ offset 16)))
+  (font-data-read-u16 font-data (+ offset 19)))
 
 
 (defun maxp-extended-max-function-defs (table)
   "Number of function definitions."
   (declare (type maxp-extended table))
-  (when (>= (table-ref-length table) 20)
+  (when (>= (table-ref-length table) 23)
     (font-data-read-u16 (table-ref-font-data table)
-                        (+ (table-ref-offset table) 18))))
+                        (+ (table-ref-offset table) 21))))
 
 
 (defun maxp-extended-max-function-defs-raw (font-data offset)
-  (font-data-read-u16 font-data (+ offset 18)))
+  (font-data-read-u16 font-data (+ offset 21)))
 
 
 (defun maxp-extended-max-instruction-defs (table)
   "Number of instruction definitions."
   (declare (type maxp-extended table))
-  (when (>= (table-ref-length table) 22)
+  (when (>= (table-ref-length table) 25)
     (font-data-read-u16 (table-ref-font-data table)
-                        (+ (table-ref-offset table) 20))))
+                        (+ (table-ref-offset table) 23))))
 
 
 (defun maxp-extended-max-instruction-defs-raw (font-data offset)
-  (font-data-read-u16 font-data (+ offset 20)))
+  (font-data-read-u16 font-data (+ offset 23)))
 
 
 (defun maxp-extended-max-stack-elements (table)
   "Maximum interpreter stack depth."
   (declare (type maxp-extended table))
-  (when (>= (table-ref-length table) 24)
+  (when (>= (table-ref-length table) 27)
     (font-data-read-u16 (table-ref-font-data table)
-                        (+ (table-ref-offset table) 22))))
+                        (+ (table-ref-offset table) 25))))
 
 
 (defun maxp-extended-max-stack-elements-raw (font-data offset)
-  (font-data-read-u16 font-data (+ offset 22)))
+  (font-data-read-u16 font-data (+ offset 25)))
 
 
 (defun maxp-extended-max-size-of-instructions (table)
   "Maximum glyph instruction byte count."
   (declare (type maxp-extended table))
-  (when (>= (table-ref-length table) 26)
+  (when (>= (table-ref-length table) 29)
     (font-data-read-u16 (table-ref-font-data table)
-                        (+ (table-ref-offset table) 24))))
+                        (+ (table-ref-offset table) 27))))
 
 
 (defun maxp-extended-max-size-of-instructions-raw (font-data offset)
-  (font-data-read-u16 font-data (+ offset 24)))
+  (font-data-read-u16 font-data (+ offset 27)))
 
 
 (defun maxp-extended-max-component-elements (table)
   "Maximum top-level component count."
   (declare (type maxp-extended table))
-  (when (>= (table-ref-length table) 28)
+  (when (>= (table-ref-length table) 31)
     (font-data-read-u16 (table-ref-font-data table)
-                        (+ (table-ref-offset table) 26))))
+                        (+ (table-ref-offset table) 29))))
 
 
 (defun maxp-extended-max-component-elements-raw (font-data offset)
-  (font-data-read-u16 font-data (+ offset 26)))
+  (font-data-read-u16 font-data (+ offset 29)))
 
 
 (defun maxp-extended-max-component-depth (table)
   "Maximum component recursion depth."
   (declare (type maxp-extended table))
-  (when (>= (table-ref-length table) 30)
+  (when (>= (table-ref-length table) 33)
     (font-data-read-u16 (table-ref-font-data table)
-                        (+ (table-ref-offset table) 28))))
+                        (+ (table-ref-offset table) 31))))
 
 
 (defun maxp-extended-max-component-depth-raw (font-data offset)
-  (font-data-read-u16 font-data (+ offset 28)))
+  (font-data-read-u16 font-data (+ offset 31)))
 
 
 (defun sanitize-maxp-extended (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 4 length) (font-data-valid-range-p font-data offset 4))
-    (error 'font-out-of-bounds-error :pos offset :size 4 :length
+  (unless (and (<= 7 length) (font-data-valid-range-p font-data offset 7))
+    (error 'font-out-of-bounds-error :pos offset :size 7 :length
            (font-data-length font-data)))
   t)
 

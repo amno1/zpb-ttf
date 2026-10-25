@@ -9,15 +9,15 @@
 (export
  '(+variation-axis-record-size+ axis-instance-arrays axis-instance-arrays-axes
    axis-instance-arrays-axes-count axis-instance-arrays-axes-ref
-   axis-instance-arrays-instances axis-instance-arrays-p fvar fvar--reserved
-   fvar-axis-count fvar-axis-instance-arrays-offset
-   fvar-axis-instance-arrays-offset-offset fvar-axis-size fvar-instance-count
-   fvar-instance-size fvar-p fvar-version read-axis-instance-arrays read-fvar
-   sanitize-axis-instance-arrays sanitize-fvar variation-axis-record
-   variation-axis-record-axis-name-id variation-axis-record-axis-tag
-   variation-axis-record-default-value variation-axis-record-flags
-   variation-axis-record-max-value variation-axis-record-min-value
-   variation-axis-record-p))
+   axis-instance-arrays-instances axis-instance-arrays-instances-start
+   axis-instance-arrays-p fvar fvar--reserved fvar-axis-count
+   fvar-axis-instance-arrays-offset fvar-axis-instance-arrays-offset-offset
+   fvar-axis-size fvar-instance-count fvar-instance-size fvar-p fvar-version
+   read-axis-instance-arrays read-fvar sanitize-axis-instance-arrays
+   sanitize-fvar variation-axis-record variation-axis-record-axis-name-id
+   variation-axis-record-axis-tag variation-axis-record-default-value
+   variation-axis-record-flags variation-axis-record-max-value
+   variation-axis-record-min-value variation-axis-record-p))
 
 
 (defstruct
@@ -194,15 +194,17 @@
       (%table-font-data %table-offset %table-length))))
 
 
-(declaim
- (inline axis-instance-arrays-axes axis-instance-arrays-axes-count
-  axis-instance-arrays-instances))
+(declaim (inline axis-instance-arrays-axes-count))
 
 
 (defun axis-instance-arrays-axes-count (table &optional axis-count)
   "Variation axis record array."
   (or axis-count
-      (max 0 (floor (- (table-ref-length table) (table-ref-offset table)) 20))))
+      (max 0
+           (floor
+            (- (+ (table-ref-offset table) (table-ref-length table))
+               (table-ref-offset table))
+            20))))
 
 
 (defun axis-instance-arrays-axes-ref (table index)
@@ -215,6 +217,12 @@
       (error 'font-out-of-bounds-error :pos pos :size 20 :length
              (table-ref-length table)))
     (%make-variation-axis-record (table-ref-font-data table) pos)))
+
+
+(defun axis-instance-arrays-instances-start (table)
+  "Byte position of the first INSTANCE-RECORD element; elements are variable-length."
+  (declare (type axis-instance-arrays table))
+  (+ (table-ref-offset table) (* (axis-instance-arrays-axes-count table) 20)))
 
 
 (defun sanitize-axis-instance-arrays (font-data offset length)

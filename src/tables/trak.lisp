@@ -148,8 +148,8 @@
 
 (declaim
  (inline track-data-n-tracks track-data-n-sizes track-data-size-table-offset
-  track-data-track-table track-data-track-table-count track-data-n-tracks-raw
-  track-data-n-sizes-raw track-data-size-table-offset-raw))
+  track-data-track-table-count track-data-n-tracks-raw track-data-n-sizes-raw
+  track-data-size-table-offset-raw))
 
 
 (defun track-data-n-tracks (table)

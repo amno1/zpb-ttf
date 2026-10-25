@@ -25,20 +25,11 @@
 (defun make-transformer (a b c d e f)
   "Given the elements of the transformation matrix specified by A, B,
 C, D, E, and F, return a function of two arguments that returns the
-arguments transformed as multiple values."
-  (let ((m (max (abs a) (abs b)))
-        (n (max (abs c) (abs d))))
-    (when (<= (abs (- (abs a) (abs b))) 33/65536)
-      (setf m (* m 2)))
-    (when (<= (abs (- (abs c) (abs d))) 33/65536)
-      (setf n (* n 2)))
-    (lambda (x y)
-      (values (round (* m (+ (* (/ a m) x)
-                             (* (/ c m) y)
-                             e)))
-              (round (* n (+ (* (/ b n) x)
-                             (* (/ d n) y)
-                             f)))))))
+arguments transformed as multiple values. The offsets E and F are
+applied unscaled, as the OpenType spec requires by default."
+  (lambda (x y)
+    (values (round (+ (* a x) (* c y) e))
+            (round (+ (* b x) (* d y) f)))))
 
 (defun transform-contours (fn contours)
   (loop for contour across contours do

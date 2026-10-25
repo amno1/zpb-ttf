@@ -10,12 +10,12 @@
  '(+contextual-entry-data-size+ +insertion-entry-data-size+ +morx-feature-size+
    chain chain-chain-length chain-default-flags chain-features
    chain-features-count chain-features-ref chain-n-feature-entries
-   chain-n-subtables chain-p chain-subtables contextual-entry-data
-   contextual-entry-data-current-index contextual-entry-data-mark-index
-   contextual-entry-data-p insertion-entry-data
-   insertion-entry-data-current-insert-index
+   chain-n-subtables chain-p chain-subtables chain-subtables-start
+   contextual-entry-data contextual-entry-data-current-index
+   contextual-entry-data-mark-index contextual-entry-data-p
+   insertion-entry-data insertion-entry-data-current-insert-index
    insertion-entry-data-marked-insert-index insertion-entry-data-p morx
-   morx-chains morx-feature morx-feature-disable-flags
+   morx-chains morx-chains-start morx-feature morx-feature-disable-flags
    morx-feature-enable-flags morx-feature-feature-settings
    morx-feature-feature-type morx-feature-p morx-n-chains morx-p morx-unused
    morx-version read-chain read-morx read-subtable sanitize-chain sanitize-morx
@@ -118,7 +118,7 @@
 
 
 (declaim
- (inline morx-version morx-unused morx-n-chains morx-chains morx-version-raw
+ (inline morx-version morx-unused morx-n-chains morx-version-raw
   morx-unused-raw morx-n-chains-raw))
 
 
@@ -154,6 +154,12 @@
   (font-data-read-u32 font-data (+ offset 4)))
 
 
+(defun morx-chains-start (table)
+  "Byte position of the first CHAIN element; elements are variable-length."
+  (declare (type morx table))
+  (+ (table-ref-offset table) 8))
+
+
 (defun sanitize-morx (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
@@ -178,9 +184,8 @@
 
 (declaim
  (inline chain-default-flags chain-chain-length chain-n-feature-entries
-  chain-n-subtables chain-features chain-features-count chain-subtables
-  chain-default-flags-raw chain-chain-length-raw chain-n-feature-entries-raw
-  chain-n-subtables-raw))
+  chain-n-subtables chain-features-count chain-default-flags-raw
+  chain-chain-length-raw chain-n-feature-entries-raw chain-n-subtables-raw))
 
 
 (defun chain-default-flags (table)
@@ -243,6 +248,12 @@
     (%make-morx-feature (table-ref-font-data table) pos)))
 
 
+(defun chain-subtables-start (table)
+  "Byte position of the first SUBTABLE element; elements are variable-length."
+  (declare (type chain table))
+  (+ (table-ref-offset table) 16 (* (chain-features-count table) 12)))
+
+
 (defun sanitize-chain (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
@@ -274,7 +285,7 @@
 
 (declaim
  (inline subtable-length subtable-coverage subtable-sub-feature-flags
-  subtable-data subtable-data-count subtable-length-raw subtable-coverage-raw
+  subtable-data-count subtable-length-raw subtable-coverage-raw
   subtable-sub-feature-flags-raw))
 
 
@@ -313,7 +324,10 @@
 (defun subtable-data-count (table)
   "Data for specific subtable."
   (max 0
-       (floor (- (table-ref-length table) (+ (table-ref-offset table) 12)) 1)))
+       (floor
+        (- (+ (table-ref-offset table) (table-ref-length table))
+           (+ (table-ref-offset table) 12))
+        1)))
 
 
 (defun subtable-data-ref (table index)

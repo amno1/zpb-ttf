@@ -708,7 +708,7 @@
      (:constructor %make-range-record2 (%record-font-data %record-offset))))
 
 
-(define-constant +range-record2-size+ 6)
+(define-constant +range-record2-size+ 9)
 
 
 (declaim
@@ -726,6 +726,12 @@
   "Last glyph ID in the range"
   (declare (type range-record2 rec))
   (font-data-read-u24 (record-ref-font-data rec) (+ (record-ref-offset rec) 3)))
+
+
+(defun range-record2-start-coverage-index (rec)
+  "Coverage Index of first glyph ID in range"
+  (declare (type range-record2 rec))
+  (font-data-read-u24 (record-ref-font-data rec) (+ (record-ref-offset rec) 6)))
 
 
 (defstruct
@@ -767,8 +773,8 @@
 
 
 (declaim
- (inline script-list-script-count script-list-script-records
-  script-list-script-records-count script-list-script-count-raw))
+ (inline script-list-script-count script-list-script-records-count
+  script-list-script-count-raw))
 
 
 (defun script-list-script-count (table)
@@ -829,7 +835,7 @@
 
 (declaim
  (inline script-default-lang-sys-offset script-default-lang-sys-offset-offset
-  script-lang-sys-count script-lang-sys-records script-lang-sys-records-count
+  script-lang-sys-count script-lang-sys-records-count
   script-lang-sys-count-raw))
 
 
@@ -907,9 +913,9 @@
 
 (declaim
  (inline lang-sys-lookup-order-offset lang-sys-required-feature-index
-  lang-sys-feature-index-count lang-sys-feature-indices
-  lang-sys-feature-indices-count lang-sys-lookup-order-offset-raw
-  lang-sys-required-feature-index-raw lang-sys-feature-index-count-raw))
+  lang-sys-feature-index-count lang-sys-feature-indices-count
+  lang-sys-lookup-order-offset-raw lang-sys-required-feature-index-raw
+  lang-sys-feature-index-count-raw))
 
 
 (defun lang-sys-lookup-order-offset (table)
@@ -991,8 +997,8 @@
 
 
 (declaim
- (inline feature-list-feature-count feature-list-feature-records
-  feature-list-feature-records-count feature-list-feature-count-raw))
+ (inline feature-list-feature-count feature-list-feature-records-count
+  feature-list-feature-count-raw))
 
 
 (defun feature-list-feature-count (table)
@@ -1053,8 +1059,8 @@
 
 (declaim
  (inline feature-feature-params-offset feature-feature-params-offset-offset
-  feature-lookup-index-count feature-lookup-list-indices
-  feature-lookup-list-indices-count feature-lookup-index-count-raw))
+  feature-lookup-index-count feature-lookup-list-indices-count
+  feature-lookup-index-count-raw))
 
 
 (defun feature-feature-params-offset-offset (table)
@@ -1130,8 +1136,8 @@
 
 
 (declaim
- (inline lookup-list-lookup-count lookup-list-lookup-offsets
-  lookup-list-lookup-offsets-count lookup-list-lookup-count-raw))
+ (inline lookup-list-lookup-count lookup-list-lookup-offsets-count
+  lookup-list-lookup-count-raw))
 
 
 (defun lookup-list-lookup-count (table)
@@ -1195,8 +1201,8 @@
 
 (declaim
  (inline lookup-lookup-type lookup-lookup-flag lookup-sub-table-count
-  lookup-subtable-offsets lookup-subtable-offsets-count
-  lookup-mark-filtering-set lookup-lookup-type-raw lookup-sub-table-count-raw))
+  lookup-subtable-offsets-count lookup-mark-filtering-set
+  lookup-lookup-type-raw lookup-lookup-flag-raw lookup-sub-table-count-raw))
 
 
 (defun lookup-lookup-type (table)
@@ -1209,15 +1215,26 @@
   (font-data-read-u16 font-data offset))
 
 
-(defun lookup-sub-table-count (table)
-  "Number of subtables for this lookup"
+(defun lookup-lookup-flag (table)
+  "Lookup qualifiers"
   (declare (type lookup table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 2)))
 
 
-(defun lookup-sub-table-count-raw (font-data offset)
+(defun lookup-lookup-flag-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
+
+
+(defun lookup-sub-table-count (table)
+  "Number of subtables for this lookup"
+  (declare (type lookup table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 4)))
+
+
+(defun lookup-sub-table-count-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 4)))
 
 
 (defun lookup-subtable-offsets-count (table)
@@ -1229,7 +1246,7 @@
   "Array of offsets to lookup subtables, from beginning of Lookup table"
   (declare (type lookup table)
            (type (unsigned-byte 32) index))
-  (let* ((pos (+ (+ (table-ref-offset table) 4) (* index 2))))
+  (let* ((pos (+ (+ (table-ref-offset table) 6) (* index 2))))
     (unless
         (<= (+ pos 2) (+ (table-ref-offset table) (table-ref-length table)))
       (error 'font-out-of-bounds-error :pos pos :size 2 :length
@@ -1243,23 +1260,24 @@
 (defun lookup-mark-filtering-set (table)
   "Index (base 0) into GDEF mark glyph sets structure. This field is only present if the USE_MARK_FILTERING_SET lookup flag is set."
   (declare (type lookup table))
-  (font-data-read-u16 (table-ref-font-data table)
-                      (+ (table-ref-offset table) 4
-                         (* (lookup-subtable-offsets-count table) 2))))
+  (when (logtest 16 (lookup-lookup-flag table))
+    (font-data-read-u16 (table-ref-font-data table)
+                        (+ (table-ref-offset table) 6
+                           (* (lookup-subtable-offsets-count table) 2)))))
 
 
 (defun sanitize-lookup (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 4 length) (font-data-valid-range-p font-data offset 4))
-    (error 'font-out-of-bounds-error :pos offset :size 4 :length
+  (unless (and (<= 6 length) (font-data-valid-range-p font-data offset 6))
+    (error 'font-out-of-bounds-error :pos offset :size 6 :length
            (font-data-length font-data)))
   (let ((cnt (lookup-sub-table-count-raw font-data offset)))
     (unless
-        (and (<= (+ 4 (* cnt 2)) length)
-             (font-data-valid-range-p font-data offset (+ 4 (* cnt 2))))
-      (error 'font-out-of-bounds-error :pos offset :size (+ 4 (* cnt 2))
+        (and (<= (+ 6 (* cnt 2)) length)
+             (font-data-valid-range-p font-data offset (+ 6 (* cnt 2))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 6 (* cnt 2))
              :length (font-data-length font-data))))
   t)
 
@@ -1279,8 +1297,8 @@
 
 (declaim
  (inline coverage-format1-coverage-format coverage-format1-glyph-count
-  coverage-format1-glyph-array coverage-format1-glyph-array-count
-  coverage-format1-coverage-format-raw coverage-format1-glyph-count-raw))
+  coverage-format1-glyph-array-count coverage-format1-coverage-format-raw
+  coverage-format1-glyph-count-raw))
 
 
 (defun coverage-format1-coverage-format (table)
@@ -1352,8 +1370,8 @@
 
 (declaim
  (inline coverage-format2-coverage-format coverage-format2-range-count
-  coverage-format2-range-records coverage-format2-range-records-count
-  coverage-format2-coverage-format-raw coverage-format2-range-count-raw))
+  coverage-format2-range-records-count coverage-format2-coverage-format-raw
+  coverage-format2-range-count-raw))
 
 
 (defun coverage-format2-coverage-format (table)
@@ -1439,9 +1457,9 @@
 
 (declaim
  (inline class-def-format1-class-format class-def-format1-start-glyph-id
-  class-def-format1-glyph-count class-def-format1-class-value-array
-  class-def-format1-class-value-array-count class-def-format1-class-format-raw
-  class-def-format1-start-glyph-id-raw class-def-format1-glyph-count-raw))
+  class-def-format1-glyph-count class-def-format1-class-value-array-count
+  class-def-format1-class-format-raw class-def-format1-start-glyph-id-raw
+  class-def-format1-glyph-count-raw))
 
 
 (defun class-def-format1-class-format (table)
@@ -1524,7 +1542,6 @@
 
 (declaim
  (inline class-def-format2-class-format class-def-format2-class-range-count
-  class-def-format2-class-range-records
   class-def-format2-class-range-records-count
   class-def-format2-class-format-raw class-def-format2-class-range-count-raw))
 
@@ -1615,7 +1632,6 @@
   sequence-context-format1-coverage-offset
   sequence-context-format1-coverage-offset-offset
   sequence-context-format1-seq-rule-set-count
-  sequence-context-format1-seq-rule-set-offsets
   sequence-context-format1-seq-rule-set-offsets-count
   sequence-context-format1-format-table-raw
   sequence-context-format1-seq-rule-set-count-raw))
@@ -1709,7 +1725,7 @@
 
 
 (declaim
- (inline sequence-rule-set-seq-rule-count sequence-rule-set-seq-rule-offsets
+ (inline sequence-rule-set-seq-rule-count
   sequence-rule-set-seq-rule-offsets-count
   sequence-rule-set-seq-rule-count-raw))
 
@@ -1775,8 +1791,7 @@
 
 (declaim
  (inline sequence-rule-glyph-count sequence-rule-seq-lookup-count
-  sequence-rule-input-sequence sequence-rule-input-sequence-count
-  sequence-rule-seq-lookup-records sequence-rule-seq-lookup-records-count
+  sequence-rule-input-sequence-count sequence-rule-seq-lookup-records-count
   sequence-rule-glyph-count-raw sequence-rule-seq-lookup-count-raw))
 
 
@@ -1869,7 +1884,6 @@
   sequence-context-format2-class-def-offset
   sequence-context-format2-class-def-offset-offset
   sequence-context-format2-class-seq-rule-set-count
-  sequence-context-format2-class-seq-rule-set-offsets
   sequence-context-format2-class-seq-rule-set-offsets-count
   sequence-context-format2-format-table-raw
   sequence-context-format2-class-seq-rule-set-count-raw))
@@ -1981,7 +1995,6 @@
 
 (declaim
  (inline class-sequence-rule-set-class-seq-rule-count
-  class-sequence-rule-set-class-seq-rule-offsets
   class-sequence-rule-set-class-seq-rule-offsets-count
   class-sequence-rule-set-class-seq-rule-count-raw))
 
@@ -2048,8 +2061,7 @@
 
 (declaim
  (inline class-sequence-rule-glyph-count class-sequence-rule-seq-lookup-count
-  class-sequence-rule-input-sequence class-sequence-rule-input-sequence-count
-  class-sequence-rule-seq-lookup-records
+  class-sequence-rule-input-sequence-count
   class-sequence-rule-seq-lookup-records-count
   class-sequence-rule-glyph-count-raw class-sequence-rule-seq-lookup-count-raw))
 
@@ -2140,9 +2152,7 @@
  (inline sequence-context-format3-format-table
   sequence-context-format3-glyph-count
   sequence-context-format3-seq-lookup-count
-  sequence-context-format3-coverage-offsets
   sequence-context-format3-coverage-offsets-count
-  sequence-context-format3-seq-lookup-records
   sequence-context-format3-seq-lookup-records-count
   sequence-context-format3-format-table-raw
   sequence-context-format3-glyph-count-raw
@@ -2273,7 +2283,6 @@
   chained-sequence-context-format1-coverage-offset
   chained-sequence-context-format1-coverage-offset-offset
   chained-sequence-context-format1-chained-seq-rule-set-count
-  chained-sequence-context-format1-chained-seq-rule-set-offsets
   chained-sequence-context-format1-chained-seq-rule-set-offsets-count
   chained-sequence-context-format1-format-table-raw
   chained-sequence-context-format1-chained-seq-rule-set-count-raw))
@@ -2372,7 +2381,6 @@
 
 (declaim
  (inline chained-sequence-rule-set-chained-seq-rule-count
-  chained-sequence-rule-set-chained-seq-rule-offsets
   chained-sequence-rule-set-chained-seq-rule-offsets-count
   chained-sequence-rule-set-chained-seq-rule-count-raw))
 
@@ -2440,15 +2448,12 @@
 
 (declaim
  (inline chained-sequence-rule-backtrack-glyph-count
-  chained-sequence-rule-backtrack-sequence
   chained-sequence-rule-backtrack-sequence-count
-  chained-sequence-rule-input-glyph-count chained-sequence-rule-input-sequence
+  chained-sequence-rule-input-glyph-count
   chained-sequence-rule-input-sequence-count
   chained-sequence-rule-lookahead-glyph-count
-  chained-sequence-rule-lookahead-sequence
   chained-sequence-rule-lookahead-sequence-count
   chained-sequence-rule-seq-lookup-count
-  chained-sequence-rule-seq-lookup-records
   chained-sequence-rule-seq-lookup-records-count
   chained-sequence-rule-backtrack-glyph-count-raw))
 
@@ -2628,7 +2633,6 @@
   chained-sequence-context-format2-lookahead-class-def-offset
   chained-sequence-context-format2-lookahead-class-def-offset-offset
   chained-sequence-context-format2-chained-class-seq-rule-set-count
-  chained-sequence-context-format2-chained-class-seq-rule-set-offsets
   chained-sequence-context-format2-chained-class-seq-rule-set-offsets-count
   chained-sequence-context-format2-format-table-raw
   chained-sequence-context-format2-chained-class-seq-rule-set-count-raw))
@@ -2784,7 +2788,6 @@
 
 (declaim
  (inline chained-class-sequence-rule-set-chained-class-seq-rule-count
-  chained-class-sequence-rule-set-chained-class-seq-rule-offsets
   chained-class-sequence-rule-set-chained-class-seq-rule-offsets-count
   chained-class-sequence-rule-set-chained-class-seq-rule-count-raw))
 
@@ -2855,16 +2858,12 @@
 
 (declaim
  (inline chained-class-sequence-rule-backtrack-glyph-count
-  chained-class-sequence-rule-backtrack-sequence
   chained-class-sequence-rule-backtrack-sequence-count
   chained-class-sequence-rule-input-glyph-count
-  chained-class-sequence-rule-input-sequence
   chained-class-sequence-rule-input-sequence-count
   chained-class-sequence-rule-lookahead-glyph-count
-  chained-class-sequence-rule-lookahead-sequence
   chained-class-sequence-rule-lookahead-sequence-count
   chained-class-sequence-rule-seq-lookup-count
-  chained-class-sequence-rule-seq-lookup-records
   chained-class-sequence-rule-seq-lookup-records-count
   chained-class-sequence-rule-backtrack-glyph-count-raw))
 
@@ -3044,16 +3043,12 @@
 (declaim
  (inline chained-sequence-context-format3-format-table
   chained-sequence-context-format3-backtrack-glyph-count
-  chained-sequence-context-format3-backtrack-coverage-offsets
   chained-sequence-context-format3-backtrack-coverage-offsets-count
   chained-sequence-context-format3-input-glyph-count
-  chained-sequence-context-format3-input-coverage-offsets
   chained-sequence-context-format3-input-coverage-offsets-count
   chained-sequence-context-format3-lookahead-glyph-count
-  chained-sequence-context-format3-lookahead-coverage-offsets
   chained-sequence-context-format3-lookahead-coverage-offsets-count
   chained-sequence-context-format3-seq-lookup-count
-  chained-sequence-context-format3-seq-lookup-records
   chained-sequence-context-format3-seq-lookup-records-count
   chained-sequence-context-format3-format-table-raw
   chained-sequence-context-format3-backtrack-glyph-count-raw))
@@ -3290,8 +3285,8 @@
 
 (declaim
  (inline device-start-size device-end-size device-delta-format
-  device-delta-value device-delta-value-count device-start-size-raw
-  device-end-size-raw device-delta-format-raw))
+  device-delta-value-count device-start-size-raw device-end-size-raw
+  device-delta-format-raw))
 
 
 (defun device-start-size (table)
@@ -3330,8 +3325,10 @@
   "Array of compressed data"
   (or count
       (max 0
-           (floor (- (table-ref-length table) (+ (table-ref-offset table) 6))
-                  2))))
+           (floor
+            (- (+ (table-ref-offset table) (table-ref-length table))
+               (+ (table-ref-offset table) 6))
+            2))))
 
 
 (defun device-delta-value-ref (table index)
@@ -3482,10 +3479,8 @@
 (declaim
  (inline feature-variations-version
   feature-variations-feature-variation-record-count
-  feature-variations-feature-variation-records
   feature-variations-feature-variation-records-count
   feature-variations-lookup-variation-record-count
-  feature-variations-lookup-variation-records
   feature-variations-lookup-variation-records-count
   feature-variations-version-raw
   feature-variations-feature-variation-record-count-raw))
@@ -3595,7 +3590,6 @@
 (declaim
  (inline feature-lookups-version feature-lookups-flags
   feature-lookups-lookup-condition-count
-  feature-lookups-lookup-condition-records
   feature-lookups-lookup-condition-records-count feature-lookups-version-raw
   feature-lookups-flags-raw feature-lookups-lookup-condition-count-raw))
 
@@ -3674,7 +3668,7 @@
 
 
 (declaim
- (inline lookup-index-list-lookup-index-count lookup-index-list-lookup-indices
+ (inline lookup-index-list-lookup-index-count
   lookup-index-list-lookup-indices-count
   lookup-index-list-lookup-index-count-raw))
 
@@ -3733,8 +3727,8 @@
 
 
 (declaim
- (inline condition-set-condition-count condition-set-condition-offsets
-  condition-set-condition-offsets-count condition-set-condition-count-raw))
+ (inline condition-set-condition-count condition-set-condition-offsets-count
+  condition-set-condition-count-raw))
 
 
 (defun condition-set-condition-count (table)
@@ -3948,8 +3942,8 @@
 
 (declaim
  (inline condition-format3-format-table condition-format3-condition-count
-  condition-format3-condition-offsets condition-format3-condition-offsets-count
-  condition-format3-format-table-raw condition-format3-condition-count-raw))
+  condition-format3-condition-offsets-count condition-format3-format-table-raw
+  condition-format3-condition-count-raw))
 
 
 (defun condition-format3-format-table (table)
@@ -4024,8 +4018,8 @@
 
 (declaim
  (inline condition-format4-format-table condition-format4-condition-count
-  condition-format4-condition-offsets condition-format4-condition-offsets-count
-  condition-format4-format-table-raw condition-format4-condition-count-raw))
+  condition-format4-condition-offsets-count condition-format4-format-table-raw
+  condition-format4-condition-count-raw))
 
 
 (defun condition-format4-format-table (table)
@@ -4155,7 +4149,6 @@
 (declaim
  (inline feature-table-substitution-version
   feature-table-substitution-substitution-count
-  feature-table-substitution-substitutions
   feature-table-substitution-substitutions-count
   feature-table-substitution-version-raw
   feature-table-substitution-substitution-count-raw))
@@ -4367,7 +4360,7 @@
   character-variant-params-sample-text-name-id
   character-variant-params-num-named-parameters
   character-variant-params-first-param-ui-label-name-id
-  character-variant-params-char-count character-variant-params-character-table
+  character-variant-params-char-count
   character-variant-params-character-table-count
   character-variant-params-format-table-raw
   character-variant-params-feat-ui-label-name-id-raw
@@ -4461,6 +4454,18 @@
   (character-variant-params-char-count table))
 
 
+(defun character-variant-params-character-table-ref (table index)
+  "The Unicode Scalar Value of the characters for which this feature provides glyph variants."
+  (declare (type character-variant-params table)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (+ (table-ref-offset table) 14) (* index 3))))
+    (unless
+        (<= (+ pos 3) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 3 :length
+             (table-ref-length table)))
+    (font-data-read-u24 (table-ref-font-data table) pos)))
+
+
 (defun sanitize-character-variant-params (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
@@ -4468,6 +4473,12 @@
   (unless (and (<= 14 length) (font-data-valid-range-p font-data offset 14))
     (error 'font-out-of-bounds-error :pos offset :size 14 :length
            (font-data-length font-data)))
+  (let ((cnt (character-variant-params-char-count-raw font-data offset)))
+    (unless
+        (and (<= (+ 14 (* cnt 3)) length)
+             (font-data-valid-range-p font-data offset (+ 14 (* cnt 3))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 14 (* cnt 3))
+             :length (font-data-length font-data))))
   t)
 
 
@@ -4486,8 +4497,8 @@
 
 (declaim
  (inline coverage-format3-coverage-format coverage-format3-glyph-count
-  coverage-format3-glyph-array coverage-format3-glyph-array-count
-  coverage-format3-coverage-format-raw))
+  coverage-format3-glyph-array-count coverage-format3-coverage-format-raw
+  coverage-format3-glyph-count-raw))
 
 
 (defun coverage-format3-coverage-format (table)
@@ -4500,6 +4511,17 @@
   (font-data-read-u16 font-data offset))
 
 
+(defun coverage-format3-glyph-count (table)
+  "Number of glyphs in the glyph array"
+  (declare (type coverage-format3 table))
+  (font-data-read-u24 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 2)))
+
+
+(defun coverage-format3-glyph-count-raw (font-data offset)
+  (font-data-read-u24 font-data (+ offset 2)))
+
+
 (defun coverage-format3-glyph-array-count (table)
   "Array of glyph IDs — in numerical order"
   (coverage-format3-glyph-count table))
@@ -4509,7 +4531,7 @@
   "Array of glyph IDs — in numerical order"
   (declare (type coverage-format3 table)
            (type (unsigned-byte 32) index))
-  (let ((pos (+ (+ (table-ref-offset table) 2) (* index 3))))
+  (let ((pos (+ (+ (table-ref-offset table) 5) (* index 3))))
     (unless
         (<= (+ pos 3) (+ (table-ref-offset table) (table-ref-length table)))
       (error 'font-out-of-bounds-error :pos pos :size 3 :length
@@ -4521,14 +4543,14 @@
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 2 length) (font-data-valid-range-p font-data offset 2))
-    (error 'font-out-of-bounds-error :pos offset :size 2 :length
+  (unless (and (<= 5 length) (font-data-valid-range-p font-data offset 5))
+    (error 'font-out-of-bounds-error :pos offset :size 5 :length
            (font-data-length font-data)))
   (let ((cnt (coverage-format3-glyph-count-raw font-data offset)))
     (unless
-        (and (<= (+ 2 (* cnt 3)) length)
-             (font-data-valid-range-p font-data offset (+ 2 (* cnt 3))))
-      (error 'font-out-of-bounds-error :pos offset :size (+ 2 (* cnt 3))
+        (and (<= (+ 5 (* cnt 3)) length)
+             (font-data-valid-range-p font-data offset (+ 5 (* cnt 3))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 5 (* cnt 3))
              :length (font-data-length font-data))))
   t)
 
@@ -4548,8 +4570,8 @@
 
 (declaim
  (inline coverage-format4-coverage-format coverage-format4-range-count
-  coverage-format4-range-records coverage-format4-range-records-count
-  coverage-format4-coverage-format-raw))
+  coverage-format4-range-records-count coverage-format4-coverage-format-raw
+  coverage-format4-range-count-raw))
 
 
 (defun coverage-format4-coverage-format (table)
@@ -4562,18 +4584,47 @@
   (font-data-read-u16 font-data offset))
 
 
+(defun coverage-format4-range-count (table)
+  "Number of RangeRecords"
+  (declare (type coverage-format4 table))
+  (font-data-read-u24 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 2)))
+
+
+(defun coverage-format4-range-count-raw (font-data offset)
+  (font-data-read-u24 font-data (+ offset 2)))
+
+
 (defun coverage-format4-range-records-count (table)
   "Array of glyph ranges — ordered by startGlyphID."
   (coverage-format4-range-count table))
+
+
+(defun coverage-format4-range-records-ref (table index)
+  "Array of glyph ranges — ordered by startGlyphID."
+  (declare (type coverage-format4 table)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (+ (table-ref-offset table) 5) (* index 9))))
+    (unless
+        (<= (+ pos 9) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 9 :length
+             (table-ref-length table)))
+    (%make-range-record2 (table-ref-font-data table) pos)))
 
 
 (defun sanitize-coverage-format4 (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 2 length) (font-data-valid-range-p font-data offset 2))
-    (error 'font-out-of-bounds-error :pos offset :size 2 :length
+  (unless (and (<= 5 length) (font-data-valid-range-p font-data offset 5))
+    (error 'font-out-of-bounds-error :pos offset :size 5 :length
            (font-data-length font-data)))
+  (let ((cnt (coverage-format4-range-count-raw font-data offset)))
+    (unless
+        (and (<= (+ 5 (* cnt 9)) length)
+             (font-data-valid-range-p font-data offset (+ 5 (* cnt 9))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 5 (* cnt 9))
+             :length (font-data-length font-data))))
   t)
 
 
@@ -4592,9 +4643,9 @@
 
 (declaim
  (inline class-def-format3-class-format class-def-format3-start-glyph-id
-  class-def-format3-glyph-count class-def-format3-class-value-array
-  class-def-format3-class-value-array-count class-def-format3-class-format-raw
-  class-def-format3-start-glyph-id-raw))
+  class-def-format3-glyph-count class-def-format3-class-value-array-count
+  class-def-format3-class-format-raw class-def-format3-start-glyph-id-raw
+  class-def-format3-glyph-count-raw))
 
 
 (defun class-def-format3-class-format (table)
@@ -4618,18 +4669,47 @@
   (font-data-read-u24 font-data (+ offset 2)))
 
 
+(defun class-def-format3-glyph-count (table)
+  "Size of the classValueArray"
+  (declare (type class-def-format3 table))
+  (font-data-read-u24 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 5)))
+
+
+(defun class-def-format3-glyph-count-raw (font-data offset)
+  (font-data-read-u24 font-data (+ offset 5)))
+
+
 (defun class-def-format3-class-value-array-count (table)
   "Array of Class Values — one per glyph ID"
   (class-def-format3-glyph-count table))
+
+
+(defun class-def-format3-class-value-array-ref (table index)
+  "Array of Class Values — one per glyph ID"
+  (declare (type class-def-format3 table)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (+ (table-ref-offset table) 8) (* index 3))))
+    (unless
+        (<= (+ pos 3) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 3 :length
+             (table-ref-length table)))
+    (font-data-read-u24 (table-ref-font-data table) pos)))
 
 
 (defun sanitize-class-def-format3 (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 5 length) (font-data-valid-range-p font-data offset 5))
-    (error 'font-out-of-bounds-error :pos offset :size 5 :length
+  (unless (and (<= 8 length) (font-data-valid-range-p font-data offset 8))
+    (error 'font-out-of-bounds-error :pos offset :size 8 :length
            (font-data-length font-data)))
+  (let ((cnt (class-def-format3-glyph-count-raw font-data offset)))
+    (unless
+        (and (<= (+ 8 (* cnt 3)) length)
+             (font-data-valid-range-p font-data offset (+ 8 (* cnt 3))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 8 (* cnt 3))
+             :length (font-data-length font-data))))
   t)
 
 
@@ -4648,9 +4728,8 @@
 
 (declaim
  (inline class-def-format4-class-format class-def-format4-class-range-count
-  class-def-format4-class-range-records
   class-def-format4-class-range-records-count
-  class-def-format4-class-format-raw))
+  class-def-format4-class-format-raw class-def-format4-class-range-count-raw))
 
 
 (defun class-def-format4-class-format (table)
@@ -4663,6 +4742,17 @@
   (font-data-read-u16 font-data offset))
 
 
+(defun class-def-format4-class-range-count (table)
+  "Number of ClassRangeRecords"
+  (declare (type class-def-format4 table))
+  (font-data-read-u24 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 2)))
+
+
+(defun class-def-format4-class-range-count-raw (font-data offset)
+  (font-data-read-u24 font-data (+ offset 2)))
+
+
 (defun class-def-format4-class-range-records-count (table)
   "Array of ClassRangeRecords — ordered by startGlyphID"
   (class-def-format4-class-range-count table))
@@ -4672,7 +4762,7 @@
   "Array of ClassRangeRecords — ordered by startGlyphID"
   (declare (type class-def-format4 table)
            (type (unsigned-byte 32) index))
-  (let ((pos (+ (+ (table-ref-offset table) 2) (* index 8))))
+  (let ((pos (+ (+ (table-ref-offset table) 5) (* index 8))))
     (unless
         (<= (+ pos 8) (+ (table-ref-offset table) (table-ref-length table)))
       (error 'font-out-of-bounds-error :pos pos :size 8 :length
@@ -4684,14 +4774,14 @@
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 2 length) (font-data-valid-range-p font-data offset 2))
-    (error 'font-out-of-bounds-error :pos offset :size 2 :length
+  (unless (and (<= 5 length) (font-data-valid-range-p font-data offset 5))
+    (error 'font-out-of-bounds-error :pos offset :size 5 :length
            (font-data-length font-data)))
   (let ((cnt (class-def-format4-class-range-count-raw font-data offset)))
     (unless
-        (and (<= (+ 2 (* cnt 8)) length)
-             (font-data-valid-range-p font-data offset (+ 2 (* cnt 8))))
-      (error 'font-out-of-bounds-error :pos offset :size (+ 2 (* cnt 8))
+        (and (<= (+ 5 (* cnt 8)) length)
+             (font-data-valid-range-p font-data offset (+ 5 (* cnt 8))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 5 (* cnt 8))
              :length (font-data-length font-data))))
   t)
 
@@ -4714,9 +4804,9 @@
   sequence-context-format4-coverage-offset
   sequence-context-format4-coverage-offset-offset
   sequence-context-format4-seq-rule-set-count
-  sequence-context-format4-seq-rule-set-offsets
   sequence-context-format4-seq-rule-set-offsets-count
-  sequence-context-format4-format-table-raw))
+  sequence-context-format4-format-table-raw
+  sequence-context-format4-seq-rule-set-count-raw))
 
 
 (defun sequence-context-format4-format-table (table)
@@ -4745,6 +4835,17 @@
        (+ (table-ref-offset table) off)))))
 
 
+(defun sequence-context-format4-seq-rule-set-count (table)
+  "Number of SequenceRuleSet tables"
+  (declare (type sequence-context-format4 table))
+  (font-data-read-u24 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 6)))
+
+
+(defun sequence-context-format4-seq-rule-set-count-raw (font-data offset)
+  (font-data-read-u24 font-data (+ offset 6)))
+
+
 (defun sequence-context-format4-seq-rule-set-offsets-count (table)
   "Array of offsets to SequenceRuleSet tables, from beginning of SequenceContextFormat4 table (offsets may be NULL)"
   (sequence-context-format4-seq-rule-set-count table))
@@ -4754,7 +4855,7 @@
   "Array of offsets to SequenceRuleSet tables, from beginning of SequenceContextFormat4 table (offsets may be NULL)"
   (declare (type sequence-context-format4 table)
            (type (unsigned-byte 32) index))
-  (let* ((pos (+ (+ (table-ref-offset table) 6) (* index 3))))
+  (let* ((pos (+ (+ (table-ref-offset table) 9) (* index 3))))
     (unless
         (<= (+ pos 3) (+ (table-ref-offset table) (table-ref-length table)))
       (error 'font-out-of-bounds-error :pos pos :size 3 :length
@@ -4769,15 +4870,15 @@
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 6 length) (font-data-valid-range-p font-data offset 6))
-    (error 'font-out-of-bounds-error :pos offset :size 6 :length
+  (unless (and (<= 9 length) (font-data-valid-range-p font-data offset 9))
+    (error 'font-out-of-bounds-error :pos offset :size 9 :length
            (font-data-length font-data)))
   (let ((cnt
          (sequence-context-format4-seq-rule-set-count-raw font-data offset)))
     (unless
-        (and (<= (+ 6 (* cnt 3)) length)
-             (font-data-valid-range-p font-data offset (+ 6 (* cnt 3))))
-      (error 'font-out-of-bounds-error :pos offset :size (+ 6 (* cnt 3))
+        (and (<= (+ 9 (* cnt 3)) length)
+             (font-data-valid-range-p font-data offset (+ 9 (* cnt 3))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 9 (* cnt 3))
              :length (font-data-length font-data))))
   t)
 
@@ -4796,7 +4897,7 @@
 
 
 (declaim
- (inline sequence-rule-set2-seq-rule-count sequence-rule-set2-seq-rule-offsets
+ (inline sequence-rule-set2-seq-rule-count
   sequence-rule-set2-seq-rule-offsets-count
   sequence-rule-set2-seq-rule-count-raw))
 
@@ -4862,8 +4963,7 @@
 
 (declaim
  (inline sequence-rule2-glyph-count sequence-rule2-seq-lookup-count
-  sequence-rule2-input-sequence sequence-rule2-input-sequence-count
-  sequence-rule2-seq-lookup-records sequence-rule2-seq-lookup-records-count
+  sequence-rule2-input-sequence-count sequence-rule2-seq-lookup-records-count
   sequence-rule2-glyph-count-raw sequence-rule2-seq-lookup-count-raw))
 
 
@@ -4956,9 +5056,9 @@
   sequence-context-format5-class-def-offset
   sequence-context-format5-class-def-offset-offset
   sequence-context-format5-class-seq-rule-set-count
-  sequence-context-format5-class-seq-rule-set-offsets
   sequence-context-format5-class-seq-rule-set-offsets-count
-  sequence-context-format5-format-table-raw))
+  sequence-context-format5-format-table-raw
+  sequence-context-format5-class-seq-rule-set-count-raw))
 
 
 (defun sequence-context-format5-format-table (table)
@@ -5003,6 +5103,17 @@
        (+ (table-ref-offset table) off)))))
 
 
+(defun sequence-context-format5-class-seq-rule-set-count (table)
+  "Number of ClassSequenceRuleSet tables"
+  (declare (type sequence-context-format5 table))
+  (font-data-read-u24 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 10)))
+
+
+(defun sequence-context-format5-class-seq-rule-set-count-raw (font-data offset)
+  (font-data-read-u24 font-data (+ offset 10)))
+
+
 (defun sequence-context-format5-class-seq-rule-set-offsets-count (table)
   "Array of offsets to ClassSequenceRuleSet tables, from beginning of SequenceContextFormat5 table (may be NULL)"
   (sequence-context-format5-class-seq-rule-set-count table))
@@ -5012,7 +5123,7 @@
   "Array of offsets to ClassSequenceRuleSet tables, from beginning of SequenceContextFormat5 table (may be NULL)"
   (declare (type sequence-context-format5 table)
            (type (unsigned-byte 32) index))
-  (let* ((pos (+ (+ (table-ref-offset table) 10) (* index 3))))
+  (let* ((pos (+ (+ (table-ref-offset table) 13) (* index 3))))
     (unless
         (<= (+ pos 3) (+ (table-ref-offset table) (table-ref-length table)))
       (error 'font-out-of-bounds-error :pos pos :size 3 :length
@@ -5027,16 +5138,16 @@
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 10 length) (font-data-valid-range-p font-data offset 10))
-    (error 'font-out-of-bounds-error :pos offset :size 10 :length
+  (unless (and (<= 13 length) (font-data-valid-range-p font-data offset 13))
+    (error 'font-out-of-bounds-error :pos offset :size 13 :length
            (font-data-length font-data)))
   (let ((cnt
          (sequence-context-format5-class-seq-rule-set-count-raw font-data
           offset)))
     (unless
-        (and (<= (+ 10 (* cnt 3)) length)
-             (font-data-valid-range-p font-data offset (+ 10 (* cnt 3))))
-      (error 'font-out-of-bounds-error :pos offset :size (+ 10 (* cnt 3))
+        (and (<= (+ 13 (* cnt 3)) length)
+             (font-data-valid-range-p font-data offset (+ 13 (* cnt 3))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 13 (* cnt 3))
              :length (font-data-length font-data))))
   t)
 
@@ -5056,7 +5167,6 @@
 
 (declaim
  (inline class-sequence-rule-set2-class-seq-rule-count
-  class-sequence-rule-set2-class-seq-rule-offsets
   class-sequence-rule-set2-class-seq-rule-offsets-count
   class-sequence-rule-set2-class-seq-rule-count-raw))
 
@@ -5125,9 +5235,7 @@
  (inline sequence-context-format6-format-table
   sequence-context-format6-glyph-count
   sequence-context-format6-seq-lookup-count
-  sequence-context-format6-coverage-offsets
   sequence-context-format6-coverage-offsets-count
-  sequence-context-format6-seq-lookup-records
   sequence-context-format6-seq-lookup-records-count
   sequence-context-format6-format-table-raw
   sequence-context-format6-glyph-count-raw
@@ -5241,9 +5349,9 @@
   chained-sequence-context-format4-coverage-offset
   chained-sequence-context-format4-coverage-offset-offset
   chained-sequence-context-format4-chained-seq-rule-set-count
-  chained-sequence-context-format4-chained-seq-rule-set-offsets
   chained-sequence-context-format4-chained-seq-rule-set-offsets-count
-  chained-sequence-context-format4-format-table-raw))
+  chained-sequence-context-format4-format-table-raw
+  chained-sequence-context-format4-chained-seq-rule-set-count-raw))
 
 
 (defun chained-sequence-context-format4-format-table (table)
@@ -5272,6 +5380,18 @@
        (+ (table-ref-offset table) off)))))
 
 
+(defun chained-sequence-context-format4-chained-seq-rule-set-count (table)
+  "Number of ChainedSequenceRuleSet tables"
+  (declare (type chained-sequence-context-format4 table))
+  (font-data-read-u24 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 6)))
+
+
+(defun chained-sequence-context-format4-chained-seq-rule-set-count-raw
+       (font-data offset)
+  (font-data-read-u24 font-data (+ offset 6)))
+
+
 (defun chained-sequence-context-format4-chained-seq-rule-set-offsets-count
        (table)
   "Array of offsets to ChainedSeqRuleSet tables, from beginning of ChainedSequenceContextFormat4 table (may be NULL)"
@@ -5283,7 +5403,7 @@
   "Array of offsets to ChainedSeqRuleSet tables, from beginning of ChainedSequenceContextFormat4 table (may be NULL)"
   (declare (type chained-sequence-context-format4 table)
            (type (unsigned-byte 32) index))
-  (let* ((pos (+ (+ (table-ref-offset table) 6) (* index 3))))
+  (let* ((pos (+ (+ (table-ref-offset table) 9) (* index 3))))
     (unless
         (<= (+ pos 3) (+ (table-ref-offset table) (table-ref-length table)))
       (error 'font-out-of-bounds-error :pos pos :size 3 :length
@@ -5298,16 +5418,16 @@
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 6 length) (font-data-valid-range-p font-data offset 6))
-    (error 'font-out-of-bounds-error :pos offset :size 6 :length
+  (unless (and (<= 9 length) (font-data-valid-range-p font-data offset 9))
+    (error 'font-out-of-bounds-error :pos offset :size 9 :length
            (font-data-length font-data)))
   (let ((cnt
          (chained-sequence-context-format4-chained-seq-rule-set-count-raw
           font-data offset)))
     (unless
-        (and (<= (+ 6 (* cnt 3)) length)
-             (font-data-valid-range-p font-data offset (+ 6 (* cnt 3))))
-      (error 'font-out-of-bounds-error :pos offset :size (+ 6 (* cnt 3))
+        (and (<= (+ 9 (* cnt 3)) length)
+             (font-data-valid-range-p font-data offset (+ 9 (* cnt 3))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 9 (* cnt 3))
              :length (font-data-length font-data))))
   t)
 
@@ -5327,7 +5447,6 @@
 
 (declaim
  (inline chained-sequence-rule-set2-chained-seq-rule-count
-  chained-sequence-rule-set2-chained-seq-rule-offsets
   chained-sequence-rule-set2-chained-seq-rule-offsets-count
   chained-sequence-rule-set2-chained-seq-rule-count-raw))
 
@@ -5395,16 +5514,12 @@
 
 (declaim
  (inline chained-sequence-rule2-backtrack-glyph-count
-  chained-sequence-rule2-backtrack-sequence
   chained-sequence-rule2-backtrack-sequence-count
   chained-sequence-rule2-input-glyph-count
-  chained-sequence-rule2-input-sequence
   chained-sequence-rule2-input-sequence-count
   chained-sequence-rule2-lookahead-glyph-count
-  chained-sequence-rule2-lookahead-sequence
   chained-sequence-rule2-lookahead-sequence-count
   chained-sequence-rule2-seq-lookup-count
-  chained-sequence-rule2-seq-lookup-records
   chained-sequence-rule2-seq-lookup-records-count
   chained-sequence-rule2-backtrack-glyph-count-raw))
 
@@ -5584,7 +5699,6 @@
   chained-sequence-context-format5-lookahead-class-def-offset
   chained-sequence-context-format5-lookahead-class-def-offset-offset
   chained-sequence-context-format5-chained-class-seq-rule-set-count
-  chained-sequence-context-format5-chained-class-seq-rule-set-offsets
   chained-sequence-context-format5-chained-class-seq-rule-set-offsets-count
   chained-sequence-context-format5-format-table-raw
   chained-sequence-context-format5-chained-class-seq-rule-set-count-raw))
@@ -5740,7 +5854,6 @@
 
 (declaim
  (inline chained-class-sequence-rule-set2-chained-class-seq-rule-count
-  chained-class-sequence-rule-set2-chained-class-seq-rule-offsets
   chained-class-sequence-rule-set2-chained-class-seq-rule-offsets-count
   chained-class-sequence-rule-set2-chained-class-seq-rule-count-raw))
 
@@ -5810,8 +5923,8 @@
 
 
 (declaim
- (inline lookup-list2-lookup-count lookup-list2-lookup-offsets
-  lookup-list2-lookup-offsets-count lookup-list2-lookup-count-raw))
+ (inline lookup-list2-lookup-count lookup-list2-lookup-offsets-count
+  lookup-list2-lookup-count-raw))
 
 
 (defun lookup-list2-lookup-count (table)

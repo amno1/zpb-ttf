@@ -21,15 +21,17 @@
      (:constructor %make-vmtx (%table-font-data %table-offset %table-length))))
 
 
-(declaim
- (inline vmtx-v-metrics vmtx-v-metrics-count vmtx-top-side-bearings
-  vmtx-top-side-bearings-count))
+(declaim (inline vmtx-v-metrics-count vmtx-top-side-bearings-count))
 
 
 (defun vmtx-v-metrics-count (table &optional number-of-long-ver-metrics)
   "Paired advance height and top side bearing values for each glyph. Records are indexed by glyph ID."
   (or number-of-long-ver-metrics
-      (max 0 (floor (- (table-ref-length table) (table-ref-offset table)) 4))))
+      (max 0
+           (floor
+            (- (+ (table-ref-offset table) (table-ref-length table))
+               (table-ref-offset table))
+            4))))
 
 
 (defun vmtx-v-metrics-ref (table index)
@@ -48,7 +50,7 @@
   "Top side bearings for glyph IDs greater than or equal to numberOfLongMetrics."
   (max 0
        (floor
-        (- (table-ref-length table)
+        (- (+ (table-ref-offset table) (table-ref-length table))
            (+ (table-ref-offset table) (* (vmtx-v-metrics-count table) 4)))
         2)))
 
@@ -91,33 +93,36 @@
 
 
 (declaim
- (inline vmtx-extended-v-metrics vmtx-extended-v-metrics-count
-  vmtx-extended-top-side-bearings vmtx-extended-top-side-bearings-count))
+ (inline vmtx-extended-v-metrics-count vmtx-extended-top-side-bearings-count))
 
 
 (defun vmtx-extended-v-metrics-count
        (table &optional number-of-long-ver-metrics)
   (or number-of-long-ver-metrics
-      (max 0 (floor (- (table-ref-length table) (table-ref-offset table)) 4))))
+      (max 0
+           (floor
+            (- (+ (table-ref-offset table) (table-ref-length table))
+               (table-ref-offset table))
+            6))))
 
 
 (defun vmtx-extended-v-metrics-ref (table index)
   (declare (type vmtx-extended table)
            (type (unsigned-byte 32) index))
-  (let ((pos (+ (table-ref-offset table) (* index 4))))
+  (let ((pos (+ (table-ref-offset table) (* index 6))))
     (unless
-        (<= (+ pos 4) (+ (table-ref-offset table) (table-ref-length table)))
-      (error 'font-out-of-bounds-error :pos pos :size 4 :length
+        (<= (+ pos 6) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 6 :length
              (table-ref-length table)))
-    (%make-long-metric (table-ref-font-data table) pos)))
+    (%make-long-metric-extended (table-ref-font-data table) pos)))
 
 
 (defun vmtx-extended-top-side-bearings-count (table)
   (max 0
        (floor
-        (- (table-ref-length table)
+        (- (+ (table-ref-offset table) (table-ref-length table))
            (+ (table-ref-offset table)
-              (* (vmtx-extended-v-metrics-count table) 4)))
+              (* (vmtx-extended-v-metrics-count table) 6)))
         2)))
 
 
@@ -127,7 +132,7 @@
   (let ((pos
          (+
           (+ (table-ref-offset table)
-             (* (vmtx-extended-v-metrics-count table) 4))
+             (* (vmtx-extended-v-metrics-count table) 6))
           (* index 2))))
     (unless
         (<= (+ pos 2) (+ (table-ref-offset table) (table-ref-length table)))

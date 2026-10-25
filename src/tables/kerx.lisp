@@ -16,8 +16,9 @@
    kerx-subtable0-pair-p kerx-subtable0-pair-right kerx-subtable0-pair-value
    kerx-subtable0-pairs kerx-subtable0-pairs-count kerx-subtable0-pairs-ref
    kerx-subtable0-range-shift kerx-subtable0-search-range kerx-subtables
-   kerx-version read-kerx read-kerx-subtable read-kerx-subtable0 sanitize-kerx
-   sanitize-kerx-subtable sanitize-kerx-subtable0))
+   kerx-subtables-start kerx-version read-kerx read-kerx-subtable
+   read-kerx-subtable0 sanitize-kerx sanitize-kerx-subtable
+   sanitize-kerx-subtable0))
 
 
 (defstruct
@@ -58,8 +59,8 @@
 
 
 (declaim
- (inline kerx-version kerx-padding kerx-n-tables kerx-subtables
-  kerx-version-raw kerx-padding-raw kerx-n-tables-raw))
+ (inline kerx-version kerx-padding kerx-n-tables kerx-version-raw
+  kerx-padding-raw kerx-n-tables-raw))
 
 
 (defun kerx-version (table)
@@ -94,6 +95,12 @@
   (font-data-read-u32 font-data (+ offset 4)))
 
 
+(defun kerx-subtables-start (table)
+  "Byte position of the first SUBTABLE element; elements are variable-length."
+  (declare (type kerx table))
+  (+ (table-ref-offset table) 8))
+
+
 (defun sanitize-kerx (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
@@ -119,8 +126,8 @@
 
 (declaim
  (inline kerx-subtable-length kerx-subtable-coverage kerx-subtable-tuple-count
-  kerx-subtable-data kerx-subtable-data-count kerx-subtable-length-raw
-  kerx-subtable-coverage-raw kerx-subtable-tuple-count-raw))
+  kerx-subtable-data-count kerx-subtable-length-raw kerx-subtable-coverage-raw
+  kerx-subtable-tuple-count-raw))
 
 
 (defun kerx-subtable-length (table)
@@ -158,7 +165,10 @@
 (defun kerx-subtable-data-count (table)
   "Subtable specific data."
   (max 0
-       (floor (- (table-ref-length table) (+ (table-ref-offset table) 12)) 1)))
+       (floor
+        (- (+ (table-ref-offset table) (table-ref-length table))
+           (+ (table-ref-offset table) 12))
+        1)))
 
 
 (defun kerx-subtable-data-ref (table index)
@@ -204,7 +214,7 @@
 
 (declaim
  (inline kerx-subtable0-n-pairs kerx-subtable0-search-range
-  kerx-subtable0-entry-selector kerx-subtable0-range-shift kerx-subtable0-pairs
+  kerx-subtable0-entry-selector kerx-subtable0-range-shift
   kerx-subtable0-pairs-count kerx-subtable0-n-pairs-raw
   kerx-subtable0-search-range-raw kerx-subtable0-entry-selector-raw
   kerx-subtable0-range-shift-raw))

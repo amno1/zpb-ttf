@@ -16,23 +16,77 @@
           (progn ,@body)
        (close-font-loader ,loader))))
 
+;;; Mac OS Roman code points for bytes #x80-#xFF.
+(defparameter *mac-roman-high-codes*
+  (coerce '(#x00C4 #x00C5 #x00C7 #x00C9 #x00D1 #x00D6 #x00DC #x00E1
+            #x00E0 #x00E2 #x00E4 #x00E3 #x00E5 #x00E7 #x00E9 #x00E8
+            #x00EA #x00EB #x00ED #x00EC #x00EE #x00EF #x00F1 #x00F3
+            #x00F2 #x00F4 #x00F6 #x00F5 #x00FA #x00F9 #x00FB #x00FC
+            #x2020 #x00B0 #x00A2 #x00A3 #x00A7 #x2022 #x00B6 #x00DF
+            #x00AE #x00A9 #x2122 #x00B4 #x00A8 #x2260 #x00C6 #x00D8
+            #x221E #x00B1 #x2264 #x2265 #x00A5 #x00B5 #x2202 #x2211
+            #x220F #x03C0 #x222B #x00AA #x00BA #x03A9 #x00E6 #x00F8
+            #x00BF #x00A1 #x00AC #x221A #x0192 #x2248 #x2206 #x00AB
+            #x00BB #x2026 #x00A0 #x00C0 #x00C3 #x00D5 #x0152 #x0153
+            #x2013 #x2014 #x201C #x201D #x2018 #x2019 #x00F7 #x25CA
+            #x00FF #x0178 #x2044 #x20AC #x2039 #x203A #xFB01 #xFB02
+            #x2021 #x00B7 #x201A #x201E #x2030 #x00C2 #x00CA #x00C1
+            #x00CB #x00C8 #x00CD #x00CE #x00CF #x00CC #x00D3 #x00D4
+            #xF8FF #x00D2 #x00DA #x00DB #x00D9 #x0131 #x02C6 #x02DC
+            #x00AF #x02D8 #x02D9 #x02DA #x00B8 #x02DD #x02DB #x02C7)
+          '(simple-array (unsigned-byte 16) (128))))
+
+(defun decode-utf-16be-from-fd (fd offset length)
+  "Decode LENGTH bytes of UTF-16BE; a trailing odd byte is ignored and
+unpaired surrogates become U+FFFD."
+  (let ((units (floor length 2))
+        (out (make-string-output-stream))
+        (i 0))
+    (flet ((unit (k) (zpb-otf:font-data-read-u16 fd (+ offset (* k 2)))))
+      (loop while (< i units)
+            do (let ((u (unit i)))
+                 (incf i)
+                 (write-char
+                  (cond
+                    ((and (<= #xD800 u #xDBFF) (< i units) (<= #xDC00 (unit i) #xDFFF))
+                     (prog1 (code-char (+ #x10000 (ash (- u #xD800) 10) (- (unit i) #xDC00)))
+                       (incf i)))
+                    ((<= #xD800 u #xDFFF) (code-char #xFFFD))
+                    (t (code-char u)))
+                  out))))
+    (get-output-stream-string out)))
+
 (defun decode-name-string-from-fd (fd offset length platform-id encoding-id)
   (cond
     ;; UTF-16BE: platform 0 (Unicode) or platform 3 (Windows) with encoding 1 or 10
     ((or (zerop platform-id)
          (and (= platform-id 3) (or (= encoding-id 1) (= encoding-id 10))))
-     (let ((str (make-string (/ length 2))))
-       (dotimes (i (/ length 2) str)
-         (let ((code (zpb-otf:font-data-read-u16 fd (+ offset (* i 2)))))
-           (setf (char str i) (code-char code))))))
-    ;; Latin/MacRoman/ASCII:
+     (decode-utf-16be-from-fd fd offset length))
+    ;; Macintosh Roman
+    ((and (= platform-id 1) (zerop encoding-id))
+     (let ((str (make-string length)))
+       (dotimes (i length str)
+         (let ((byte (zpb-otf:font-data-read-u8 fd (+ offset i))))
+           (setf (char str i)
+                 (code-char (if (< byte #x80)
+                                byte
+                                (aref *mac-roman-high-codes* (- byte #x80)))))))))
+    ;; Other single-byte encodings: Latin-1 as a best effort
     (t
      (let ((str (make-string length)))
        (dotimes (i length str)
          (setf (char str i) (code-char (zpb-otf:font-data-read-u8 fd (+ offset i)))))))))
 
-(defun setup-cmap-lookup (loader cmap cmap-offset)
+(defun cmap-subtable-length (fd sub-off fmt table-end)
+  "Length of the cmap subtable at SUB-OFF from its own header, clamped to TABLE-END."
+  (let ((declared (if (>= fmt 8)
+                      (zpb-otf:font-data-read-u32 fd (+ sub-off 4))
+                      (zpb-otf:font-data-read-u16 fd (+ sub-off 2)))))
+    (min declared (max 0 (- table-end sub-off)))))
+
+(defun setup-cmap-lookup (loader cmap cmap-offset cmap-length)
   (let ((fd (font-data loader))
+        (table-end (+ cmap-offset cmap-length))
         (best-fmt nil)
         (best-sub-off nil))
     ;; Look for Format 12 (preferred full Unicode) or Format 4 (BMP Unicode)
@@ -52,8 +106,10 @@
 
     (cond
       ((eql best-fmt 12)
-       (let* ((cmap12 (zpb-otf:read-cmap12 fd best-sub-off))
-              (num-groups (zpb-otf:cmap12-num-groups cmap12)))
+       (let* ((sub-len (cmap-subtable-length fd best-sub-off 12 table-end))
+              (cmap12 (zpb-otf:read-cmap12 fd best-sub-off sub-len))
+              (num-groups (min (zpb-otf:cmap12-num-groups cmap12)
+                               (max 0 (floor (- sub-len 16) 12)))))
          (setf (cmap-lookup-fn loader)
                (lambda (cp)
                  (let ((low 0)
@@ -66,35 +122,133 @@
                            (cond
                              ((< cp start) (setf high (1- mid)))
                              ((> cp end) (setf low (1+ mid)))
-                             (t (return-from nil
+                             (t (return
                                   (+ (zpb-otf:sequential-map-group-start-glyph-id grp)
-                                     (- cp start)))))))
-                   0)))))
+                                     (- cp start))))))
+                         finally (return 0))))
+               (cmap-mappings-fn loader)
+               (lambda (fn)
+                 (dotimes (g num-groups)
+                   (let* ((grp (zpb-otf:cmap12-groups-ref cmap12 g))
+                          (start (zpb-otf:sequential-map-group-start-char-code grp))
+                          (gid (zpb-otf:sequential-map-group-start-glyph-id grp)))
+                     (loop for cp from start
+                             to (min (zpb-otf:sequential-map-group-end-char-code grp) #x10FFFF)
+                           do (funcall fn cp (+ gid (- cp start))))))))))
 
       ((eql best-fmt 4)
-       (let* ((cmap4 (zpb-otf:read-cmap4 fd best-sub-off))
-              (seg-len (/ (zpb-otf:cmap4-seg-count-x2 cmap4) 2)))
-         (setf (cmap-lookup-fn loader)
-               (lambda (cp)
-                 (if (> cp #xFFFF)
-                     0
-                     (dotimes (s seg-len 0)
-                       (let ((end (zpb-otf:cmap4-end-code-ref cmap4 s)))
-                         (when (<= cp end)
-                           (let ((start (zpb-otf:cmap4-start-code-ref cmap4 s))
-                                 (delta (zpb-otf:cmap4-id-delta-ref cmap4 s))
-                                 (ro-off (zpb-otf:cmap4-id-range-offsets-ref cmap4 s)))
-                             (return
-                               (if (< cp start)
-                                   0
-                                   (if (zerop ro-off)
-                                       (logand #xFFFF (+ cp delta))
-                                       (let* ((ro-addr (+ best-sub-off 14 (* 2 seg-len) 2 (* 2 seg-len) (* 2 seg-len) (* 2 s)))
-                                              (g-addr (+ ro-addr ro-off (* 2 (- cp start))))
-                                              (gid (zpb-otf:font-data-read-u16 fd g-addr)))
-                                         (if (zerop gid) 0 (logand #xFFFF (+ gid delta))))))))))))))))
+       (let* ((sub-len (cmap-subtable-length fd best-sub-off 4 table-end))
+              (sub-end (+ best-sub-off sub-len))
+              (cmap4 (zpb-otf:read-cmap4 fd best-sub-off sub-len))
+              (seg-len (/ (zpb-otf:cmap4-seg-count-x2 cmap4) 2))
+              (ro-base (+ best-sub-off 16 (* 6 seg-len))))
+         (labels ((segment-glyph (s cp)
+                    (let ((start (zpb-otf:cmap4-start-code-ref cmap4 s))
+                          (delta (zpb-otf:cmap4-id-delta-ref cmap4 s))
+                          (ro-off (zpb-otf:cmap4-id-range-offsets-ref cmap4 s)))
+                      (cond
+                        ((< cp start) 0)
+                        ((zerop ro-off) (logand #xFFFF (+ cp delta)))
+                        (t
+                         (let ((g-addr (+ ro-base (* 2 s) ro-off (* 2 (- cp start)))))
+                           ;; A malformed idRangeOffset must not read past the subtable.
+                           (if (> (+ g-addr 2) sub-end)
+                               0
+                               (let ((gid (zpb-otf:font-data-read-u16 fd g-addr)))
+                                 (if (zerop gid) 0 (logand #xFFFF (+ gid delta))))))))))
+                  (find-segment (cp)
+                    ;; First segment whose endCode >= CP.
+                    (let ((low 0) (high seg-len))
+                      (loop while (< low high)
+                            do (let ((mid (floor (+ low high) 2)))
+                                 (if (< (zpb-otf:cmap4-end-code-ref cmap4 mid) cp)
+                                     (setf low (1+ mid))
+                                     (setf high mid))))
+                      (when (< low seg-len) low))))
+           (setf (cmap-lookup-fn loader)
+                 (lambda (cp)
+                   (let ((s (and (<= cp #xFFFF) (find-segment cp))))
+                     (if s (segment-glyph s cp) 0)))
+                 (cmap-mappings-fn loader)
+                 (lambda (fn)
+                   (dotimes (s seg-len)
+                     (loop for cp from (zpb-otf:cmap4-start-code-ref cmap4 s)
+                             to (min (zpb-otf:cmap4-end-code-ref cmap4 s) #xFFFE)
+                           for gid = (segment-glyph s cp)
+                           unless (zerop gid) do (funcall fn cp gid))))))))
       (t
        (setf (cmap-lookup-fn loader) (constantly 0))))))
+
+(defun read-long-metrics (data offset size long-count glyph-count)
+  "Read an hmtx/vmtx style table: LONG-COUNT (advance, bearing) pairs
+followed by bare bearings for the remaining glyphs. Return a vector of
+advances and a vector of GLYPH-COUNT bearings."
+  (let* ((long-count (min long-count (floor size 4)))
+         (advances (make-array long-count))
+         (bearings (make-array (max glyph-count long-count) :initial-element 0))
+         (trailing-end (+ offset size)))
+    (dotimes (i long-count)
+      (let ((pos (+ offset (* i 4))))
+        (setf (aref advances i) (zpb-otf:font-data-read-u16 data pos)
+              (aref bearings i) (zpb-otf:font-data-read-i16 data (+ pos 2)))))
+    (loop for i from long-count below glyph-count
+          for pos = (+ offset (* long-count 4) (* (- i long-count) 2))
+          while (<= (+ pos 2) trailing-end)
+          do (setf (aref bearings i) (zpb-otf:font-data-read-i16 data pos)))
+    (values advances bearings)))
+
+(defun read-kerning-pairs (loader pairs-pos n-pairs)
+  (let ((data (font-data loader)))
+    (dotimes (p n-pairs)
+      (let ((left (zpb-otf:font-data-read-u16 data pairs-pos))
+            (right (zpb-otf:font-data-read-u16 data (+ pairs-pos 2)))
+            (val (zpb-otf:font-data-read-i16 data (+ pairs-pos 4))))
+        (setf (gethash (logior (ash left 16) right) (kerning-table loader)) val)
+        (incf pairs-pos 6)))))
+
+(defun load-kern-table (loader koff ksize)
+  "Read horizontal format 0 subtables of the Microsoft (version 0) or
+Apple (version 1.0) 'kern' table into the loader's kerning table."
+  (let* ((data (font-data loader))
+         (kend (+ koff ksize))
+         (version (zpb-otf:font-data-read-u16 data koff)))
+    (case version
+      (0
+       (let ((n-tables (zpb-otf:font-data-read-u16 data (+ koff 2)))
+             (sub-off (+ koff 4)))
+         (dotimes (t-idx n-tables)
+           (when (> (+ sub-off 14) kend) (return))
+           (let* ((sub-len (zpb-otf:font-data-read-u16 data (+ sub-off 2)))
+                  (sub-cov (zpb-otf:font-data-read-u16 data (+ sub-off 4)))
+                  (format (ldb (byte 8 8) sub-cov)))
+             ;; Format 0, horizontal, not minimum values, not cross-stream.
+             (when (and (zerop format) (logbitp 0 sub-cov)
+                        (not (logbitp 1 sub-cov)) (not (logbitp 2 sub-cov)))
+               (read-kerning-pairs loader (+ sub-off 14)
+                                   (min (zpb-otf:font-data-read-u16 data (+ sub-off 6))
+                                        (floor (- kend sub-off 14) 6))))
+             (when (zerop sub-len) (return))
+             (incf sub-off sub-len)))))
+      (1
+       (when (= (zpb-otf:font-data-read-u16 data (+ koff 2)) 0)
+         (let ((n-tables (zpb-otf:font-data-read-u32 data (+ koff 4)))
+               (sub-off (+ koff 8)))
+           (dotimes (t-idx n-tables)
+             (when (> (+ sub-off 16) kend) (return))
+             (let* ((sub-len (zpb-otf:font-data-read-u32 data sub-off))
+                    (sub-cov (zpb-otf:font-data-read-u16 data (+ sub-off 4)))
+                    (format (ldb (byte 8 0) sub-cov)))
+               ;; Format 0, not vertical, not cross-stream, not variation.
+               (when (and (zerop format) (zerop (logand sub-cov #xE000)))
+                 (read-kerning-pairs loader (+ sub-off 16)
+                                     (min (zpb-otf:font-data-read-u16 data (+ sub-off 8))
+                                          (floor (- kend sub-off 16) 6))))
+               (when (zerop sub-len) (return))
+               (incf sub-off sub-len)))))))))
+
+(defparameter *sfnt-versions*
+  (list #x00010000 #x4F54544F #x74727565 #x74797031) ; 1.0, 'OTTO', 'true', 'typ1'
+  "Valid sfntVersion values at the start of a font's table directory.")
 
 (defun open-font-loader-from-data (data &key (collection-index 0) input-stream)
   (let* ((sfnt-magic (zpb-otf:font-data-read-u32 data 0))
@@ -112,6 +266,13 @@
                  :actual-value collection-index
                  :expected-values (list num-fonts)))
         (setf font-offset (zpb-otf:font-data-read-u32 data (+ 12 (* collection-index 4))))))
+
+    (let ((sfnt-version (zpb-otf:font-data-read-u32 data font-offset)))
+      (unless (member sfnt-version *sfnt-versions*)
+        (error 'bad-magic
+               :location (format nil "table directory at offset ~D" font-offset)
+               :actual-value sfnt-version
+               :expected-values *sfnt-versions*)))
 
     (let* ((dir (zpb-otf:read-table-directory data font-offset))
            (num-tables (zpb-otf:table-directory-num-tables dir))
@@ -161,13 +322,10 @@
                   (line-gap loader) (zpb-otf:hhea-line-gap hhea)
                   (max-width loader) (zpb-otf:hhea-advance-width-max hhea))
             (when hmtx-info
-              (let* ((hmtx (zpb-otf:read-hmtx data (offset hmtx-info) (size hmtx-info)))
-                     (widths (make-array num-h-metrics))
-                     (lsbs (make-array num-h-metrics)))
-                (dotimes (i num-h-metrics)
-                  (let ((mrec (zpb-otf:hmtx-h-metrics-ref hmtx i)))
-                    (setf (aref widths i) (zpb-otf:long-metric-advance mrec)
-                          (aref lsbs i) (zpb-otf:long-metric-side-bearing mrec))))
+              (zpb-otf:read-hmtx data (offset hmtx-info) (size hmtx-info))
+              (multiple-value-bind (widths lsbs)
+                  (read-long-metrics data (offset hmtx-info) (size hmtx-info)
+                                     num-h-metrics (glyph-count loader))
                 (setf (advance-widths loader) widths
                       (left-side-bearings loader) lsbs))))))
 
@@ -177,18 +335,15 @@
         (cond
           ((and vhea-info vmtx-info)
            (let* ((vhea (zpb-otf:read-vhea data (offset vhea-info) (size vhea-info)))
-                  (num-v-metrics (zpb-otf:vhea-number-of-long-ver-metrics vhea))
-                  (vmtx (zpb-otf:read-vmtx data (offset vmtx-info) (size vmtx-info)))
-                  (heights (make-array num-v-metrics))
-                  (tsbs (make-array num-v-metrics)))
+                  (num-v-metrics (zpb-otf:vhea-number-of-long-ver-metrics vhea)))
+             (zpb-otf:read-vmtx data (offset vmtx-info) (size vmtx-info))
              (setf (vascender loader) (zpb-otf:vhea-ascender vhea)
                    (vdescender loader) (zpb-otf:vhea-descender vhea))
-             (dotimes (i num-v-metrics)
-               (let ((mrec (zpb-otf:vmtx-v-metrics-ref vmtx i)))
-                 (setf (aref heights i) (zpb-otf:long-metric-advance mrec)
-                       (aref tsbs i) (zpb-otf:long-metric-side-bearing mrec))))
-             (setf (advance-heights loader) heights
-                   (top-side-bearings loader) tsbs)))
+             (multiple-value-bind (heights tsbs)
+                 (read-long-metrics data (offset vmtx-info) (size vmtx-info)
+                                    num-v-metrics (glyph-count loader))
+               (setf (advance-heights loader) heights
+                     (top-side-bearings loader) tsbs))))
           (t
            (setf (vhea-missing-p loader) t
                  (vmtx-missing-p loader) t)
@@ -236,32 +391,13 @@
       (let ((info (table-info "cmap" loader)))
         (when info
           (let ((cmap (zpb-otf:read-cmap data (offset info) (size info))))
-            (setup-cmap-lookup loader cmap (offset info)))))
+            (setup-cmap-lookup loader cmap (offset info) (size info)))))
 
       ;; 8. KERN table
       (let ((info (table-info "kern" loader)))
         (when info
-          (handler-case
-              (let* ((koff (offset info))
-                     (version (zpb-otf:font-data-read-u16 data koff)))
-                (when (zerop version)
-                  (let* ((n-tables (zpb-otf:font-data-read-u16 data (+ koff 2)))
-                         (sub-off (+ koff 4)))
-                    (dotimes (t-idx n-tables)
-                      (let* ((sub-ver (zpb-otf:font-data-read-u16 data sub-off))
-                             (sub-len (zpb-otf:font-data-read-u16 data (+ sub-off 2)))
-                             (sub-cov (zpb-otf:font-data-read-u16 data (+ sub-off 4))))
-                        (when (and (zerop sub-ver) (logbitp 0 sub-cov)) ; format 0 horizontal
-                          (let* ((n-pairs (zpb-otf:font-data-read-u16 data (+ sub-off 6)))
-                                 (pair-pos (+ sub-off 14)))
-                            (dotimes (p n-pairs)
-                              (let ((left (zpb-otf:font-data-read-u16 data pair-pos))
-                                    (right (zpb-otf:font-data-read-u16 data (+ pair-pos 2)))
-                                    (val (zpb-otf:font-data-read-i16 data (+ pair-pos 4))))
-                                (setf (gethash (logior (ash left 16) right) (kerning-table loader)) val)
-                                (incf pair-pos 6)))))
-                        (incf sub-off sub-len))))))
-            (error () nil))))
+          (handler-case (load-kern-table loader (offset info) (size info))
+            (zpb-otf:font-out-of-bounds-error () nil))))
 
       ;; Initialize glyph cache
       (setf (glyph-cache loader)
@@ -272,13 +408,18 @@
 (defun open-font-loader (thing &key (collection-index 0))
   (cond
     ((streamp thing)
-     (let* ((len (file-length thing))
-            (buf (make-array len :element-type '(unsigned-byte 8))))
-       (file-position thing 0)
-       (read-sequence buf thing)
-       (open-font-loader-from-data (zpb-otf:make-font-data buf)
-                                   :collection-index collection-index
-                                   :input-stream thing)))
+     (let ((ok nil))
+       (unwind-protect
+            (let* ((len (file-length thing))
+                   (buf (make-array len :element-type '(unsigned-byte 8))))
+              (file-position thing 0)
+              (read-sequence buf thing)
+              (prog1 (open-font-loader-from-data (zpb-otf:make-font-data buf)
+                                                 :collection-index collection-index
+                                                 :input-stream thing)
+                (setf ok t)))
+         ;; The loader owns the stream; don't leak it when loading fails.
+         (unless ok (close thing)))))
     (t
      (let ((data (zpb-otf:ensure-font-data thing)))
        (open-font-loader-from-data data :collection-index collection-index)))))

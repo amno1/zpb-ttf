@@ -305,8 +305,8 @@
 
 (declaim
  (inline attach-list-coverage-offset attach-list-coverage-offset-offset
-  attach-list-glyph-count attach-list-attach-point-offsets
-  attach-list-attach-point-offsets-count attach-list-glyph-count-raw))
+  attach-list-glyph-count attach-list-attach-point-offsets-count
+  attach-list-glyph-count-raw))
 
 
 (defun attach-list-coverage-offset-offset (table)
@@ -385,8 +385,8 @@
 
 
 (declaim
- (inline attach-point-point-count attach-point-point-indices
-  attach-point-point-indices-count attach-point-point-count-raw))
+ (inline attach-point-point-count attach-point-point-indices-count
+  attach-point-point-count-raw))
 
 
 (defun attach-point-point-count (table)
@@ -447,8 +447,8 @@
 
 (declaim
  (inline lig-caret-list-coverage-offset lig-caret-list-coverage-offset-offset
-  lig-caret-list-lig-glyph-count lig-caret-list-lig-glyph-offsets
-  lig-caret-list-lig-glyph-offsets-count lig-caret-list-lig-glyph-count-raw))
+  lig-caret-list-lig-glyph-count lig-caret-list-lig-glyph-offsets-count
+  lig-caret-list-lig-glyph-count-raw))
 
 
 (defun lig-caret-list-coverage-offset-offset (table)
@@ -527,8 +527,8 @@
 
 
 (declaim
- (inline lig-glyph-caret-count lig-glyph-caret-value-offsets
-  lig-glyph-caret-value-offsets-count lig-glyph-caret-count-raw))
+ (inline lig-glyph-caret-count lig-glyph-caret-value-offsets-count
+  lig-glyph-caret-count-raw))
 
 
 (defun lig-glyph-caret-count (table)
@@ -773,8 +773,8 @@
 
 (declaim
  (inline mark-glyph-sets-format-table mark-glyph-sets-mark-glyph-set-count
-  mark-glyph-sets-coverage-offsets mark-glyph-sets-coverage-offsets-count
-  mark-glyph-sets-format-table-raw mark-glyph-sets-mark-glyph-set-count-raw))
+  mark-glyph-sets-coverage-offsets-count mark-glyph-sets-format-table-raw
+  mark-glyph-sets-mark-glyph-set-count-raw))
 
 
 (defun mark-glyph-sets-format-table (table)
@@ -849,8 +849,8 @@
 
 (declaim
  (inline lig-caret-list2-coverage-offset lig-caret-list2-coverage-offset-offset
-  lig-caret-list2-lig-glyph-count lig-caret-list2-lig-glyph-offsets
-  lig-caret-list2-lig-glyph-offsets-count))
+  lig-caret-list2-lig-glyph-count lig-caret-list2-lig-glyph-offsets-count
+  lig-caret-list2-lig-glyph-count-raw))
 
 
 (defun lig-caret-list2-coverage-offset-offset (table)
@@ -868,6 +868,17 @@
        (+ (table-ref-offset table) off)))))
 
 
+(defun lig-caret-list2-lig-glyph-count (table)
+  "Number of ligature glyphs"
+  (declare (type lig-caret-list2 table))
+  (font-data-read-u24 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 4)))
+
+
+(defun lig-caret-list2-lig-glyph-count-raw (font-data offset)
+  (font-data-read-u24 font-data (+ offset 4)))
+
+
 (defun lig-caret-list2-lig-glyph-offsets-count (table)
   "Array of offsets to LigGlyph tables, from beginning of LigCaretList2 table —in Coverage Index order"
   (lig-caret-list2-lig-glyph-count table))
@@ -877,7 +888,7 @@
   "Array of offsets to LigGlyph tables, from beginning of LigCaretList2 table —in Coverage Index order"
   (declare (type lig-caret-list2 table)
            (type (unsigned-byte 32) index))
-  (let* ((pos (+ (+ (table-ref-offset table) 4) (* index 3))))
+  (let* ((pos (+ (+ (table-ref-offset table) 7) (* index 3))))
     (unless
         (<= (+ pos 3) (+ (table-ref-offset table) (table-ref-length table)))
       (error 'font-out-of-bounds-error :pos pos :size 3 :length
@@ -892,14 +903,14 @@
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 4 length) (font-data-valid-range-p font-data offset 4))
-    (error 'font-out-of-bounds-error :pos offset :size 4 :length
+  (unless (and (<= 7 length) (font-data-valid-range-p font-data offset 7))
+    (error 'font-out-of-bounds-error :pos offset :size 7 :length
            (font-data-length font-data)))
   (let ((cnt (lig-caret-list2-lig-glyph-count-raw font-data offset)))
     (unless
-        (and (<= (+ 4 (* cnt 3)) length)
-             (font-data-valid-range-p font-data offset (+ 4 (* cnt 3))))
-      (error 'font-out-of-bounds-error :pos offset :size (+ 4 (* cnt 3))
+        (and (<= (+ 7 (* cnt 3)) length)
+             (font-data-valid-range-p font-data offset (+ 7 (* cnt 3))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 7 (* cnt 3))
              :length (font-data-length font-data))))
   t)
 

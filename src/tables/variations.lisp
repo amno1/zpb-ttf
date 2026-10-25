@@ -56,7 +56,8 @@
    tuple-variation-header-variation-data-size variation-region
    variation-region-list variation-region-list-axis-count
    variation-region-list-p variation-region-list-region-count
-   variation-region-list-variation-regions variation-region-p
+   variation-region-list-variation-regions
+   variation-region-list-variation-regions-start variation-region-p
    variation-region-region-axes variation-region-region-axes-count
    variation-region-region-axes-ref))
 
@@ -86,12 +87,10 @@
      (:constructor %make-tuple (%record-font-data %record-offset))))
 
 
-(declaim (inline tuple-values))
-
-
 (defun tuple-values-count (rec &optional axis-count)
   "Coordinate array specifying a position within the font’s variation space.  The number of elements must match the axisCount specified in the 'fvar' table."
-  (declare (type tuple rec))
+  (declare (type tuple rec)
+           (ignore rec))
   axis-count)
 
 
@@ -108,12 +107,10 @@
      (:constructor %make-variation-region (%record-font-data %record-offset))))
 
 
-(declaim (inline variation-region-region-axes))
-
-
 (defun variation-region-region-axes-count (rec &optional axis-count)
   "Array of region axis coordinates records, in the order of axes given in the 'fvar' table."
-  (declare (type variation-region rec))
+  (declare (type variation-region rec)
+           (ignore rec))
   axis-count)
 
 
@@ -167,13 +164,11 @@
 
 (declaim
  (inline tuple-variation-header-variation-data-size
-  tuple-variation-header-tuple-index tuple-variation-header-peak-tuple
-  tuple-variation-header-peak-tuple-count
-  tuple-variation-header-intermediate-start-tuple
+  tuple-variation-header-tuple-index tuple-variation-header-peak-tuple-count
   tuple-variation-header-intermediate-start-tuple-count
-  tuple-variation-header-intermediate-end-tuple
   tuple-variation-header-intermediate-end-tuple-count
-  tuple-variation-header-variation-data-size-raw))
+  tuple-variation-header-variation-data-size-raw
+  tuple-variation-header-tuple-index-raw))
 
 
 (defun tuple-variation-header-variation-data-size (table)
@@ -186,19 +181,32 @@
   (font-data-read-u16 font-data offset))
 
 
+(defun tuple-variation-header-tuple-index (table)
+  "A packed field. The high 4 bits are flags (see below). The low 12 bits are an index into a shared tuple records array."
+  (declare (type tuple-variation-header table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 2)))
+
+
+(defun tuple-variation-header-tuple-index-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 2)))
+
+
 (defun tuple-variation-header-peak-tuple-count (table &optional count)
   "Peak tuple record for this tuple variation table — optional, determined by flags in the tupleIndex value.  Note that this must always be included in the 'cvar' table."
   (or count
       (max 0
-           (floor (- (table-ref-length table) (+ (table-ref-offset table) 2))
-                  2))))
+           (floor
+            (- (+ (table-ref-offset table) (table-ref-length table))
+               (+ (table-ref-offset table) 4))
+            2))))
 
 
 (defun tuple-variation-header-peak-tuple-ref (table index)
   "Peak tuple record for this tuple variation table — optional, determined by flags in the tupleIndex value.  Note that this must always be included in the 'cvar' table."
   (declare (type tuple-variation-header table)
            (type (unsigned-byte 32) index))
-  (let ((pos (+ (+ (table-ref-offset table) 2) (* index 2))))
+  (let ((pos (+ (+ (table-ref-offset table) 4) (* index 2))))
     (unless
         (<= (+ pos 2) (+ (table-ref-offset table) (table-ref-length table)))
       (error 'font-out-of-bounds-error :pos pos :size 2 :length
@@ -212,8 +220,8 @@
   (or count
       (max 0
            (floor
-            (- (table-ref-length table)
-               (+ (table-ref-offset table) 2
+            (- (+ (table-ref-offset table) (table-ref-length table))
+               (+ (table-ref-offset table) 4
                   (* (tuple-variation-header-peak-tuple-count table) 2)))
             2))))
 
@@ -224,7 +232,7 @@
            (type (unsigned-byte 32) index))
   (let ((pos
          (+
-          (+ (table-ref-offset table) 2
+          (+ (table-ref-offset table) 4
              (* (tuple-variation-header-peak-tuple-count table) 2))
           (* index 2))))
     (unless
@@ -240,8 +248,8 @@
   (or count
       (max 0
            (floor
-            (- (table-ref-length table)
-               (+ (table-ref-offset table) 2
+            (- (+ (table-ref-offset table) (table-ref-length table))
+               (+ (table-ref-offset table) 4
                   (*
                    (tuple-variation-header-intermediate-start-tuple-count
                     table)
@@ -256,7 +264,7 @@
            (type (unsigned-byte 32) index))
   (let ((pos
          (+
-          (+ (table-ref-offset table) 2
+          (+ (table-ref-offset table) 4
              (* (tuple-variation-header-intermediate-start-tuple-count table)
                 2)
              (* (tuple-variation-header-peak-tuple-count table) 2))
@@ -272,8 +280,8 @@
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 2 length) (font-data-valid-range-p font-data offset 2))
-    (error 'font-out-of-bounds-error :pos offset :size 2 :length
+  (unless (and (<= 4 length) (font-data-valid-range-p font-data offset 4))
+    (error 'font-out-of-bounds-error :pos offset :size 4 :length
            (font-data-length font-data)))
   t)
 
@@ -294,7 +302,7 @@
 (declaim
  (inline delta-set-index-map-format0-format-table
   delta-set-index-map-format0-entry-format
-  delta-set-index-map-format0-map-count delta-set-index-map-format0-map-data
+  delta-set-index-map-format0-map-count
   delta-set-index-map-format0-map-data-count
   delta-set-index-map-format0-format-table-raw
   delta-set-index-map-format0-entry-format-raw
@@ -337,8 +345,10 @@
   "The delta-set index mapping data. See details below."
   (or count
       (max 0
-           (floor (- (table-ref-length table) (+ (table-ref-offset table) 4))
-                  1))))
+           (floor
+            (- (+ (table-ref-offset table) (table-ref-length table))
+               (+ (table-ref-offset table) 4))
+            1))))
 
 
 (defun delta-set-index-map-format0-map-data-ref (table index)
@@ -385,7 +395,7 @@
 (declaim
  (inline delta-set-index-map-format1-format-table
   delta-set-index-map-format1-entry-format
-  delta-set-index-map-format1-map-count delta-set-index-map-format1-map-data
+  delta-set-index-map-format1-map-count
   delta-set-index-map-format1-map-data-count
   delta-set-index-map-format1-format-table-raw
   delta-set-index-map-format1-entry-format-raw
@@ -428,8 +438,10 @@
   "The delta-set index mapping data. See details below."
   (or count
       (max 0
-           (floor (- (table-ref-length table) (+ (table-ref-offset table) 6))
-                  1))))
+           (floor
+            (- (+ (table-ref-offset table) (table-ref-length table))
+               (+ (table-ref-offset table) 6))
+            1))))
 
 
 (defun delta-set-index-map-format1-map-data-ref (table index)
@@ -488,8 +500,7 @@
 
 (declaim
  (inline variation-region-list-axis-count variation-region-list-region-count
-  variation-region-list-variation-regions variation-region-list-axis-count-raw
-  variation-region-list-region-count-raw))
+  variation-region-list-axis-count-raw variation-region-list-region-count-raw))
 
 
 (defun variation-region-list-axis-count (table)
@@ -511,6 +522,12 @@
 
 (defun variation-region-list-region-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
+
+
+(defun variation-region-list-variation-regions-start (table)
+  "Byte position of the first VARIATION-REGION element; elements are variable-length."
+  (declare (type variation-region-list table))
+  (+ (table-ref-offset table) 4))
 
 
 (defun sanitize-variation-region-list (font-data offset length)
@@ -541,7 +558,6 @@
   item-variation-store-variation-region-list-offset
   item-variation-store-variation-region-list-offset-offset
   item-variation-store-item-variation-data-count
-  item-variation-store-item-variation-data-offsets
   item-variation-store-item-variation-data-offsets-count
   item-variation-store-format-table-raw
   item-variation-store-item-variation-data-count-raw))
@@ -636,10 +652,9 @@
 
 (declaim
  (inline item-variation-data-item-count item-variation-data-word-delta-count
-  item-variation-data-region-index-count item-variation-data-region-indexes
-  item-variation-data-region-indexes-count item-variation-data-delta-sets
-  item-variation-data-delta-sets-count item-variation-data-item-count-raw
-  item-variation-data-word-delta-count-raw
+  item-variation-data-region-index-count
+  item-variation-data-region-indexes-count item-variation-data-delta-sets-count
+  item-variation-data-item-count-raw item-variation-data-word-delta-count-raw
   item-variation-data-region-index-count-raw))
 
 
@@ -697,7 +712,7 @@
   (or count
       (max 0
            (floor
-            (- (table-ref-length table)
+            (- (+ (table-ref-offset table) (table-ref-length table))
                (+ (table-ref-offset table) 6
                   (* (item-variation-data-region-indexes-count table) 2)))
             1))))

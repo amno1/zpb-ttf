@@ -406,7 +406,6 @@
 (declaim
  (inline single-subst-format2-subst-format single-subst-format2-coverage-offset
   single-subst-format2-coverage-offset-offset single-subst-format2-glyph-count
-  single-subst-format2-substitute-glyph-ids
   single-subst-format2-substitute-glyph-ids-count
   single-subst-format2-subst-format-raw single-subst-format2-glyph-count-raw))
 
@@ -498,7 +497,7 @@
  (inline multiple-subst-format1-subst-format
   multiple-subst-format1-coverage-offset
   multiple-subst-format1-coverage-offset-offset
-  multiple-subst-format1-sequence-count multiple-subst-format1-sequence-offsets
+  multiple-subst-format1-sequence-count
   multiple-subst-format1-sequence-offsets-count
   multiple-subst-format1-subst-format-raw
   multiple-subst-format1-sequence-count-raw))
@@ -591,8 +590,8 @@
 
 
 (declaim
- (inline sequence-table-glyph-count sequence-table-substitute-glyph-ids
-  sequence-table-substitute-glyph-ids-count sequence-table-glyph-count-raw))
+ (inline sequence-table-glyph-count sequence-table-substitute-glyph-ids-count
+  sequence-table-glyph-count-raw))
 
 
 (defun sequence-table-glyph-count (table)
@@ -656,7 +655,6 @@
   alternate-subst-format1-coverage-offset
   alternate-subst-format1-coverage-offset-offset
   alternate-subst-format1-alternate-set-count
-  alternate-subst-format1-alternate-set-offsets
   alternate-subst-format1-alternate-set-offsets-count
   alternate-subst-format1-subst-format-raw
   alternate-subst-format1-alternate-set-count-raw))
@@ -750,8 +748,8 @@
 
 
 (declaim
- (inline alternate-set-glyph-count alternate-set-alternate-glyph-ids
-  alternate-set-alternate-glyph-ids-count alternate-set-glyph-count-raw))
+ (inline alternate-set-glyph-count alternate-set-alternate-glyph-ids-count
+  alternate-set-glyph-count-raw))
 
 
 (defun alternate-set-glyph-count (table)
@@ -815,7 +813,6 @@
   ligature-subst-format1-coverage-offset
   ligature-subst-format1-coverage-offset-offset
   ligature-subst-format1-ligature-set-count
-  ligature-subst-format1-ligature-set-offsets
   ligature-subst-format1-ligature-set-offsets-count
   ligature-subst-format1-subst-format-raw
   ligature-subst-format1-ligature-set-count-raw))
@@ -908,8 +905,8 @@
 
 
 (declaim
- (inline ligature-set-ligature-count ligature-set-ligature-offsets
-  ligature-set-ligature-offsets-count ligature-set-ligature-count-raw))
+ (inline ligature-set-ligature-count ligature-set-ligature-offsets-count
+  ligature-set-ligature-count-raw))
 
 
 (defun ligature-set-ligature-count (table)
@@ -973,8 +970,8 @@
 
 (declaim
  (inline ligature-ligature-glyph ligature-component-count
-  ligature-component-glyph-ids ligature-component-glyph-ids-count
-  ligature-ligature-glyph-raw ligature-component-count-raw))
+  ligature-component-glyph-ids-count ligature-ligature-glyph-raw
+  ligature-component-count-raw))
 
 
 (defun ligature-ligature-glyph (table)
@@ -1112,13 +1109,10 @@
   reverse-chain-single-subst-format1-coverage-offset
   reverse-chain-single-subst-format1-coverage-offset-offset
   reverse-chain-single-subst-format1-backtrack-glyph-count
-  reverse-chain-single-subst-format1-backtrack-coverage-offsets
   reverse-chain-single-subst-format1-backtrack-coverage-offsets-count
   reverse-chain-single-subst-format1-lookahead-glyph-count
-  reverse-chain-single-subst-format1-lookahead-coverage-offsets
   reverse-chain-single-subst-format1-lookahead-coverage-offsets-count
   reverse-chain-single-subst-format1-glyph-count
-  reverse-chain-single-subst-format1-substitute-glyph-ids
   reverse-chain-single-subst-format1-substitute-glyph-ids-count
   reverse-chain-single-subst-format1-subst-format-raw
   reverse-chain-single-subst-format1-backtrack-glyph-count-raw))
@@ -1302,7 +1296,8 @@
 (declaim
  (inline single-subst-format3-subst-format single-subst-format3-coverage-offset
   single-subst-format3-coverage-offset-offset
-  single-subst-format3-delta-glyph-id single-subst-format3-subst-format-raw))
+  single-subst-format3-delta-glyph-id single-subst-format3-subst-format-raw
+  single-subst-format3-delta-glyph-id-raw))
 
 
 (defun single-subst-format3-subst-format (table)
@@ -1331,12 +1326,23 @@
        (+ (table-ref-offset table) off)))))
 
 
+(defun single-subst-format3-delta-glyph-id (table)
+  "Add to original glyph ID to get substitute glyph ID"
+  (declare (type single-subst-format3 table))
+  (font-data-read-i24 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 6)))
+
+
+(defun single-subst-format3-delta-glyph-id-raw (font-data offset)
+  (font-data-read-i24 font-data (+ offset 6)))
+
+
 (defun sanitize-single-subst-format3 (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 6 length) (font-data-valid-range-p font-data offset 6))
-    (error 'font-out-of-bounds-error :pos offset :size 6 :length
+  (unless (and (<= 9 length) (font-data-valid-range-p font-data offset 9))
+    (error 'font-out-of-bounds-error :pos offset :size 9 :length
            (font-data-length font-data)))
   t)
 
@@ -1357,9 +1363,8 @@
 (declaim
  (inline single-subst-format4-subst-format single-subst-format4-coverage-offset
   single-subst-format4-coverage-offset-offset single-subst-format4-glyph-count
-  single-subst-format4-substitute-glyph-ids
   single-subst-format4-substitute-glyph-ids-count
-  single-subst-format4-subst-format-raw))
+  single-subst-format4-subst-format-raw single-subst-format4-glyph-count-raw))
 
 
 (defun single-subst-format4-subst-format (table)
@@ -1388,6 +1393,17 @@
        (+ (table-ref-offset table) off)))))
 
 
+(defun single-subst-format4-glyph-count (table)
+  "Number of glyph IDs in the substituteGlyphIDs array"
+  (declare (type single-subst-format4 table))
+  (font-data-read-u24 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 6)))
+
+
+(defun single-subst-format4-glyph-count-raw (font-data offset)
+  (font-data-read-u24 font-data (+ offset 6)))
+
+
 (defun single-subst-format4-substitute-glyph-ids-count (table)
   "Array of substitute glyph IDs — ordered by Coverage index"
   (single-subst-format4-glyph-count table))
@@ -1397,7 +1413,7 @@
   "Array of substitute glyph IDs — ordered by Coverage index"
   (declare (type single-subst-format4 table)
            (type (unsigned-byte 32) index))
-  (let ((pos (+ (+ (table-ref-offset table) 6) (* index 3))))
+  (let ((pos (+ (+ (table-ref-offset table) 9) (* index 3))))
     (unless
         (<= (+ pos 3) (+ (table-ref-offset table) (table-ref-length table)))
       (error 'font-out-of-bounds-error :pos pos :size 3 :length
@@ -1409,14 +1425,14 @@
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 6 length) (font-data-valid-range-p font-data offset 6))
-    (error 'font-out-of-bounds-error :pos offset :size 6 :length
+  (unless (and (<= 9 length) (font-data-valid-range-p font-data offset 9))
+    (error 'font-out-of-bounds-error :pos offset :size 9 :length
            (font-data-length font-data)))
   (let ((cnt (single-subst-format4-glyph-count-raw font-data offset)))
     (unless
-        (and (<= (+ 6 (* cnt 3)) length)
-             (font-data-valid-range-p font-data offset (+ 6 (* cnt 3))))
-      (error 'font-out-of-bounds-error :pos offset :size (+ 6 (* cnt 3))
+        (and (<= (+ 9 (* cnt 3)) length)
+             (font-data-valid-range-p font-data offset (+ 9 (* cnt 3))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 9 (* cnt 3))
              :length (font-data-length font-data))))
   t)
 
@@ -1438,9 +1454,10 @@
  (inline multiple-subst-format2-subst-format
   multiple-subst-format2-coverage-offset
   multiple-subst-format2-coverage-offset-offset
-  multiple-subst-format2-sequence-count multiple-subst-format2-sequence-offsets
+  multiple-subst-format2-sequence-count
   multiple-subst-format2-sequence-offsets-count
-  multiple-subst-format2-subst-format-raw))
+  multiple-subst-format2-subst-format-raw
+  multiple-subst-format2-sequence-count-raw))
 
 
 (defun multiple-subst-format2-subst-format (table)
@@ -1469,6 +1486,17 @@
        (+ (table-ref-offset table) off)))))
 
 
+(defun multiple-subst-format2-sequence-count (table)
+  "Number of Sequence table offsets in the sequenceOffsets array"
+  (declare (type multiple-subst-format2 table))
+  (font-data-read-u24 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 6)))
+
+
+(defun multiple-subst-format2-sequence-count-raw (font-data offset)
+  (font-data-read-u24 font-data (+ offset 6)))
+
+
 (defun multiple-subst-format2-sequence-offsets-count (table)
   "Array of offsets to Sequence tables. Offsets are from beginning of substitution subtable, ordered by Coverage index"
   (multiple-subst-format2-sequence-count table))
@@ -1478,7 +1506,7 @@
   "Array of offsets to Sequence tables. Offsets are from beginning of substitution subtable, ordered by Coverage index"
   (declare (type multiple-subst-format2 table)
            (type (unsigned-byte 32) index))
-  (let* ((pos (+ (+ (table-ref-offset table) 6) (* index 3))))
+  (let* ((pos (+ (+ (table-ref-offset table) 9) (* index 3))))
     (unless
         (<= (+ pos 3) (+ (table-ref-offset table) (table-ref-length table)))
       (error 'font-out-of-bounds-error :pos pos :size 3 :length
@@ -1493,14 +1521,14 @@
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 6 length) (font-data-valid-range-p font-data offset 6))
-    (error 'font-out-of-bounds-error :pos offset :size 6 :length
+  (unless (and (<= 9 length) (font-data-valid-range-p font-data offset 9))
+    (error 'font-out-of-bounds-error :pos offset :size 9 :length
            (font-data-length font-data)))
   (let ((cnt (multiple-subst-format2-sequence-count-raw font-data offset)))
     (unless
-        (and (<= (+ 6 (* cnt 3)) length)
-             (font-data-valid-range-p font-data offset (+ 6 (* cnt 3))))
-      (error 'font-out-of-bounds-error :pos offset :size (+ 6 (* cnt 3))
+        (and (<= (+ 9 (* cnt 3)) length)
+             (font-data-valid-range-p font-data offset (+ 9 (* cnt 3))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 9 (* cnt 3))
              :length (font-data-length font-data))))
   t)
 
@@ -1523,9 +1551,9 @@
   alternate-subst-format2-coverage-offset
   alternate-subst-format2-coverage-offset-offset
   alternate-subst-format2-alternate-set-count
-  alternate-subst-format2-alternate-set-offsets
   alternate-subst-format2-alternate-set-offsets-count
-  alternate-subst-format2-subst-format-raw))
+  alternate-subst-format2-subst-format-raw
+  alternate-subst-format2-alternate-set-count-raw))
 
 
 (defun alternate-subst-format2-subst-format (table)
@@ -1554,6 +1582,17 @@
        (+ (table-ref-offset table) off)))))
 
 
+(defun alternate-subst-format2-alternate-set-count (table)
+  "Number of AlternateSet tables"
+  (declare (type alternate-subst-format2 table))
+  (font-data-read-u24 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 6)))
+
+
+(defun alternate-subst-format2-alternate-set-count-raw (font-data offset)
+  (font-data-read-u24 font-data (+ offset 6)))
+
+
 (defun alternate-subst-format2-alternate-set-offsets-count (table)
   "Array of offsets to AlternateSet tables. Offsets are from beginning of substitution subtable, ordered by Coverage index"
   (alternate-subst-format2-alternate-set-count table))
@@ -1563,7 +1602,7 @@
   "Array of offsets to AlternateSet tables. Offsets are from beginning of substitution subtable, ordered by Coverage index"
   (declare (type alternate-subst-format2 table)
            (type (unsigned-byte 32) index))
-  (let* ((pos (+ (+ (table-ref-offset table) 6) (* index 3))))
+  (let* ((pos (+ (+ (table-ref-offset table) 9) (* index 3))))
     (unless
         (<= (+ pos 3) (+ (table-ref-offset table) (table-ref-length table)))
       (error 'font-out-of-bounds-error :pos pos :size 3 :length
@@ -1578,15 +1617,15 @@
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 6 length) (font-data-valid-range-p font-data offset 6))
-    (error 'font-out-of-bounds-error :pos offset :size 6 :length
+  (unless (and (<= 9 length) (font-data-valid-range-p font-data offset 9))
+    (error 'font-out-of-bounds-error :pos offset :size 9 :length
            (font-data-length font-data)))
   (let ((cnt
          (alternate-subst-format2-alternate-set-count-raw font-data offset)))
     (unless
-        (and (<= (+ 6 (* cnt 3)) length)
-             (font-data-valid-range-p font-data offset (+ 6 (* cnt 3))))
-      (error 'font-out-of-bounds-error :pos offset :size (+ 6 (* cnt 3))
+        (and (<= (+ 9 (* cnt 3)) length)
+             (font-data-valid-range-p font-data offset (+ 9 (* cnt 3))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 9 (* cnt 3))
              :length (font-data-length font-data))))
   t)
 
@@ -1609,9 +1648,9 @@
   ligature-subst-format2-coverage-offset
   ligature-subst-format2-coverage-offset-offset
   ligature-subst-format2-ligature-set-count
-  ligature-subst-format2-ligature-set-offsets
   ligature-subst-format2-ligature-set-offsets-count
-  ligature-subst-format2-subst-format-raw))
+  ligature-subst-format2-subst-format-raw
+  ligature-subst-format2-ligature-set-count-raw))
 
 
 (defun ligature-subst-format2-subst-format (table)
@@ -1640,6 +1679,17 @@
        (+ (table-ref-offset table) off)))))
 
 
+(defun ligature-subst-format2-ligature-set-count (table)
+  "Number of LigatureSet tables"
+  (declare (type ligature-subst-format2 table))
+  (font-data-read-u24 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 6)))
+
+
+(defun ligature-subst-format2-ligature-set-count-raw (font-data offset)
+  (font-data-read-u24 font-data (+ offset 6)))
+
+
 (defun ligature-subst-format2-ligature-set-offsets-count (table)
   "Array of offsets to LigatureSet tables. Offsets are from beginning of substitution subtable, ordered by Coverage index"
   (ligature-subst-format2-ligature-set-count table))
@@ -1649,7 +1699,7 @@
   "Array of offsets to LigatureSet tables. Offsets are from beginning of substitution subtable, ordered by Coverage index"
   (declare (type ligature-subst-format2 table)
            (type (unsigned-byte 32) index))
-  (let* ((pos (+ (+ (table-ref-offset table) 6) (* index 3))))
+  (let* ((pos (+ (+ (table-ref-offset table) 9) (* index 3))))
     (unless
         (<= (+ pos 3) (+ (table-ref-offset table) (table-ref-length table)))
       (error 'font-out-of-bounds-error :pos pos :size 3 :length
@@ -1664,14 +1714,14 @@
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 6 length) (font-data-valid-range-p font-data offset 6))
-    (error 'font-out-of-bounds-error :pos offset :size 6 :length
+  (unless (and (<= 9 length) (font-data-valid-range-p font-data offset 9))
+    (error 'font-out-of-bounds-error :pos offset :size 9 :length
            (font-data-length font-data)))
   (let ((cnt (ligature-subst-format2-ligature-set-count-raw font-data offset)))
     (unless
-        (and (<= (+ 6 (* cnt 3)) length)
-             (font-data-valid-range-p font-data offset (+ 6 (* cnt 3))))
-      (error 'font-out-of-bounds-error :pos offset :size (+ 6 (* cnt 3))
+        (and (<= (+ 9 (* cnt 3)) length)
+             (font-data-valid-range-p font-data offset (+ 9 (* cnt 3))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 9 (* cnt 3))
              :length (font-data-length font-data))))
   t)
 
@@ -1694,13 +1744,10 @@
   reverse-chain-single-subst-format2-coverage-offset
   reverse-chain-single-subst-format2-coverage-offset-offset
   reverse-chain-single-subst-format2-backtrack-glyph-count
-  reverse-chain-single-subst-format2-backtrack-coverage-offsets
   reverse-chain-single-subst-format2-backtrack-coverage-offsets-count
   reverse-chain-single-subst-format2-lookahead-glyph-count
-  reverse-chain-single-subst-format2-lookahead-coverage-offsets
   reverse-chain-single-subst-format2-lookahead-coverage-offsets-count
   reverse-chain-single-subst-format2-glyph-count
-  reverse-chain-single-subst-format2-substitute-glyph-ids
   reverse-chain-single-subst-format2-substitute-glyph-ids-count
   reverse-chain-single-subst-format2-subst-format-raw
   reverse-chain-single-subst-format2-backtrack-glyph-count-raw))
@@ -1806,6 +1853,21 @@
          (+ (table-ref-offset table) off))))))
 
 
+(defun reverse-chain-single-subst-format2-glyph-count (table)
+  "Number of glyph IDs in the substituteGlyphIDs array."
+  (declare (type reverse-chain-single-subst-format2 table))
+  (font-data-read-u24 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 10
+                         (*
+                          (reverse-chain-single-subst-format2-lookahead-coverage-offsets-count
+                           table)
+                          3)
+                         (*
+                          (reverse-chain-single-subst-format2-backtrack-coverage-offsets-count
+                           table)
+                          3))))
+
+
 (defun reverse-chain-single-subst-format2-substitute-glyph-ids-count (table)
   "Array of substitute glyph IDs — ordered by Coverage index."
   (reverse-chain-single-subst-format2-glyph-count table))
@@ -1818,7 +1880,7 @@
            (type (unsigned-byte 32) index))
   (let ((pos
          (+
-          (+ (table-ref-offset table) 10
+          (+ (table-ref-offset table) 13
              (*
               (reverse-chain-single-subst-format2-lookahead-coverage-offsets-count
                table)
@@ -1867,8 +1929,8 @@
 
 
 (declaim
- (inline sequence2-glyph-count sequence2-substitute-glyph-ids
-  sequence2-substitute-glyph-ids-count sequence2-glyph-count-raw))
+ (inline sequence2-glyph-count sequence2-substitute-glyph-ids-count
+  sequence2-glyph-count-raw))
 
 
 (defun sequence2-glyph-count (table)
@@ -1928,8 +1990,8 @@
 
 
 (declaim
- (inline alternate-set2-glyph-count alternate-set2-alternate-glyph-ids
-  alternate-set2-alternate-glyph-ids-count alternate-set2-glyph-count-raw))
+ (inline alternate-set2-glyph-count alternate-set2-alternate-glyph-ids-count
+  alternate-set2-glyph-count-raw))
 
 
 (defun alternate-set2-glyph-count (table)
@@ -1989,8 +2051,8 @@
 
 
 (declaim
- (inline ligature-set2-ligature-count ligature-set2-ligature-offsets
-  ligature-set2-ligature-offsets-count ligature-set2-ligature-count-raw))
+ (inline ligature-set2-ligature-count ligature-set2-ligature-offsets-count
+  ligature-set2-ligature-count-raw))
 
 
 (defun ligature-set2-ligature-count (table)
@@ -2054,8 +2116,8 @@
 
 (declaim
  (inline ligature2-ligature-glyph ligature2-component-count
-  ligature2-component-glyph-ids ligature2-component-glyph-ids-count
-  ligature2-ligature-glyph-raw ligature2-component-count-raw))
+  ligature2-component-glyph-ids-count ligature2-ligature-glyph-raw
+  ligature2-component-count-raw))
 
 
 (defun ligature2-ligature-glyph (table)

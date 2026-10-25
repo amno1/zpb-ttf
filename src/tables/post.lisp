@@ -11,8 +11,8 @@
    post-glyph-name-index-ref post-is-fixed-pitch post-italic-angle
    post-max-mem-type1 post-max-mem-type42 post-min-mem-type1
    post-min-mem-type42 post-num-glyphs post-p post-string-data
-   post-underline-position post-underline-thickness post-version read-post
-   sanitize-post))
+   post-string-data-start post-underline-position post-underline-thickness
+   post-version read-post sanitize-post))
 
 
 (defstruct
@@ -24,21 +24,20 @@
  (inline post-version post-italic-angle post-underline-position
   post-underline-thickness post-is-fixed-pitch post-min-mem-type42
   post-max-mem-type42 post-min-mem-type1 post-max-mem-type1 post-num-glyphs
-  post-glyph-name-index post-glyph-name-index-count post-string-data
-  post-version-raw post-italic-angle-raw post-underline-position-raw
-  post-underline-thickness-raw post-is-fixed-pitch-raw post-min-mem-type42-raw
-  post-max-mem-type42-raw post-min-mem-type1-raw post-max-mem-type1-raw
-  post-num-glyphs-raw))
+  post-glyph-name-index-count post-version-raw post-italic-angle-raw
+  post-underline-position-raw post-underline-thickness-raw
+  post-is-fixed-pitch-raw post-min-mem-type42-raw post-max-mem-type42-raw
+  post-min-mem-type1-raw post-max-mem-type1-raw post-num-glyphs-raw))
 
 
 (defun post-version (table)
   "0x00010000 for version 1.0 0x00020000 for version 2.0 0x00025000 for version 2.5 (deprecated) 0x00030000 for version 3.0"
   (declare (type post table))
-  (font-data-read-fixed (table-ref-font-data table) (table-ref-offset table)))
+  (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
 
 
 (defun post-version-raw (font-data offset)
-  (font-data-read-fixed font-data offset))
+  (font-data-read-u32 font-data offset))
 
 
 (defun post-italic-angle (table)
@@ -156,6 +155,12 @@
       (error 'font-out-of-bounds-error :pos pos :size 2 :length
              (table-ref-length table)))
     (font-data-read-u16 (table-ref-font-data table) pos)))
+
+
+(defun post-string-data-start (table)
+  "Byte position of the first P-STRING element; elements are variable-length."
+  (declare (type post table))
+  (+ (table-ref-offset table) 34 (* (post-glyph-name-index-count table) 2)))
 
 
 (defun sanitize-post (font-data offset length)

@@ -18,7 +18,7 @@
 
 
 (declaim
- (inline eblc-major-version eblc-minor-version eblc-num-sizes eblc-bitmap-sizes
+ (inline eblc-major-version eblc-minor-version eblc-num-sizes
   eblc-bitmap-sizes-count eblc-major-version-raw eblc-minor-version-raw
   eblc-num-sizes-raw))
 

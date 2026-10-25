@@ -11,14 +11,16 @@
    (table-count :initarg :table-count :initform 0 :reader table-count)
    ;; from 'head' table
    (units/em :accessor units/em :initform 2048)
-   (bounding-box :accessor bounding-box :initform #(0 0 0 0))
+   (bounding-box :accessor bounding-box :initform (vector 0 0 0 0))
    (loca-offset-format :accessor loca-offset-format :initform :short)
    ;; from 'loca' table
    (glyph-locations :accessor glyph-locations :initform nil)
    ;; from 'cmap' table
-   (character-map :accessor character-map :initform nil)
+   ;; Glyph index -> lowest code point mapping to it; built on first use.
    (inverse-character-map :accessor inverse-character-map :initform nil)
    (cmap-lookup-fn :accessor cmap-lookup-fn :initform nil)
+   ;; Function of one argument FN, calling (FN code-point glyph-index) for each mapping.
+   (cmap-mappings-fn :accessor cmap-mappings-fn :initform nil)
    ;; from 'maxp' table
    (glyph-count :accessor glyph-count :initform 0)
    ;; from 'hhea' table
@@ -27,16 +29,16 @@
    (line-gap :accessor line-gap :initform 0)
    (max-width :accessor max-width :initform 0)
    ;; from 'hmtx' table
-   (advance-widths :accessor advance-widths :initform #())
-   (left-side-bearings :accessor left-side-bearings :initform #())
+   (advance-widths :accessor advance-widths :initform (vector))
+   (left-side-bearings :accessor left-side-bearings :initform (vector))
    ;; from 'vhea' table
    (vhea-missing-p :initform nil :accessor vhea-missing-p)
    (vascender :accessor vascender :initform 0)
    (vdescender :accessor vdescender :initform 0)
    ;; from 'vhea' and 'vmtx' tables
    (vmtx-missing-p :initform nil :accessor vmtx-missing-p)
-   (advance-heights :accessor advance-heights :initform #())
-   (top-side-bearings :accessor top-side-bearings :initform #())
+   (advance-heights :accessor advance-heights :initform (vector))
+   (top-side-bearings :accessor top-side-bearings :initform (vector))
    ;; from 'kern' table
    (kerning-table :initform (make-hash-table) :accessor kerning-table)
    ;; from 'name' table
@@ -140,18 +142,31 @@
                   (or (null name-id) (= (name-id name-entry) name-id)))
         return name-entry))
 
+(defun name-entry-rank (entry)
+  "Preference rank of ENTRY, lower is better."
+  (let ((plat (platform-id entry))
+        (enc (encoding-id entry))
+        (lang (language-id entry)))
+    (cond ((and (= plat 3) (= enc 1) (= lang #x0409)) 0) ; Windows US-English
+          ((and (= plat 3) (= enc 10) (= lang #x0409)) 1)
+          ((= plat 3) 2)
+          ((= plat 0) 3)                                 ; Unicode
+          ((and (= plat 1) (= enc 0) (= lang 0)) 4)      ; Mac Roman
+          (t 5))))
+
 (defmethod name-entry-value (name-designator (font-loader font-loader))
-  (let* ((name-id (etypecase name-designator
-                    (keyword (name-identifier-id name-designator))
-                    (integer name-designator)))
-         (entry (or (find-name-entry 3 1 #x0409 name-id font-loader) ; Windows US-English
-                    (find-name-entry 3 10 #x0409 name-id font-loader)
-                    (find-name-entry 3 nil nil name-id font-loader)
-                    (find-name-entry 0 nil nil name-id font-loader) ; Unicode
-                    (find-name-entry 1 0 0 name-id font-loader)    ; Mac Roman
-                    (find-name-entry nil nil nil name-id font-loader))))
-    (when entry
-      (value entry))))
+  (let ((name-id (etypecase name-designator
+                   (keyword (name-identifier-id name-designator))
+                   (integer name-designator)))
+        (best nil)
+        (best-rank nil))
+    (loop for entry across (name-entries font-loader)
+          when (= (name-id entry) name-id)
+            do (let ((rank (name-entry-rank entry)))
+                 (when (or (null best-rank) (< rank best-rank))
+                   (setf best entry best-rank rank))))
+    (when best
+      (value best))))
 
 (defmethod postscript-name ((font-loader font-loader))
   (name-entry-value :postscript-name font-loader))
@@ -174,9 +189,21 @@
           (funcall fn code-point)
           0))))
 
+(defun build-inverse-character-map (font-loader)
+  (let ((inv (make-array (glyph-count font-loader) :initial-element 0))
+        (fn (cmap-mappings-fn font-loader)))
+    (when fn
+      (funcall fn (lambda (cp gid)
+                    (when (and (< 0 gid (length inv))
+                               (or (zerop (aref inv gid)) (< cp (aref inv gid))))
+                      (setf (aref inv gid) cp)))))
+    inv))
+
 (defgeneric font-index-code-point (glyph-index font-loader)
   (:method (glyph-index (font-loader font-loader))
-    (let ((inv (inverse-character-map font-loader)))
+    (let ((inv (or (inverse-character-map font-loader)
+                   (setf (inverse-character-map font-loader)
+                         (build-inverse-character-map font-loader)))))
       (if (and inv (< glyph-index (length inv)))
           (let ((cp (aref inv glyph-index)))
             (if (plusp cp) cp 0))
@@ -188,16 +215,16 @@
 
 (defmethod index-glyph (index (font-loader font-loader))
   (let ((cache (glyph-cache font-loader)))
-    (when (and cache (< index (length cache)))
-      (let ((existing (aref cache index)))
-        (if existing
-            existing
-            (let ((g (make-instance 'glyph
-                                    :font-loader font-loader
-                                    :font-index index
-                                    :code-point (font-index-code-point index font-loader))))
-              (setf (aref cache index) g)
-              g))))))
+    (unless (and (integerp index) (< -1 index (glyph-count font-loader)) cache)
+      (error 'unsupported-value
+             :description "Glyph index out of range"
+             :actual-value index
+             :expected-values (list (format nil "0..~D" (1- (glyph-count font-loader))))))
+    (or (aref cache index)
+        (setf (aref cache index)
+              (make-instance 'glyph
+                             :font-loader font-loader
+                             :font-index index)))))
 
 (defmethod find-glyph (char-or-code (font-loader font-loader))
   (let* ((cp (if (characterp char-or-code) (char-code char-or-code) char-or-code))
@@ -214,4 +241,4 @@
                              v)
                        pairs)))
              (kerning-table font-loader))
-    pairs))
+    (nreverse pairs)))

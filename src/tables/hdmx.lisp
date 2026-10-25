@@ -7,8 +7,8 @@
 
 
 (export
- '(hdmx hdmx-num-records hdmx-p hdmx-records hdmx-size-device-record
-   hdmx-version read-hdmx sanitize-hdmx))
+ '(hdmx hdmx-num-records hdmx-p hdmx-records hdmx-records-start
+   hdmx-size-device-record hdmx-version read-hdmx sanitize-hdmx))
 
 
 (defstruct
@@ -17,8 +17,8 @@
 
 
 (declaim
- (inline hdmx-version hdmx-num-records hdmx-size-device-record hdmx-records
-  hdmx-version-raw hdmx-num-records-raw hdmx-size-device-record-raw))
+ (inline hdmx-version hdmx-num-records hdmx-size-device-record hdmx-version-raw
+  hdmx-num-records-raw hdmx-size-device-record-raw))
 
 
 (defun hdmx-version (table)
@@ -51,6 +51,12 @@
 
 (defun hdmx-size-device-record-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 4)))
+
+
+(defun hdmx-records-start (table)
+  "Byte position of the first DEVICE-RECORD element; elements are variable-length."
+  (declare (type hdmx table))
+  (+ (table-ref-offset table) 8))
 
 
 (defun sanitize-hdmx (font-data offset length)

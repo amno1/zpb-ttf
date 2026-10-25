@@ -41,6 +41,7 @@
    #:font-data-read-u16
    #:font-data-read-i16
    #:font-data-read-u24
+   #:font-data-read-i24
    #:font-data-read-u32
    #:font-data-read-i32
    #:font-data-read-fixed

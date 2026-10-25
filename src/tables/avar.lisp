@@ -8,13 +8,12 @@
 
 (export
  '(+axis-value-map-size+ avar avar--reserved avar-axis-count
-   avar-axis-index-map-offset avar-axis-index-map-offset-offset
-   avar-axis-segment-maps avar-p avar-var-store-offset
-   avar-var-store-offset-offset avar-version axis-value-map
-   axis-value-map-from-coordinate axis-value-map-p axis-value-map-to-coordinate
-   read-avar sanitize-avar segment-maps segment-maps-axis-value-maps
-   segment-maps-axis-value-maps-count segment-maps-axis-value-maps-ref
-   segment-maps-p segment-maps-position-map-count))
+   avar-axis-segment-maps avar-axis-segment-maps-start avar-p avar-version
+   axis-value-map axis-value-map-from-coordinate axis-value-map-p
+   axis-value-map-to-coordinate read-avar sanitize-avar segment-maps
+   segment-maps-axis-value-maps segment-maps-axis-value-maps-count
+   segment-maps-axis-value-maps-ref segment-maps-p
+   segment-maps-position-map-count))
 
 
 (defstruct
@@ -22,7 +21,7 @@
      (:constructor %make-segment-maps (%record-font-data %record-offset))))
 
 
-(declaim (inline segment-maps-position-map-count segment-maps-axis-value-maps))
+(declaim (inline segment-maps-position-map-count))
 
 
 (defun segment-maps-position-map-count (rec)
@@ -75,9 +74,7 @@
 
 
 (declaim
- (inline avar-version avar--reserved avar-axis-count avar-axis-segment-maps
-  avar-axis-index-map-offset avar-axis-index-map-offset-offset
-  avar-var-store-offset avar-var-store-offset-offset avar-version-raw
+ (inline avar-version avar--reserved avar-axis-count avar-version-raw
   avar--reserved-raw avar-axis-count-raw))
 
 
@@ -113,38 +110,10 @@
   (font-data-read-u16 font-data (+ offset 6)))
 
 
-(defun avar-axis-index-map-offset-offset (table)
-  "Offset to DeltaSetIndexMap table (may be NULL)."
+(defun avar-axis-segment-maps-start (table)
+  "Byte position of the first SEGMENT-MAPS element; elements are variable-length."
   (declare (type avar table))
-  (when (>= (table-ref-length table) 12)
-    (font-data-read-u32 (table-ref-font-data table)
-                        (+ (table-ref-offset table) 8))))
-
-
-(defun avar-axis-index-map-offset (table)
-  "Offset to DeltaSetIndexMap table (may be NULL)."
-  (declare (type avar table))
-  (let ((off (avar-axis-index-map-offset-offset table)))
-    (when (and off (not (zerop off)))
-      (read-delta-set-index-map (table-ref-font-data table)
-       (+ (table-ref-offset table) off)))))
-
-
-(defun avar-var-store-offset-offset (table)
-  "Offset to ItemVariationStore (may be NULL)."
-  (declare (type avar table))
-  (when (>= (table-ref-length table) 16)
-    (font-data-read-u32 (table-ref-font-data table)
-                        (+ (table-ref-offset table) 12))))
-
-
-(defun avar-var-store-offset (table)
-  "Offset to ItemVariationStore (may be NULL)."
-  (declare (type avar table))
-  (let ((off (avar-var-store-offset-offset table)))
-    (when (and off (not (zerop off)))
-      (read-item-variation-store (table-ref-font-data table)
-       (+ (table-ref-offset table) off)))))
+  (+ (table-ref-offset table) 8))
 
 
 (defun sanitize-avar (font-data offset length)

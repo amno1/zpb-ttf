@@ -98,10 +98,9 @@
 
 
 (declaim
- (inline name-version name-count name-storage-offset name-name-record
-  name-name-record-count name-lang-tag-count name-lang-tag-record
-  name-lang-tag-record-count name-version-raw name-count-raw
-  name-storage-offset-raw))
+ (inline name-version name-count name-storage-offset name-name-record-count
+  name-lang-tag-count name-lang-tag-record-count name-version-raw
+  name-count-raw name-storage-offset-raw))
 
 
 (defun name-version (table)

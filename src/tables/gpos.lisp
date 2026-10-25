@@ -7,9 +7,9 @@
 
 
 (export
- '(+class1-record-size+ +class2-record-size+ +entry-exit-record-size+
-   +entry-exit-record2-size+ +mark-record-size+ +mark-record2-size+
-   +pair-value-record-size+ +pair-value-record2-size+ +value-format-x-advance+
+ '(+class2-record-size+ +entry-exit-record-size+ +entry-exit-record2-size+
+   +mark-record-size+ +mark-record2-size+ +pair-value-record-size+
+   +pair-value-record2-size+ +value-format-x-advance+
    +value-format-x-advance-device+ +value-format-x-placement+
    +value-format-x-placement-device+ +value-format-y-advance+
    +value-format-y-advance-device+ +value-format-y-placement+
@@ -21,16 +21,18 @@
    anchor-format3-p anchor-format3-x-coordinate anchor-format3-x-device-offset
    anchor-format3-x-device-offset-offset anchor-format3-y-coordinate
    anchor-format3-y-device-offset anchor-format3-y-device-offset-offset
-   base-array base-array-base-count base-array-base-records base-array-p
-   base-array2 base-array2-base-count base-array2-base-records base-array2-p
-   base-record base-record-base-anchor-offsets
-   base-record-base-anchor-offsets-count base-record-base-anchor-offsets-ref
-   base-record-p base-record2 base-record2-base-anchor-offsets
-   base-record2-base-anchor-offsets-count base-record2-base-anchor-offsets-ref
-   base-record2-p class1-record class1-record-class2-records class1-record-p
-   class2-record class2-record-p class2-record-value-record1
-   class2-record-value-record2 component-record
-   component-record-ligature-anchor-offsets
+   base-array base-array-base-count base-array-base-records
+   base-array-base-records-start base-array-p base-array2
+   base-array2-base-count base-array2-base-records
+   base-array2-base-records-start base-array2-p base-record
+   base-record-base-anchor-offsets base-record-base-anchor-offsets-count
+   base-record-base-anchor-offsets-ref base-record-p base-record2
+   base-record2-base-anchor-offsets base-record2-base-anchor-offsets-count
+   base-record2-base-anchor-offsets-ref base-record2-p class1-record
+   class1-record-class2-records class1-record-class2-records-count
+   class1-record-class2-records-ref class1-record-p class2-record
+   class2-record-p class2-record-value-record1 class2-record-value-record2
+   component-record component-record-ligature-anchor-offsets
    component-record-ligature-anchor-offsets-count
    component-record-ligature-anchor-offsets-ref component-record-p
    component-record2 component-record2-ligature-anchor-offsets
@@ -70,8 +72,9 @@
    ligature-array2-ligature-attach-offsets-count
    ligature-array2-ligature-attach-offsets-ref ligature-array2-ligature-count
    ligature-array2-p ligature-attach ligature-attach-component-count
-   ligature-attach-component-records ligature-attach-p ligature-attach2
-   ligature-attach2-component-count ligature-attach2-component-records
+   ligature-attach-component-records ligature-attach-component-records-start
+   ligature-attach-p ligature-attach2 ligature-attach2-component-count
+   ligature-attach2-component-records ligature-attach2-component-records-start
    ligature-attach2-p mark-array mark-array-mark-count mark-array-mark-records
    mark-array-mark-records-count mark-array-mark-records-ref mark-array-p
    mark-array2 mark-array2-mark-count mark-array2-mark-records
@@ -138,10 +141,11 @@
    mark-mark-pos-format2-pos-format mark-record mark-record-mark-anchor-offset
    mark-record-mark-class mark-record-p mark-record2
    mark-record2-mark-anchor-offset mark-record2-mark-class mark-record2-p
-   mark2-array mark2-array-mark2-count mark2-array-mark2-records mark2-array-p
-   mark2-array2 mark2-array2-mark2-count mark2-array2-mark2-records
-   mark2-array2-p mark2-record mark2-record-mark2-anchor-offsets
-   mark2-record-mark2-anchor-offsets-count
+   mark2-array mark2-array-mark2-count mark2-array-mark2-records
+   mark2-array-mark2-records-start mark2-array-p mark2-array2
+   mark2-array2-mark2-count mark2-array2-mark2-records
+   mark2-array2-mark2-records-start mark2-array2-p mark2-record
+   mark2-record-mark2-anchor-offsets mark2-record-mark2-anchor-offsets-count
    mark2-record-mark2-anchor-offsets-ref mark2-record-p mark2-record2
    mark2-record2-mark2-anchor-offsets mark2-record2-mark2-anchor-offsets-count
    mark2-record2-mark2-anchor-offsets-ref mark2-record2-p pair-pos-format1
@@ -153,25 +157,28 @@
    pair-pos-format2 pair-pos-format2-class-def1-offset
    pair-pos-format2-class-def1-offset-offset pair-pos-format2-class-def2-offset
    pair-pos-format2-class-def2-offset-offset pair-pos-format2-class1-count
-   pair-pos-format2-class1-records pair-pos-format2-class2-count
-   pair-pos-format2-coverage-offset pair-pos-format2-coverage-offset-offset
-   pair-pos-format2-p pair-pos-format2-pos-format
-   pair-pos-format2-value-format1 pair-pos-format2-value-format2
-   pair-pos-format3 pair-pos-format3-coverage-offset
-   pair-pos-format3-coverage-offset-offset pair-pos-format3-p
-   pair-pos-format3-pair-set-count pair-pos-format3-pair-set-offsets
-   pair-pos-format3-pair-set-offsets-count
+   pair-pos-format2-class1-records pair-pos-format2-class1-records-start
+   pair-pos-format2-class2-count pair-pos-format2-coverage-offset
+   pair-pos-format2-coverage-offset-offset pair-pos-format2-p
+   pair-pos-format2-pos-format pair-pos-format2-value-format1
+   pair-pos-format2-value-format2 pair-pos-format3
+   pair-pos-format3-coverage-offset pair-pos-format3-coverage-offset-offset
+   pair-pos-format3-p pair-pos-format3-pair-set-count
+   pair-pos-format3-pair-set-offsets pair-pos-format3-pair-set-offsets-count
    pair-pos-format3-pair-set-offsets-ref pair-pos-format3-pos-format
    pair-pos-format3-value-format1 pair-pos-format3-value-format2
    pair-pos-format4 pair-pos-format4-class-def1-offset
    pair-pos-format4-class-def1-offset-offset pair-pos-format4-class-def2-offset
    pair-pos-format4-class-def2-offset-offset pair-pos-format4-class1-count
-   pair-pos-format4-class1-records pair-pos-format4-class2-count
-   pair-pos-format4-coverage-offset pair-pos-format4-coverage-offset-offset
-   pair-pos-format4-p pair-pos-format4-pos-format
-   pair-pos-format4-value-format1 pair-pos-format4-value-format2 pair-set
-   pair-set-p pair-set-pair-value-count pair-set-pair-value-records pair-set2
-   pair-set2-p pair-set2-pair-value-count pair-set2-pair-value-records
+   pair-pos-format4-class1-records pair-pos-format4-class1-records-start
+   pair-pos-format4-class2-count pair-pos-format4-coverage-offset
+   pair-pos-format4-coverage-offset-offset pair-pos-format4-p
+   pair-pos-format4-pos-format pair-pos-format4-value-format1
+   pair-pos-format4-value-format2 pair-set pair-set-p pair-set-pair-value-count
+   pair-set-pair-value-records pair-set-pair-value-records-count
+   pair-set-pair-value-records-ref pair-set2 pair-set2-p
+   pair-set2-pair-value-count pair-set2-pair-value-records
+   pair-set2-pair-value-records-count pair-set2-pair-value-records-ref
    pair-value-record pair-value-record-p pair-value-record-second-glyph
    pair-value-record-value-record1 pair-value-record-value-record2
    pair-value-record2 pair-value-record2-p pair-value-record2-second-glyph
@@ -208,6 +215,7 @@
    single-pos-format2-coverage-offset-offset single-pos-format2-p
    single-pos-format2-pos-format single-pos-format2-value-count
    single-pos-format2-value-format single-pos-format2-value-records
+   single-pos-format2-value-records-count single-pos-format2-value-records-ref
    single-pos-format3 single-pos-format3-coverage-offset
    single-pos-format3-coverage-offset-offset single-pos-format3-p
    single-pos-format3-pos-format single-pos-format3-value-format
@@ -215,7 +223,8 @@
    single-pos-format4-coverage-offset single-pos-format4-coverage-offset-offset
    single-pos-format4-p single-pos-format4-pos-format
    single-pos-format4-value-count single-pos-format4-value-format
-   single-pos-format4-value-records value-format-x-advance-device-p
+   single-pos-format4-value-records single-pos-format4-value-records-count
+   single-pos-format4-value-records-ref value-format-x-advance-device-p
    value-format-x-advance-p value-format-x-placement-device-p
    value-format-x-placement-p value-format-y-advance-device-p
    value-format-y-advance-p value-format-y-placement-device-p
@@ -362,10 +371,19 @@
      (:constructor %make-class1-record (%record-font-data %record-offset))))
 
 
-(define-constant +class1-record-size+ 0)
+(defun class1-record-class2-records-count (rec &optional count)
+  "Array of Class2 records, ordered by classes in classDef2."
+  (declare (type class1-record rec)
+           (ignore rec))
+  count)
 
 
-(declaim (inline class1-record-class2-records))
+(defun class1-record-class2-records-ref (rec index)
+  "Array of Class2 records, ordered by classes in classDef2."
+  (declare (type class1-record rec)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (record-ref-offset rec) (* index 16))))
+    (%make-class2-record (record-ref-font-data rec) pos)))
 
 
 (defstruct
@@ -421,12 +439,10 @@
      (:constructor %make-base-record (%record-font-data %record-offset))))
 
 
-(declaim (inline base-record-base-anchor-offsets))
-
-
 (defun base-record-base-anchor-offsets-count (rec &optional mark-class-count)
   "Array of offsets (one per mark class) to Anchor tables. Offsets are from beginning of BaseArray table, ordered by class (offsets may be NULL)."
-  (declare (type base-record rec))
+  (declare (type base-record rec)
+           (ignore rec))
   mark-class-count)
 
 
@@ -443,13 +459,11 @@
      (:constructor %make-component-record (%record-font-data %record-offset))))
 
 
-(declaim (inline component-record-ligature-anchor-offsets))
-
-
 (defun component-record-ligature-anchor-offsets-count
        (rec &optional mark-class-count)
   "Array of offsets (one per class) to Anchor tables. Offsets are from beginning of LigatureAttach table, ordered by class (offsets may be NULL)."
-  (declare (type component-record rec))
+  (declare (type component-record rec)
+           (ignore rec))
   mark-class-count)
 
 
@@ -466,12 +480,10 @@
      (:constructor %make-mark2-record (%record-font-data %record-offset))))
 
 
-(declaim (inline mark2-record-mark2-anchor-offsets))
-
-
 (defun mark2-record-mark2-anchor-offsets-count (rec &optional mark-class-count)
   "Array of offsets (one per class) to Anchor tables. Offsets are from beginning of Mark2Array table, in class order (offsets may be NULL)."
-  (declare (type mark2-record rec))
+  (declare (type mark2-record rec)
+           (ignore rec))
   mark-class-count)
 
 
@@ -547,12 +559,10 @@
      (:constructor %make-base-record2 (%record-font-data %record-offset))))
 
 
-(declaim (inline base-record2-base-anchor-offsets))
-
-
 (defun base-record2-base-anchor-offsets-count (rec &optional mark-class-count)
   "Array of offsets (one per mark class) to Anchor tables. Offsets are from beginning of BaseArray table, ordered by class (offsets may be NULL)."
-  (declare (type base-record2 rec))
+  (declare (type base-record2 rec)
+           (ignore rec))
   mark-class-count)
 
 
@@ -569,13 +579,11 @@
      (:constructor %make-component-record2 (%record-font-data %record-offset))))
 
 
-(declaim (inline component-record2-ligature-anchor-offsets))
-
-
 (defun component-record2-ligature-anchor-offsets-count
        (rec &optional mark-class-count)
   "Array of offsets (one per class) to Anchor tables. Offsets are from beginning of LigatureAttach table, ordered by class (offsets may be NULL)."
-  (declare (type component-record2 rec))
+  (declare (type component-record2 rec)
+           (ignore rec))
   mark-class-count)
 
 
@@ -592,13 +600,11 @@
      (:constructor %make-mark2-record2 (%record-font-data %record-offset))))
 
 
-(declaim (inline mark2-record2-mark2-anchor-offsets))
-
-
 (defun mark2-record2-mark2-anchor-offsets-count
        (rec &optional mark-class-count)
   "Array of offsets (one per class) to Anchor tables. Offsets are from beginning of Mark2Array table, in class order (offsets may be NULL)."
-  (declare (type mark2-record2 rec))
+  (declare (type mark2-record2 rec)
+           (ignore rec))
   mark-class-count)
 
 
@@ -1038,8 +1044,8 @@
 
 
 (declaim
- (inline mark-array-mark-count mark-array-mark-records
-  mark-array-mark-records-count mark-array-mark-count-raw))
+ (inline mark-array-mark-count mark-array-mark-records-count
+  mark-array-mark-count-raw))
 
 
 (defun mark-array-mark-count (table)
@@ -1189,7 +1195,7 @@
 (declaim
  (inline single-pos-format2-pos-format single-pos-format2-coverage-offset
   single-pos-format2-coverage-offset-offset single-pos-format2-value-format
-  single-pos-format2-value-count single-pos-format2-value-records
+  single-pos-format2-value-count single-pos-format2-value-records-count
   single-pos-format2-pos-format-raw single-pos-format2-value-format-raw
   single-pos-format2-value-count-raw))
 
@@ -1242,6 +1248,27 @@
   (font-data-read-u16 font-data (+ offset 6)))
 
 
+(defun single-pos-format2-value-records-count (table)
+  "Array of ValueRecords — positioning values applied to glyphs."
+  (max 0
+       (floor
+        (- (+ (table-ref-offset table) (table-ref-length table))
+           (+ (table-ref-offset table) 8))
+        8)))
+
+
+(defun single-pos-format2-value-records-ref (table index)
+  "Array of ValueRecords — positioning values applied to glyphs."
+  (declare (type single-pos-format2 table)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (+ (table-ref-offset table) 8) (* index 8))))
+    (unless
+        (<= (+ pos 8) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 8 :length
+             (table-ref-length table)))
+    (%make-value-record (table-ref-font-data table) pos)))
+
+
 (defun sanitize-single-pos-format2 (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
@@ -1283,9 +1310,9 @@
  (inline pair-pos-format1-pos-format pair-pos-format1-coverage-offset
   pair-pos-format1-coverage-offset-offset pair-pos-format1-value-format1
   pair-pos-format1-value-format2 pair-pos-format1-pair-set-count
-  pair-pos-format1-pair-set-offsets pair-pos-format1-pair-set-offsets-count
-  pair-pos-format1-pos-format-raw pair-pos-format1-value-format1-raw
-  pair-pos-format1-value-format2-raw pair-pos-format1-pair-set-count-raw))
+  pair-pos-format1-pair-set-offsets-count pair-pos-format1-pos-format-raw
+  pair-pos-format1-value-format1-raw pair-pos-format1-value-format2-raw
+  pair-pos-format1-pair-set-count-raw))
 
 
 (defun pair-pos-format1-pos-format (table)
@@ -1397,7 +1424,7 @@
 
 
 (declaim
- (inline pair-set-pair-value-count pair-set-pair-value-records
+ (inline pair-set-pair-value-count pair-set-pair-value-records-count
   pair-set-pair-value-count-raw))
 
 
@@ -1409,6 +1436,27 @@
 
 (defun pair-set-pair-value-count-raw (font-data offset)
   (font-data-read-u16 font-data offset))
+
+
+(defun pair-set-pair-value-records-count (table)
+  "Array of PairValueRecords, ordered by glyph ID of the second glyph."
+  (max 0
+       (floor
+        (- (+ (table-ref-offset table) (table-ref-length table))
+           (+ (table-ref-offset table) 2))
+        18)))
+
+
+(defun pair-set-pair-value-records-ref (table index)
+  "Array of PairValueRecords, ordered by glyph ID of the second glyph."
+  (declare (type pair-set table)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (+ (table-ref-offset table) 2) (* index 18))))
+    (unless
+        (<= (+ pos 18) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 18 :length
+             (table-ref-length table)))
+    (%make-pair-value-record (table-ref-font-data table) pos)))
 
 
 (defun sanitize-pair-set (font-data offset length)
@@ -1440,10 +1488,9 @@
   pair-pos-format2-value-format2 pair-pos-format2-class-def1-offset
   pair-pos-format2-class-def1-offset-offset pair-pos-format2-class-def2-offset
   pair-pos-format2-class-def2-offset-offset pair-pos-format2-class1-count
-  pair-pos-format2-class2-count pair-pos-format2-class1-records
-  pair-pos-format2-pos-format-raw pair-pos-format2-value-format1-raw
-  pair-pos-format2-value-format2-raw pair-pos-format2-class1-count-raw
-  pair-pos-format2-class2-count-raw))
+  pair-pos-format2-class2-count pair-pos-format2-pos-format-raw
+  pair-pos-format2-value-format1-raw pair-pos-format2-value-format2-raw
+  pair-pos-format2-class1-count-raw pair-pos-format2-class2-count-raw))
 
 
 (defun pair-pos-format2-pos-format (table)
@@ -1548,6 +1595,12 @@
   (font-data-read-u16 font-data (+ offset 14)))
 
 
+(defun pair-pos-format2-class1-records-start (table)
+  "Byte position of the first CLASS1-RECORD element; elements are variable-length."
+  (declare (type pair-pos-format2 table))
+  (+ (table-ref-offset table) 16))
+
+
 (defun sanitize-pair-pos-format2 (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
@@ -1574,7 +1627,7 @@
 (declaim
  (inline cursive-pos-format1-pos-format cursive-pos-format1-coverage-offset
   cursive-pos-format1-coverage-offset-offset
-  cursive-pos-format1-entry-exit-count cursive-pos-format1-entry-exit-record
+  cursive-pos-format1-entry-exit-count
   cursive-pos-format1-entry-exit-record-count
   cursive-pos-format1-pos-format-raw cursive-pos-format1-entry-exit-count-raw))
 
@@ -1785,9 +1838,7 @@
       (%table-font-data %table-offset %table-length))))
 
 
-(declaim
- (inline base-array-base-count base-array-base-records
-  base-array-base-count-raw))
+(declaim (inline base-array-base-count base-array-base-count-raw))
 
 
 (defun base-array-base-count (table)
@@ -1798,6 +1849,12 @@
 
 (defun base-array-base-count-raw (font-data offset)
   (font-data-read-u16 font-data offset))
+
+
+(defun base-array-base-records-start (table)
+  "Byte position of the first BASE-RECORD element; elements are variable-length."
+  (declare (type base-array table))
+  (+ (table-ref-offset table) 2))
 
 
 (defun sanitize-base-array (font-data offset length)
@@ -1946,7 +2003,7 @@
 
 
 (declaim
- (inline ligature-array-ligature-count ligature-array-ligature-attach-offsets
+ (inline ligature-array-ligature-count
   ligature-array-ligature-attach-offsets-count
   ligature-array-ligature-count-raw))
 
@@ -2011,8 +2068,7 @@
 
 
 (declaim
- (inline ligature-attach-component-count ligature-attach-component-records
-  ligature-attach-component-count-raw))
+ (inline ligature-attach-component-count ligature-attach-component-count-raw))
 
 
 (defun ligature-attach-component-count (table)
@@ -2023,6 +2079,12 @@
 
 (defun ligature-attach-component-count-raw (font-data offset)
   (font-data-read-u16 font-data offset))
+
+
+(defun ligature-attach-component-records-start (table)
+  "Byte position of the first COMPONENT-RECORD element; elements are variable-length."
+  (declare (type ligature-attach table))
+  (+ (table-ref-offset table) 2))
 
 
 (defun sanitize-ligature-attach (font-data offset length)
@@ -2171,9 +2233,7 @@
       (%table-font-data %table-offset %table-length))))
 
 
-(declaim
- (inline mark2-array-mark2-count mark2-array-mark2-records
-  mark2-array-mark2-count-raw))
+(declaim (inline mark2-array-mark2-count mark2-array-mark2-count-raw))
 
 
 (defun mark2-array-mark2-count (table)
@@ -2184,6 +2244,12 @@
 
 (defun mark2-array-mark2-count-raw (font-data offset)
   (font-data-read-u16 font-data offset))
+
+
+(defun mark2-array-mark2-records-start (table)
+  "Byte position of the first MARK2-RECORD element; elements are variable-length."
+  (declare (type mark2-array table))
+  (+ (table-ref-offset table) 2))
 
 
 (defun sanitize-mark2-array (font-data offset length)
@@ -2355,8 +2421,9 @@
 (declaim
  (inline single-pos-format4-pos-format single-pos-format4-coverage-offset
   single-pos-format4-coverage-offset-offset single-pos-format4-value-format
-  single-pos-format4-value-count single-pos-format4-value-records
-  single-pos-format4-pos-format-raw single-pos-format4-value-format-raw))
+  single-pos-format4-value-count single-pos-format4-value-records-count
+  single-pos-format4-pos-format-raw single-pos-format4-value-format-raw
+  single-pos-format4-value-count-raw))
 
 
 (defun single-pos-format4-pos-format (table)
@@ -2396,12 +2463,44 @@
   (font-data-read-u16 font-data (+ offset 6)))
 
 
+(defun single-pos-format4-value-count (table)
+  "Number of ValueRecords — must equal glyphCount in the Coverage table."
+  (declare (type single-pos-format4 table))
+  (font-data-read-u24 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 8)))
+
+
+(defun single-pos-format4-value-count-raw (font-data offset)
+  (font-data-read-u24 font-data (+ offset 8)))
+
+
+(defun single-pos-format4-value-records-count (table)
+  "Array of ValueRecords — positioning values applied to glyphs."
+  (max 0
+       (floor
+        (- (+ (table-ref-offset table) (table-ref-length table))
+           (+ (table-ref-offset table) 11))
+        8)))
+
+
+(defun single-pos-format4-value-records-ref (table index)
+  "Array of ValueRecords — positioning values applied to glyphs."
+  (declare (type single-pos-format4 table)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (+ (table-ref-offset table) 11) (* index 8))))
+    (unless
+        (<= (+ pos 8) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 8 :length
+             (table-ref-length table)))
+    (%make-value-record (table-ref-font-data table) pos)))
+
+
 (defun sanitize-single-pos-format4 (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 8 length) (font-data-valid-range-p font-data offset 8))
-    (error 'font-out-of-bounds-error :pos offset :size 8 :length
+  (unless (and (<= 11 length) (font-data-valid-range-p font-data offset 11))
+    (error 'font-out-of-bounds-error :pos offset :size 11 :length
            (font-data-length font-data)))
   t)
 
@@ -2423,9 +2522,9 @@
  (inline pair-pos-format3-pos-format pair-pos-format3-coverage-offset
   pair-pos-format3-coverage-offset-offset pair-pos-format3-value-format1
   pair-pos-format3-value-format2 pair-pos-format3-pair-set-count
-  pair-pos-format3-pair-set-offsets pair-pos-format3-pair-set-offsets-count
-  pair-pos-format3-pos-format-raw pair-pos-format3-value-format1-raw
-  pair-pos-format3-value-format2-raw))
+  pair-pos-format3-pair-set-offsets-count pair-pos-format3-pos-format-raw
+  pair-pos-format3-value-format1-raw pair-pos-format3-value-format2-raw
+  pair-pos-format3-pair-set-count-raw))
 
 
 (defun pair-pos-format3-pos-format (table)
@@ -2476,6 +2575,17 @@
   (font-data-read-u16 font-data (+ offset 8)))
 
 
+(defun pair-pos-format3-pair-set-count (table)
+  "Number of PairSet tables"
+  (declare (type pair-pos-format3 table))
+  (font-data-read-u24 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 10)))
+
+
+(defun pair-pos-format3-pair-set-count-raw (font-data offset)
+  (font-data-read-u24 font-data (+ offset 10)))
+
+
 (defun pair-pos-format3-pair-set-offsets-count (table)
   "Array of offsets to PairSet tables. Offsets are from beginning of PairPos subtable, ordered by Coverage Index."
   (pair-pos-format3-pair-set-count table))
@@ -2485,7 +2595,7 @@
   "Array of offsets to PairSet tables. Offsets are from beginning of PairPos subtable, ordered by Coverage Index."
   (declare (type pair-pos-format3 table)
            (type (unsigned-byte 32) index))
-  (let* ((pos (+ (+ (table-ref-offset table) 10) (* index 3))))
+  (let* ((pos (+ (+ (table-ref-offset table) 13) (* index 3))))
     (unless
         (<= (+ pos 3) (+ (table-ref-offset table) (table-ref-length table)))
       (error 'font-out-of-bounds-error :pos pos :size 3 :length
@@ -2500,14 +2610,14 @@
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 10 length) (font-data-valid-range-p font-data offset 10))
-    (error 'font-out-of-bounds-error :pos offset :size 10 :length
+  (unless (and (<= 13 length) (font-data-valid-range-p font-data offset 13))
+    (error 'font-out-of-bounds-error :pos offset :size 13 :length
            (font-data-length font-data)))
   (let ((cnt (pair-pos-format3-pair-set-count-raw font-data offset)))
     (unless
-        (and (<= (+ 10 (* cnt 3)) length)
-             (font-data-valid-range-p font-data offset (+ 10 (* cnt 3))))
-      (error 'font-out-of-bounds-error :pos offset :size (+ 10 (* cnt 3))
+        (and (<= (+ 13 (* cnt 3)) length)
+             (font-data-valid-range-p font-data offset (+ 13 (* cnt 3))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 13 (* cnt 3))
              :length (font-data-length font-data))))
   t)
 
@@ -2525,15 +2635,48 @@
       (%table-font-data %table-offset %table-length))))
 
 
-(declaim (inline pair-set2-pair-value-count pair-set2-pair-value-records))
+(declaim
+ (inline pair-set2-pair-value-count pair-set2-pair-value-records-count
+  pair-set2-pair-value-count-raw))
+
+
+(defun pair-set2-pair-value-count (table)
+  "Number of PairValueRecords"
+  (declare (type pair-set2 table))
+  (font-data-read-u24 (table-ref-font-data table) (table-ref-offset table)))
+
+
+(defun pair-set2-pair-value-count-raw (font-data offset)
+  (font-data-read-u24 font-data offset))
+
+
+(defun pair-set2-pair-value-records-count (table)
+  "Array of PairValueRecords, ordered by glyph ID of the second glyph."
+  (max 0
+       (floor
+        (- (+ (table-ref-offset table) (table-ref-length table))
+           (+ (table-ref-offset table) 3))
+        19)))
+
+
+(defun pair-set2-pair-value-records-ref (table index)
+  "Array of PairValueRecords, ordered by glyph ID of the second glyph."
+  (declare (type pair-set2 table)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (+ (table-ref-offset table) 3) (* index 19))))
+    (unless
+        (<= (+ pos 19) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 19 :length
+             (table-ref-length table)))
+    (%make-pair-value-record2 (table-ref-font-data table) pos)))
 
 
 (defun sanitize-pair-set2 (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 0 length) (font-data-valid-range-p font-data offset 0))
-    (error 'font-out-of-bounds-error :pos offset :size 0 :length
+  (unless (and (<= 3 length) (font-data-valid-range-p font-data offset 3))
+    (error 'font-out-of-bounds-error :pos offset :size 3 :length
            (font-data-length font-data)))
   t)
 
@@ -2557,10 +2700,9 @@
   pair-pos-format4-value-format2 pair-pos-format4-class-def1-offset
   pair-pos-format4-class-def1-offset-offset pair-pos-format4-class-def2-offset
   pair-pos-format4-class-def2-offset-offset pair-pos-format4-class1-count
-  pair-pos-format4-class2-count pair-pos-format4-class1-records
-  pair-pos-format4-pos-format-raw pair-pos-format4-value-format1-raw
-  pair-pos-format4-value-format2-raw pair-pos-format4-class1-count-raw
-  pair-pos-format4-class2-count-raw))
+  pair-pos-format4-class2-count pair-pos-format4-pos-format-raw
+  pair-pos-format4-value-format1-raw pair-pos-format4-value-format2-raw
+  pair-pos-format4-class1-count-raw pair-pos-format4-class2-count-raw))
 
 
 (defun pair-pos-format4-pos-format (table)
@@ -2665,6 +2807,12 @@
   (font-data-read-u16 font-data (+ offset 20)))
 
 
+(defun pair-pos-format4-class1-records-start (table)
+  "Byte position of the first CLASS1-RECORD element; elements are variable-length."
+  (declare (type pair-pos-format4 table))
+  (+ (table-ref-offset table) 22))
+
+
 (defun sanitize-pair-pos-format4 (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
@@ -2691,9 +2839,9 @@
 (declaim
  (inline cursive-pos-format2-pos-format cursive-pos-format2-coverage-offset
   cursive-pos-format2-coverage-offset-offset
-  cursive-pos-format2-entry-exit-count cursive-pos-format2-entry-exit-record
+  cursive-pos-format2-entry-exit-count
   cursive-pos-format2-entry-exit-record-count
-  cursive-pos-format2-pos-format-raw))
+  cursive-pos-format2-pos-format-raw cursive-pos-format2-entry-exit-count-raw))
 
 
 (defun cursive-pos-format2-pos-format (table)
@@ -2722,6 +2870,17 @@
        (+ (table-ref-offset table) off)))))
 
 
+(defun cursive-pos-format2-entry-exit-count (table)
+  "Number of EntryExit records"
+  (declare (type cursive-pos-format2 table))
+  (font-data-read-u24 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 6)))
+
+
+(defun cursive-pos-format2-entry-exit-count-raw (font-data offset)
+  (font-data-read-u24 font-data (+ offset 6)))
+
+
 (defun cursive-pos-format2-entry-exit-record-count (table)
   "Array of EntryExit records, in Coverage index order."
   (cursive-pos-format2-entry-exit-count table))
@@ -2731,7 +2890,7 @@
   "Array of EntryExit records, in Coverage index order."
   (declare (type cursive-pos-format2 table)
            (type (unsigned-byte 32) index))
-  (let ((pos (+ (+ (table-ref-offset table) 6) (* index 6))))
+  (let ((pos (+ (+ (table-ref-offset table) 9) (* index 6))))
     (unless
         (<= (+ pos 6) (+ (table-ref-offset table) (table-ref-length table)))
       (error 'font-out-of-bounds-error :pos pos :size 6 :length
@@ -2743,14 +2902,14 @@
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 6 length) (font-data-valid-range-p font-data offset 6))
-    (error 'font-out-of-bounds-error :pos offset :size 6 :length
+  (unless (and (<= 9 length) (font-data-valid-range-p font-data offset 9))
+    (error 'font-out-of-bounds-error :pos offset :size 9 :length
            (font-data-length font-data)))
   (let ((cnt (cursive-pos-format2-entry-exit-count-raw font-data offset)))
     (unless
-        (and (<= (+ 6 (* cnt 6)) length)
-             (font-data-valid-range-p font-data offset (+ 6 (* cnt 6))))
-      (error 'font-out-of-bounds-error :pos offset :size (+ 6 (* cnt 6))
+        (and (<= (+ 9 (* cnt 6)) length)
+             (font-data-valid-range-p font-data offset (+ 9 (* cnt 6))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 9 (* cnt 6))
              :length (font-data-length font-data))))
   t)
 
@@ -2891,15 +3050,31 @@
       (%table-font-data %table-offset %table-length))))
 
 
-(declaim (inline base-array2-base-count base-array2-base-records))
+(declaim (inline base-array2-base-count base-array2-base-count-raw))
+
+
+(defun base-array2-base-count (table)
+  "Number of BaseRecords"
+  (declare (type base-array2 table))
+  (font-data-read-u24 (table-ref-font-data table) (table-ref-offset table)))
+
+
+(defun base-array2-base-count-raw (font-data offset)
+  (font-data-read-u24 font-data offset))
+
+
+(defun base-array2-base-records-start (table)
+  "Byte position of the first BASE-RECORD2 element; elements are variable-length."
+  (declare (type base-array2 table))
+  (+ (table-ref-offset table) 3))
 
 
 (defun sanitize-base-array2 (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 0 length) (font-data-valid-range-p font-data offset 0))
-    (error 'font-out-of-bounds-error :pos offset :size 0 :length
+  (unless (and (<= 3 length) (font-data-valid-range-p font-data offset 3))
+    (error 'font-out-of-bounds-error :pos offset :size 3 :length
            (font-data-length font-data)))
   t)
 
@@ -3040,8 +3215,19 @@
 
 
 (declaim
- (inline ligature-array2-ligature-count ligature-array2-ligature-attach-offsets
-  ligature-array2-ligature-attach-offsets-count))
+ (inline ligature-array2-ligature-count
+  ligature-array2-ligature-attach-offsets-count
+  ligature-array2-ligature-count-raw))
+
+
+(defun ligature-array2-ligature-count (table)
+  "Number of LigatureAttach table offsets"
+  (declare (type ligature-array2 table))
+  (font-data-read-u24 (table-ref-font-data table) (table-ref-offset table)))
+
+
+(defun ligature-array2-ligature-count-raw (font-data offset)
+  (font-data-read-u24 font-data offset))
 
 
 (defun ligature-array2-ligature-attach-offsets-count (table)
@@ -3053,7 +3239,7 @@
   "Array of offsets to LigatureAttach tables. Offsets are from beginning of LigatureArray2 table, ordered by ligatureCoverage index."
   (declare (type ligature-array2 table)
            (type (unsigned-byte 32) index))
-  (let* ((pos (+ (table-ref-offset table) (* index 3))))
+  (let* ((pos (+ (+ (table-ref-offset table) 3) (* index 3))))
     (unless
         (<= (+ pos 3) (+ (table-ref-offset table) (table-ref-length table)))
       (error 'font-out-of-bounds-error :pos pos :size 3 :length
@@ -3068,14 +3254,14 @@
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 0 length) (font-data-valid-range-p font-data offset 0))
-    (error 'font-out-of-bounds-error :pos offset :size 0 :length
+  (unless (and (<= 3 length) (font-data-valid-range-p font-data offset 3))
+    (error 'font-out-of-bounds-error :pos offset :size 3 :length
            (font-data-length font-data)))
   (let ((cnt (ligature-array2-ligature-count-raw font-data offset)))
     (unless
-        (and (<= (+ 0 (* cnt 3)) length)
-             (font-data-valid-range-p font-data offset (+ 0 (* cnt 3))))
-      (error 'font-out-of-bounds-error :pos offset :size (+ 0 (* cnt 3))
+        (and (<= (+ 3 (* cnt 3)) length)
+             (font-data-valid-range-p font-data offset (+ 3 (* cnt 3))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 3 (* cnt 3))
              :length (font-data-length font-data))))
   t)
 
@@ -3094,8 +3280,7 @@
 
 
 (declaim
- (inline ligature-attach2-component-count ligature-attach2-component-records
-  ligature-attach2-component-count-raw))
+ (inline ligature-attach2-component-count ligature-attach2-component-count-raw))
 
 
 (defun ligature-attach2-component-count (table)
@@ -3106,6 +3291,12 @@
 
 (defun ligature-attach2-component-count-raw (font-data offset)
   (font-data-read-u16 font-data offset))
+
+
+(defun ligature-attach2-component-records-start (table)
+  "Byte position of the first COMPONENT-RECORD2 element; elements are variable-length."
+  (declare (type ligature-attach2 table))
+  (+ (table-ref-offset table) 2))
 
 
 (defun sanitize-ligature-attach2 (font-data offset length)
@@ -3254,9 +3445,7 @@
       (%table-font-data %table-offset %table-length))))
 
 
-(declaim
- (inline mark2-array2-mark2-count mark2-array2-mark2-records
-  mark2-array2-mark2-count-raw))
+(declaim (inline mark2-array2-mark2-count mark2-array2-mark2-count-raw))
 
 
 (defun mark2-array2-mark2-count (table)
@@ -3267,6 +3456,12 @@
 
 (defun mark2-array2-mark2-count-raw (font-data offset)
   (font-data-read-u16 font-data offset))
+
+
+(defun mark2-array2-mark2-records-start (table)
+  "Byte position of the first MARK2-RECORD2 element; elements are variable-length."
+  (declare (type mark2-array2 table))
+  (+ (table-ref-offset table) 2))
 
 
 (defun sanitize-mark2-array2 (font-data offset length)
@@ -3293,8 +3488,18 @@
 
 
 (declaim
- (inline mark-array2-mark-count mark-array2-mark-records
-  mark-array2-mark-records-count))
+ (inline mark-array2-mark-count mark-array2-mark-records-count
+  mark-array2-mark-count-raw))
+
+
+(defun mark-array2-mark-count (table)
+  "Number of MarkRecords"
+  (declare (type mark-array2 table))
+  (font-data-read-u24 (table-ref-font-data table) (table-ref-offset table)))
+
+
+(defun mark-array2-mark-count-raw (font-data offset)
+  (font-data-read-u24 font-data offset))
 
 
 (defun mark-array2-mark-records-count (table)
@@ -3306,7 +3511,7 @@
   "Array of MarkRecords, ordered by corresponding glyphs in the associated mark Coverage table."
   (declare (type mark-array2 table)
            (type (unsigned-byte 32) index))
-  (let ((pos (+ (table-ref-offset table) (* index 5))))
+  (let ((pos (+ (+ (table-ref-offset table) 3) (* index 5))))
     (unless
         (<= (+ pos 5) (+ (table-ref-offset table) (table-ref-length table)))
       (error 'font-out-of-bounds-error :pos pos :size 5 :length
@@ -3318,14 +3523,14 @@
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 0 length) (font-data-valid-range-p font-data offset 0))
-    (error 'font-out-of-bounds-error :pos offset :size 0 :length
+  (unless (and (<= 3 length) (font-data-valid-range-p font-data offset 3))
+    (error 'font-out-of-bounds-error :pos offset :size 3 :length
            (font-data-length font-data)))
   (let ((cnt (mark-array2-mark-count-raw font-data offset)))
     (unless
-        (and (<= (+ 0 (* cnt 5)) length)
-             (font-data-valid-range-p font-data offset (+ 0 (* cnt 5))))
-      (error 'font-out-of-bounds-error :pos offset :size (+ 0 (* cnt 5))
+        (and (<= (+ 3 (* cnt 5)) length)
+             (font-data-valid-range-p font-data offset (+ 3 (* cnt 5))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 3 (* cnt 5))
              :length (font-data-length font-data))))
   t)
 

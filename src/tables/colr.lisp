@@ -755,7 +755,6 @@
 
 (declaim
  (inline base-glyph-list-num-base-glyph-paint-records
-  base-glyph-list-base-glyph-paint-records
   base-glyph-list-base-glyph-paint-records-count
   base-glyph-list-num-base-glyph-paint-records-raw))
 
@@ -815,8 +814,8 @@
 
 
 (declaim
- (inline layer-list-num-layers layer-list-paint-offsets
-  layer-list-paint-offsets-count layer-list-num-layers-raw))
+ (inline layer-list-num-layers layer-list-paint-offsets-count
+  layer-list-num-layers-raw))
 
 
 (defun layer-list-num-layers (table)
@@ -878,8 +877,8 @@
 
 
 (declaim
- (inline clip-list-format-table clip-list-num-clips clip-list-clips
-  clip-list-clips-count clip-list-format-table-raw clip-list-num-clips-raw))
+ (inline clip-list-format-table clip-list-num-clips clip-list-clips-count
+  clip-list-format-table-raw clip-list-num-clips-raw))
 
 
 (defun clip-list-format-table (table)
@@ -1144,8 +1143,8 @@
 
 
 (declaim
- (inline color-line-extend color-line-num-stops color-line-color-stops
-  color-line-color-stops-count color-line-extend-raw color-line-num-stops-raw))
+ (inline color-line-extend color-line-num-stops color-line-color-stops-count
+  color-line-extend-raw color-line-num-stops-raw))
 
 
 (defun color-line-extend (table)
@@ -1214,8 +1213,8 @@
 
 (declaim
  (inline var-color-line-extend var-color-line-num-stops
-  var-color-line-color-stops var-color-line-color-stops-count
-  var-color-line-extend-raw var-color-line-num-stops-raw))
+  var-color-line-color-stops-count var-color-line-extend-raw
+  var-color-line-num-stops-raw))
 
 
 (defun var-color-line-extend (table)

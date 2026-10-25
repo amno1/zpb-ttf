@@ -55,9 +55,9 @@
 (declaim
  (inline mvar-version mvar--reserved mvar-value-record-size
   mvar-value-record-count mvar-item-variation-store-offset
-  mvar-item-variation-store-offset-offset mvar-value-records
-  mvar-value-records-count mvar-version-raw mvar--reserved-raw
-  mvar-value-record-size-raw mvar-value-record-count-raw))
+  mvar-item-variation-store-offset-offset mvar-value-records-count
+  mvar-version-raw mvar--reserved-raw mvar-value-record-size-raw
+  mvar-value-record-count-raw))
 
 
 (defun mvar-version (table)

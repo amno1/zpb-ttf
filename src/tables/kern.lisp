@@ -45,8 +45,8 @@
 
 
 (declaim
- (inline ot-kern-version ot-kern-n-tables ot-kern-subtable-data
-  ot-kern-subtable-data-count ot-kern-version-raw ot-kern-n-tables-raw))
+ (inline ot-kern-version ot-kern-n-tables ot-kern-subtable-data-count
+  ot-kern-version-raw ot-kern-n-tables-raw))
 
 
 (defun ot-kern-version (table)
@@ -72,7 +72,11 @@
 
 (defun ot-kern-subtable-data-count (table)
   "Data for subtables, immediately following the header."
-  (max 0 (floor (- (table-ref-length table) (+ (table-ref-offset table) 4)) 1)))
+  (max 0
+       (floor
+        (- (+ (table-ref-offset table) (table-ref-length table))
+           (+ (table-ref-offset table) 4))
+        1)))
 
 
 (defun ot-kern-subtable-data-ref (table index)
@@ -117,8 +121,8 @@
 
 
 (declaim
- (inline aat-kern-version aat-kern-n-tables aat-kern-subtable-data
-  aat-kern-subtable-data-count aat-kern-version-raw aat-kern-n-tables-raw))
+ (inline aat-kern-version aat-kern-n-tables aat-kern-subtable-data-count
+  aat-kern-version-raw aat-kern-n-tables-raw))
 
 
 (defun aat-kern-version (table)
@@ -144,7 +148,11 @@
 
 (defun aat-kern-subtable-data-count (table)
   "Data for subtables, immediately following the header."
-  (max 0 (floor (- (table-ref-length table) (+ (table-ref-offset table) 8)) 1)))
+  (max 0
+       (floor
+        (- (+ (table-ref-offset table) (table-ref-length table))
+           (+ (table-ref-offset table) 8))
+        1)))
 
 
 (defun aat-kern-subtable-data-ref (table index)
@@ -190,8 +198,8 @@
 
 (declaim
  (inline ot-subtable-version ot-subtable-length ot-subtable-coverage
-  ot-subtable-data ot-subtable-data-count ot-subtable-version-raw
-  ot-subtable-length-raw ot-subtable-coverage-raw))
+  ot-subtable-data-count ot-subtable-version-raw ot-subtable-length-raw
+  ot-subtable-coverage-raw))
 
 
 (defun ot-subtable-version (table)
@@ -228,7 +236,11 @@
 
 (defun ot-subtable-data-count (table)
   "Subtable specific data."
-  (max 0 (floor (- (table-ref-length table) (+ (table-ref-offset table) 6)) 1)))
+  (max 0
+       (floor
+        (- (+ (table-ref-offset table) (table-ref-length table))
+           (+ (table-ref-offset table) 6))
+        1)))
 
 
 (defun ot-subtable-data-ref (table index)
@@ -274,8 +286,8 @@
 
 (declaim
  (inline aat-subtable-length aat-subtable-coverage aat-subtable-tuple-index
-  aat-subtable-data aat-subtable-data-count aat-subtable-length-raw
-  aat-subtable-coverage-raw aat-subtable-tuple-index-raw))
+  aat-subtable-data-count aat-subtable-length-raw aat-subtable-coverage-raw
+  aat-subtable-tuple-index-raw))
 
 
 (defun aat-subtable-length (table)
@@ -312,7 +324,11 @@
 
 (defun aat-subtable-data-count (table)
   "Subtable specific data."
-  (max 0 (floor (- (table-ref-length table) (+ (table-ref-offset table) 8)) 1)))
+  (max 0
+       (floor
+        (- (+ (table-ref-offset table) (table-ref-length table))
+           (+ (table-ref-offset table) 8))
+        1)))
 
 
 (defun aat-subtable-data-ref (table index)
@@ -358,7 +374,7 @@
 
 (declaim
  (inline kern-subtable0-n-pairs kern-subtable0-search-range
-  kern-subtable0-entry-selector kern-subtable0-range-shift kern-subtable0-pairs
+  kern-subtable0-entry-selector kern-subtable0-range-shift
   kern-subtable0-pairs-count kern-subtable0-n-pairs-raw
   kern-subtable0-search-range-raw kern-subtable0-entry-selector-raw
   kern-subtable0-range-shift-raw))
@@ -455,8 +471,8 @@
 
 (declaim
  (inline subtable2-class-table-first-glyph subtable2-class-table-n-glyphs
-  subtable2-class-table-offsets subtable2-class-table-offsets-count
-  subtable2-class-table-first-glyph-raw subtable2-class-table-n-glyphs-raw))
+  subtable2-class-table-offsets-count subtable2-class-table-first-glyph-raw
+  subtable2-class-table-n-glyphs-raw))
 
 
 (defun subtable2-class-table-first-glyph (table)
@@ -529,9 +545,7 @@
 (declaim
  (inline subtable3-glyph-count subtable3-kern-value-count
   subtable3-left-class-count subtable3-right-class-count subtable3-flags
-  subtable3-kern-value subtable3-kern-value-array-count subtable3-left-class
-  subtable3-left-class-array-count subtable3-right-class
-  subtable3-right-class-array-count subtable3-kern-index
+  subtable3-left-class-array-count subtable3-right-class-array-count
   subtable3-kern-index-count subtable3-glyph-count-raw
   subtable3-kern-value-count-raw subtable3-left-class-count-raw
   subtable3-right-class-count-raw subtable3-flags-raw))

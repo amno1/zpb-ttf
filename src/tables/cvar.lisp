@@ -8,8 +8,8 @@
 
 (export
  '(cvar cvar-data-offset cvar-data-offset-offset cvar-p
-   cvar-tuple-variation-count cvar-tuple-variation-headers cvar-version
-   read-cvar sanitize-cvar))
+   cvar-tuple-variation-count cvar-tuple-variation-headers
+   cvar-tuple-variation-headers-start cvar-version read-cvar sanitize-cvar))
 
 
 (defstruct
@@ -19,7 +19,7 @@
 
 (declaim
  (inline cvar-version cvar-tuple-variation-count cvar-data-offset
-  cvar-data-offset-offset cvar-tuple-variation-headers cvar-version-raw))
+  cvar-data-offset-offset cvar-version-raw cvar-tuple-variation-count-raw))
 
 
 (defun cvar-version (table)
@@ -32,11 +32,22 @@
   (font-data-read-u32 font-data offset))
 
 
+(defun cvar-tuple-variation-count (table)
+  "A packed field. The high 4 bits are flags, and the low 12 bits are the number of tuple variation tables for this glyph. The number of tuple variation tables can be any number between 1 and 4095."
+  (declare (type cvar table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 4)))
+
+
+(defun cvar-tuple-variation-count-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 4)))
+
+
 (defun cvar-data-offset-offset (table)
   "Offset from the start of the 'cvar' table to the serialized data."
   (declare (type cvar table))
   (font-data-read-u16 (table-ref-font-data table)
-                      (+ (table-ref-offset table) 4)))
+                      (+ (table-ref-offset table) 6)))
 
 
 (defun cvar-data-offset (table)
@@ -48,12 +59,18 @@
                        (+ (table-ref-offset table) off)))))
 
 
+(defun cvar-tuple-variation-headers-start (table)
+  "Byte position of the first TUPLE-VARIATION-HEADER element; elements are variable-length."
+  (declare (type cvar table))
+  (+ (table-ref-offset table) 8))
+
+
 (defun sanitize-cvar (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 6 length) (font-data-valid-range-p font-data offset 6))
-    (error 'font-out-of-bounds-error :pos offset :size 6 :length
+  (unless (and (<= 8 length) (font-data-valid-range-p font-data offset 8))
+    (error 'font-out-of-bounds-error :pos offset :size 8 :length
            (font-data-length font-data)))
   t)
 

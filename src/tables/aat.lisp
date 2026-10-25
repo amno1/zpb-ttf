@@ -101,7 +101,7 @@
 
 
 (declaim
- (inline lookup0-format-table lookup0-values-data lookup0-values-data-count
+ (inline lookup0-format-table lookup0-values-data-count
   lookup0-format-table-raw))
 
 
@@ -117,7 +117,11 @@
 
 (defun lookup0-values-data-count (table)
   "Values, indexed by glyph index."
-  (max 0 (floor (- (table-ref-length table) (+ (table-ref-offset table) 2)) 1)))
+  (max 0
+       (floor
+        (- (+ (table-ref-offset table) (table-ref-length table))
+           (+ (table-ref-offset table) 2))
+        1)))
 
 
 (defun lookup0-values-data-ref (table index)
@@ -164,9 +168,9 @@
 (declaim
  (inline lookup2-format-table lookup2-unit-size lookup2-n-units
   lookup2-search-range lookup2-entry-selector lookup2-range-shift
-  lookup2-segments-data lookup2-segments-data-count lookup2-format-table-raw
-  lookup2-unit-size-raw lookup2-n-units-raw lookup2-search-range-raw
-  lookup2-entry-selector-raw lookup2-range-shift-raw))
+  lookup2-segments-data-count lookup2-format-table-raw lookup2-unit-size-raw
+  lookup2-n-units-raw lookup2-search-range-raw lookup2-entry-selector-raw
+  lookup2-range-shift-raw))
 
 
 (defun lookup2-format-table (table)
@@ -283,9 +287,9 @@
 (declaim
  (inline lookup4-format-table lookup4-unit-size lookup4-n-units
   lookup4-search-range lookup4-entry-selector lookup4-range-shift
-  lookup4-segments lookup4-segments-count lookup4-format-table-raw
-  lookup4-unit-size-raw lookup4-n-units-raw lookup4-search-range-raw
-  lookup4-entry-selector-raw lookup4-range-shift-raw))
+  lookup4-segments-count lookup4-format-table-raw lookup4-unit-size-raw
+  lookup4-n-units-raw lookup4-search-range-raw lookup4-entry-selector-raw
+  lookup4-range-shift-raw))
 
 
 (defun lookup4-format-table (table)
@@ -400,9 +404,9 @@
 (declaim
  (inline lookup6-format-table lookup6-unit-size lookup6-n-units
   lookup6-search-range lookup6-entry-selector lookup6-range-shift
-  lookup6-entries-data lookup6-entries-data-count lookup6-format-table-raw
-  lookup6-unit-size-raw lookup6-n-units-raw lookup6-search-range-raw
-  lookup6-entry-selector-raw lookup6-range-shift-raw))
+  lookup6-entries-data-count lookup6-format-table-raw lookup6-unit-size-raw
+  lookup6-n-units-raw lookup6-search-range-raw lookup6-entry-selector-raw
+  lookup6-range-shift-raw))
 
 
 (defun lookup6-format-table (table)
@@ -518,8 +522,8 @@
 
 (declaim
  (inline lookup8-format-table lookup8-first-glyph lookup8-glyph-count
-  lookup8-value-array lookup8-value-array-count lookup8-format-table-raw
-  lookup8-first-glyph-raw lookup8-glyph-count-raw))
+  lookup8-value-array-count lookup8-format-table-raw lookup8-first-glyph-raw
+  lookup8-glyph-count-raw))
 
 
 (defun lookup8-format-table (table)
@@ -602,9 +606,8 @@
 
 (declaim
  (inline lookup10-format-table lookup10-unit-size lookup10-first-glyph
-  lookup10-glyph-count lookup10-values-data lookup10-values-data-count
-  lookup10-format-table-raw lookup10-unit-size-raw lookup10-first-glyph-raw
-  lookup10-glyph-count-raw))
+  lookup10-glyph-count lookup10-values-data-count lookup10-format-table-raw
+  lookup10-unit-size-raw lookup10-first-glyph-raw lookup10-glyph-count-raw))
 
 
 (defun lookup10-format-table (table)
@@ -786,8 +789,8 @@
 
 (declaim
  (inline class-subtable-first-glyph class-subtable-n-glyphs
-  class-subtable-class-array class-subtable-class-array-count
-  class-subtable-first-glyph-raw class-subtable-n-glyphs-raw))
+  class-subtable-class-array-count class-subtable-first-glyph-raw
+  class-subtable-n-glyphs-raw))
 
 
 (defun class-subtable-first-glyph (table)
@@ -863,11 +866,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
-(declaim (inline raw-bytes-data raw-bytes-data-count))
+(declaim (inline raw-bytes-data-count))
 
 
 (defun raw-bytes-data-count (table)
-  (max 0 (floor (- (table-ref-length table) (table-ref-offset table)) 1)))
+  (max 0
+       (floor
+        (- (+ (table-ref-offset table) (table-ref-length table))
+           (table-ref-offset table))
+        1)))
 
 
 (defun raw-bytes-data-ref (table index)
@@ -997,11 +1004,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
-(declaim (inline raw-words-data raw-words-data-count))
+(declaim (inline raw-words-data-count))
 
 
 (defun raw-words-data-count (table)
-  (max 0 (floor (- (table-ref-length table) (table-ref-offset table)) 2)))
+  (max 0
+       (floor
+        (- (+ (table-ref-offset table) (table-ref-length table))
+           (table-ref-offset table))
+        2)))
 
 
 (defun raw-words-data-ref (table index)
