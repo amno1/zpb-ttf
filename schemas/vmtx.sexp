@@ -13,6 +13,6 @@
 
 (table vmtx-extended (:tag "VMTX")
  (:doc "VMTX vertical metrics (ISO/IEC 14496-22:2026, 5.6.14).")
- (field v-metrics (array long-metric-extended) :count number-of-long-ver-metrics)
+ (field v-metrics (array long-metric) :count number-of-long-ver-metrics)
  (field top-side-bearings (array i16) :count :remainder))
 

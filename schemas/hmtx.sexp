@@ -13,19 +13,14 @@
 
 (table hmtx-extended (:tag "HMTX")
  (:doc "HMTX horizontal metrics (ISO/IEC 14496-22:2026, 5.1.11).")
- (field h-metrics (array long-metric-extended) :count number-of-h-metrics)
+ (field h-metrics (array long-metric) :count number-of-h-metrics)
  (field left-side-bearings (array i16) :count :remainder))
 
 
+;; The advance is uint16, also in the extended HMTX/VMTX tables, which reuse
+;; this record unchanged (as Fontations' read-fonts and write-fonts do). No
+;; current standard text defines a 32-bit advance; don't widen it.
 (record long-metric
  (field advance u16 :doc "Advance width/height, in font design units.")
- (field side-bearing i16 :doc
-  "Glyph leading (left/top) side bearing, in font design units."))
-
-
-
-(record long-metric-extended
- (:doc "Long metric with a 32-bit advance, used by HMTX/VMTX (ISO/IEC 14496-22:2026).")
- (field advance u32 :doc "Advance width/height, in font design units.")
  (field side-bearing i16 :doc
   "Glyph leading (left/top) side bearing, in font design units."))

@@ -7,15 +7,13 @@
 (in-package #:zpb-otf)
 
 (export
- '(+hmtx-extended-tag+ +hmtx-tag+ +long-metric-extended-size+
-   +long-metric-size+ hmtx hmtx-extended hmtx-extended-h-metrics-count
-   hmtx-extended-h-metrics-ref hmtx-extended-left-side-bearings-count
-   hmtx-extended-left-side-bearings-ref hmtx-extended-p hmtx-h-metrics-count
-   hmtx-h-metrics-ref hmtx-left-side-bearings-count hmtx-left-side-bearings-ref
-   hmtx-p long-metric long-metric-advance long-metric-extended
-   long-metric-extended-advance long-metric-extended-p
-   long-metric-extended-side-bearing long-metric-p long-metric-side-bearing
-   read-hmtx read-hmtx-extended sanitize-hmtx sanitize-hmtx-extended))
+ '(+hmtx-extended-tag+ +hmtx-tag+ +long-metric-size+ hmtx hmtx-extended
+   hmtx-extended-h-metrics-count hmtx-extended-h-metrics-ref
+   hmtx-extended-left-side-bearings-count hmtx-extended-left-side-bearings-ref
+   hmtx-extended-p hmtx-h-metrics-count hmtx-h-metrics-ref
+   hmtx-left-side-bearings-count hmtx-left-side-bearings-ref hmtx-p long-metric
+   long-metric-advance long-metric-p long-metric-side-bearing read-hmtx
+   read-hmtx-extended sanitize-hmtx sanitize-hmtx-extended))
 
 (defstruct
     (long-metric (:include record-ref)
@@ -34,27 +32,6 @@
   "Glyph leading (left/top) side bearing, in font design units."
   (declare (type long-metric rec))
   (font-data-read-i16 (record-ref-font-data rec) (+ (record-ref-offset rec) 2)))
-
-(defstruct
-    (long-metric-extended (:include record-ref)
-     (:constructor %make-long-metric-extended
-      (%record-font-data %record-offset)))
-  "Long metric with a 32-bit advance, used by HMTX/VMTX (ISO/IEC 14496-22:2026).")
-
-(define-constant +long-metric-extended-size+ 6)
-
-(declaim
- (inline long-metric-extended-advance long-metric-extended-side-bearing))
-
-(defun long-metric-extended-advance (rec)
-  "Advance width/height, in font design units."
-  (declare (type long-metric-extended rec))
-  (font-data-read-u32 (record-ref-font-data rec) (record-ref-offset rec)))
-
-(defun long-metric-extended-side-bearing (rec)
-  "Glyph leading (left/top) side bearing, in font design units."
-  (declare (type long-metric-extended rec))
-  (font-data-read-i16 (record-ref-font-data rec) (+ (record-ref-offset rec) 4)))
 
 (defstruct
     (hmtx (:include table-ref)
@@ -151,12 +128,12 @@
   (declare (type hmtx-extended table)
            (ignorable number-of-h-metrics index))
   (declare (type (unsigned-byte 32) index))
-  (let ((pos (+ (table-ref-offset table) (* index 6))))
+  (let ((pos (+ (table-ref-offset table) (* index 4))))
     (unless
-        (<= (+ pos 6) (+ (table-ref-offset table) (table-ref-length table)))
-      (error 'font-out-of-bounds-error :pos pos :size 6 :length
+        (<= (+ pos 4) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 4 :length
              (table-ref-length table)))
-    (%make-long-metric-extended (table-ref-font-data table) pos)))
+    (%make-long-metric (table-ref-font-data table) pos)))
 
 (defun hmtx-extended-left-side-bearings-count (table number-of-h-metrics)
   (declare (type hmtx-extended table)
@@ -166,7 +143,7 @@
        (floor
         (- (+ (table-ref-offset table) (table-ref-length table))
            (+ (table-ref-offset table)
-              (* (hmtx-extended-h-metrics-count table number-of-h-metrics) 6)))
+              (* (hmtx-extended-h-metrics-count table number-of-h-metrics) 4)))
         2)))
 
 (defun hmtx-extended-left-side-bearings-ref (table number-of-h-metrics index)
@@ -176,7 +153,7 @@
   (let ((pos
          (+
           (+ (table-ref-offset table)
-             (* (hmtx-extended-h-metrics-count table number-of-h-metrics) 6))
+             (* (hmtx-extended-h-metrics-count table number-of-h-metrics) 4))
           (* index 2))))
     (unless
         (<= (+ pos 2) (+ (table-ref-offset table) (table-ref-length table)))

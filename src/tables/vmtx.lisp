@@ -109,12 +109,12 @@
   (declare (type vmtx-extended table)
            (ignorable number-of-long-ver-metrics index))
   (declare (type (unsigned-byte 32) index))
-  (let ((pos (+ (table-ref-offset table) (* index 6))))
+  (let ((pos (+ (table-ref-offset table) (* index 4))))
     (unless
-        (<= (+ pos 6) (+ (table-ref-offset table) (table-ref-length table)))
-      (error 'font-out-of-bounds-error :pos pos :size 6 :length
+        (<= (+ pos 4) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 4 :length
              (table-ref-length table)))
-    (%make-long-metric-extended (table-ref-font-data table) pos)))
+    (%make-long-metric (table-ref-font-data table) pos)))
 
 (defun vmtx-extended-top-side-bearings-count (table number-of-long-ver-metrics)
   (declare (type vmtx-extended table)
@@ -126,7 +126,7 @@
            (+ (table-ref-offset table)
               (*
                (vmtx-extended-v-metrics-count table number-of-long-ver-metrics)
-               6)))
+               4)))
         2)))
 
 (defun vmtx-extended-top-side-bearings-ref
@@ -139,7 +139,7 @@
           (+ (table-ref-offset table)
              (*
               (vmtx-extended-v-metrics-count table number-of-long-ver-metrics)
-              6))
+              4))
           (* index 2))))
     (unless
         (<= (+ pos 2) (+ (table-ref-offset table) (table-ref-length table)))
