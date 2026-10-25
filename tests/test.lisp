@@ -1,3 +1,7 @@
+;;;; test.lisp — Contour segment tests for zpb-ttf
+;;;; Copyright (c) 2019 Bart Botta and zpb-ttf contributors
+;;;; SPDX-License-Identifier: BSD-2-Clause
+
 (defpackage #:zpb-ttf-test
   (:use :cl)
   (:import-from :zpb-ttf

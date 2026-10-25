@@ -955,7 +955,9 @@ sized elements become plain arrays; others are returned as (:COMPUTED elem)."
     ;; Write file header
     (format stream ";;;; ~A — Generated OpenType tables~%" filename)
     (format stream ";;;; Generated automatically from OpenType sexp schema~%")
-    (format stream ";;;; DO NOT EDIT DIRECTLY~%~%")
+    (format stream ";;;; DO NOT EDIT DIRECTLY~%")
+    (format stream ";;;; Copyright (C) 2026 Arthur Miller and contributors~%")
+    (format stream ";;;; SPDX-License-Identifier: MIT~%~%")
     (pprint '(in-package #:zpb-otf) stream)
     (terpri stream)
     (terpri stream)

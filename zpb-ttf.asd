@@ -11,7 +11,7 @@
   :version "2.0.0"
   :author "Zachary Beane <xach@xach.com>, Arthur Miller and contributors"
   :description "Access TrueType and OpenType font metrics and outlines from Common Lisp"
-  :license "BSD"
+  :license "BSD-2-Clause"
   :depends-on (#:zpb-otf)
   :serial t
   :components ((:file "package")
