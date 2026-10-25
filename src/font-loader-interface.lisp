@@ -200,54 +200,102 @@ advances and a vector of GLYPH-COUNT bearings."
           do (setf (aref bearings i) (zpb-otf:font-data-read-i16 data pos)))
     (values advances bearings)))
 
-(defun read-kerning-pairs (loader pairs-pos n-pairs)
-  (let ((data (font-data loader)))
+(defun read-kerning-format-0 (loader body kend)
+  "Format 0: an ordered list of (left, right, value) pairs at BODY."
+  (let* ((data (font-data loader))
+         (n-pairs (min (zpb-otf:font-data-read-u16 data body)
+                       (floor (max 0 (- kend body 8)) 6)))
+         (pos (+ body 8)))
     (dotimes (p n-pairs)
-      (let ((left (zpb-otf:font-data-read-u16 data pairs-pos))
-            (right (zpb-otf:font-data-read-u16 data (+ pairs-pos 2)))
-            (val (zpb-otf:font-data-read-i16 data (+ pairs-pos 4))))
-        (setf (gethash (logior (ash left 16) right) (kerning-table loader)) val)
-        (incf pairs-pos 6)))))
+      (let ((left (zpb-otf:font-data-read-u16 data pos))
+            (right (zpb-otf:font-data-read-u16 data (+ pos 2)))
+            (val (zpb-otf:font-data-read-i16 data (+ pos 4))))
+        ;; Apple specifies a terminating #xFFFF/#xFFFF entry with value 0.
+        (unless (and (= left #xFFFF) (= right #xFFFF) (zerop val))
+          (setf (gethash (logior (ash left 16) right) (kerning-table loader)) val))
+        (incf pos 6)))))
+
+(defun read-kerning-class-table (data pos kend)
+  "Return the first glyph and the vector of offsets of the class table at POS."
+  (if (> (+ pos 4) kend)
+      (values 0 (vector))
+      (let* ((first (zpb-otf:font-data-read-u16 data pos))
+             (count (min (zpb-otf:font-data-read-u16 data (+ pos 2))
+                         (floor (- kend pos 4) 2)))
+             (offsets (make-array count)))
+        (dotimes (i count)
+          (setf (aref offsets i) (zpb-otf:font-data-read-u16 data (+ pos 4 (* 2 i)))))
+        (values first offsets))))
+
+(defun read-kerning-format-2 (loader sub-off body kend)
+  "Format 2: a class-based kerning array. The class-table offsets, and the
+pre-multiplied row and column offsets they hold, are relative to the
+start of the subtable; a pair's value is at SUB-OFF + left + right."
+  (let ((data (font-data loader)))
+    (when (<= (+ body 8) kend)
+      (multiple-value-bind (left-first left-offsets)
+          (read-kerning-class-table data (+ sub-off (zpb-otf:font-data-read-u16 data (+ body 2))) kend)
+        (multiple-value-bind (right-first right-offsets)
+            (read-kerning-class-table data (+ sub-off (zpb-otf:font-data-read-u16 data (+ body 4))) kend)
+          (loop for lv across left-offsets
+                for left from left-first
+                do (loop for rv across right-offsets
+                         for right from right-first
+                         for pos = (+ sub-off lv rv)
+                         when (<= (+ pos 2) kend)
+                           do (let ((val (zpb-otf:font-data-read-i16 data pos)))
+                                (unless (zerop val)
+                                  (setf (gethash (logior (ash left 16) right) (kerning-table loader))
+                                        val))))))))))
+
+(defun read-kerning-subtable (loader format sub-off body kend)
+  (case format
+    (0 (read-kerning-format-0 loader body kend))
+    (2 (read-kerning-format-2 loader sub-off body kend))
+    ;; Format 1 (contextual state table) and others are ignored.
+    ))
 
 (defun load-kern-table (loader koff ksize)
-  "Read horizontal format 0 subtables of the Microsoft (version 0) or
-Apple (version 1.0) 'kern' table into the loader's kerning table."
+  "Read the horizontal format 0 and format 2 subtables of the Microsoft
+(version 0) or Apple (version 1.0) 'kern' table into the loader's
+kerning table."
   (let* ((data (font-data loader))
          (kend (+ koff ksize))
          (version (zpb-otf:font-data-read-u16 data koff)))
     (case version
       (0
+       ;; Subtable header: version u16, length u16, coverage u16 with the
+       ;; format in the high byte and flags in the low byte.
        (let ((n-tables (zpb-otf:font-data-read-u16 data (+ koff 2)))
              (sub-off (+ koff 4)))
          (dotimes (t-idx n-tables)
-           (when (> (+ sub-off 14) kend) (return))
+           (when (> (+ sub-off 6) kend) (return))
            (let* ((sub-len (zpb-otf:font-data-read-u16 data (+ sub-off 2)))
                   (sub-cov (zpb-otf:font-data-read-u16 data (+ sub-off 4)))
-                  (format (ldb (byte 8 8) sub-cov)))
-             ;; Format 0, horizontal, not minimum values, not cross-stream.
-             (when (and (zerop format) (logbitp 0 sub-cov)
-                        (not (logbitp 1 sub-cov)) (not (logbitp 2 sub-cov)))
-               (read-kerning-pairs loader (+ sub-off 14)
-                                   (min (zpb-otf:font-data-read-u16 data (+ sub-off 6))
-                                        (floor (- kend sub-off 14) 6))))
-             (when (< sub-len 14) (return))
+                  (sub-end (min kend (+ sub-off (max sub-len 6)))))
+             ;; Horizontal, not minimum values, not cross-stream.
+             (when (= (logand sub-cov #b111) 1)
+               (read-kerning-subtable loader (ldb (byte 8 8) sub-cov) sub-off (+ sub-off 6)
+                                      ;; Fonts with many pairs overflow the 16-bit length.
+                                      (if (= t-idx (1- n-tables)) kend sub-end)))
+             (when (< sub-len 6) (return))
              (incf sub-off sub-len)))))
       (1
+       ;; Subtable header: length u32, coverage u16 with flags in the high
+       ;; byte and the format in the low byte, tupleIndex u16.
        (when (= (zpb-otf:font-data-read-u16 data (+ koff 2)) 0)
          (let ((n-tables (min (zpb-otf:font-data-read-u32 data (+ koff 4))
-                              (floor (max 0 (- kend koff 8)) 16)))
+                              (floor (max 0 (- kend koff 8)) 8)))
                (sub-off (+ koff 8)))
            (dotimes (t-idx n-tables)
-             (when (> (+ sub-off 16) kend) (return))
+             (when (> (+ sub-off 8) kend) (return))
              (let* ((sub-len (zpb-otf:font-data-read-u32 data sub-off))
-                    (sub-cov (zpb-otf:font-data-read-u16 data (+ sub-off 4)))
-                    (format (ldb (byte 8 0) sub-cov)))
-               ;; Format 0, not vertical, not cross-stream, not variation.
-               (when (and (zerop format) (zerop (logand sub-cov #xE000)))
-                 (read-kerning-pairs loader (+ sub-off 16)
-                                     (min (zpb-otf:font-data-read-u16 data (+ sub-off 8))
-                                          (floor (- kend sub-off 16) 6))))
-               (when (< sub-len 16) (return))
+                    (sub-cov (zpb-otf:font-data-read-u16 data (+ sub-off 4))))
+               ;; Not vertical, not cross-stream, not variation.
+               (when (zerop (logand sub-cov #xE000))
+                 (read-kerning-subtable loader (ldb (byte 8 0) sub-cov) sub-off (+ sub-off 8)
+                                        (min kend (+ sub-off (max sub-len 8)))))
+               (when (< sub-len 8) (return))
                (incf sub-off sub-len)))))))))
 
 (defparameter *sfnt-versions*

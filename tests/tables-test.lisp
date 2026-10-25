@@ -397,6 +397,20 @@
                       (= 1.0 (zpb-otf:tuple-variation-header-peak-tuple-ref tvh 2 0))
                       (= -1.0 (zpb-otf:tuple-variation-header-peak-tuple-ref tvh 2 1)))
                  "TupleVariationHeader embedded peak tuple uses the axis count"))
+  ;; 'kern' format 2: class tables and the value array are relative to the subtable.
+  (let* ((fd (bytes->font-data '(:u16 0) '(:u16 1)                      ; kern v0, 1 subtable
+                               '(:u16 0) '(:u16 38) '(:u16 #x0201)       ; format 2, horizontal
+                               '(:u16 4) '(:u16 14) '(:u16 22) '(:u16 30) ; rowWidth, left, right, array
+                               '(:u16 5) '(:u16 2) '(:u16 30) '(:u16 34)  ; left classes: glyphs 5, 6
+                               '(:u16 7) '(:u16 2) '(:u16 0) '(:u16 2)    ; right classes: glyphs 7, 8
+                               '(:u16 0) '(:u16 #xFFF6) '(:u16 20) '(:u16 0)))
+         (loader (make-instance 'zpb-ttf::font-loader :font-data fd)))
+    (zpb-ttf::load-kern-table loader 0 (zpb-otf:font-data-length fd))
+    (let ((table (zpb-ttf::kerning-table loader)))
+      (test-assert (and (= 2 (hash-table-count table))
+                        (= -10 (gethash (logior (ash 5 16) 8) table))
+                        (= 20 (gethash (logior (ash 6 16) 7) table)))
+                   "kern format 2 class-based pairs are read; zero entries skipped")))
   ;; Range checks accept sizes beyond 32 bits.
   (test-assert (not (zpb-otf:font-data-valid-range-p (bytes->font-data 0 0) 1 (expt 2 33)))
                "valid-range-p rejects an oversized range"))
