@@ -23,6 +23,12 @@
      (:constructor %make-lang-tag-record (%record-font-data %record-offset))))
 
 
+(define-constant +lang-tag-record-size+ 4)
+
+
+(declaim (inline lang-tag-record-length lang-tag-record-lang-tag-offset))
+
+
 (defun lang-tag-record-length (rec)
   "Language-tag string length (in bytes)"
   (declare (type lang-tag-record rec))
@@ -35,15 +41,18 @@
   (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 2)))
 
 
-(declaim (inline lang-tag-record-length lang-tag-record-lang-tag-offset))
-
-
-(define-constant +lang-tag-record-size+ 4)
-
-
 (defstruct
     (name-record (:include record-ref)
      (:constructor %make-name-record (%record-font-data %record-offset))))
+
+
+(define-constant +name-record-size+ 12)
+
+
+(declaim
+ (inline name-record-platform-id name-record-encoding-id
+  name-record-language-id name-record-name-id name-record-length
+  name-record-string-offset))
 
 
 (defun name-record-platform-id (rec)
@@ -83,27 +92,22 @@
                       (+ (record-ref-offset rec) 10)))
 
 
-(declaim
- (inline name-record-platform-id name-record-encoding-id
-  name-record-language-id name-record-name-id name-record-length
-  name-record-string-offset))
-
-
-(define-constant +name-record-size+ 12)
-
-
 (defstruct
     (name (:include table-ref)
      (:constructor %make-name (%table-font-data %table-offset %table-length))))
+
+
+(declaim
+ (inline name-version name-count name-storage-offset name-name-record
+  name-name-record-count name-lang-tag-count name-lang-tag-record
+  name-lang-tag-record-count name-version-raw name-count-raw
+  name-storage-offset-raw))
 
 
 (defun name-version (table)
   "Table version number (0 or 1)"
   (declare (type name table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline name-version-raw))
 
 
 (defun name-version-raw (font-data offset)
@@ -117,9 +121,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline name-count-raw))
-
-
 (defun name-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -129,9 +130,6 @@
   (declare (type name table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline name-storage-offset-raw))
 
 
 (defun name-storage-offset-raw (font-data offset)
@@ -167,12 +165,6 @@
 (defun name-lang-tag-record-count (table)
   "The language-tag records where langTagCount is the number of records."
   (name-lang-tag-count table))
-
-
-(declaim
- (inline name-version name-count name-storage-offset name-name-record
-  name-name-record-count name-lang-tag-count name-lang-tag-record
-  name-lang-tag-record-count))
 
 
 (defun name-lang-tag-record-ref (table index)

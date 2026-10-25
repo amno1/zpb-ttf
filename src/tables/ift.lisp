@@ -26,7 +26,13 @@
    entry-data-feature-tags-ref entry-data-format-flags
    entry-data-match-mode-and-count entry-data-p entry-data-trailing-data
    entry-data-trailing-data-bytes entry-data-trailing-data-count
-   entry-data-trailing-data-ref glyph-keyed-patch glyph-keyed-patch--reserved
+   entry-data-trailing-data-ref entry-format-flags-child-indices-p
+   entry-format-flags-codepoints-bit-1-p entry-format-flags-codepoints-bit-2-p
+   entry-format-flags-entry-id-delta-p
+   entry-format-flags-features-and-design-space-p entry-format-flags-ignored-p
+   entry-format-flags-patch-format-p entry-format-flags-reserved-p
+   glyph-keyed-flags-none-p glyph-keyed-flags-wide-glyph-ids-p
+   glyph-keyed-patch glyph-keyed-patch--reserved
    glyph-keyed-patch-brotli-stream glyph-keyed-patch-brotli-stream-bytes
    glyph-keyed-patch-brotli-stream-count glyph-keyed-patch-brotli-stream-ref
    glyph-keyed-patch-compatibility-id glyph-keyed-patch-flags
@@ -52,68 +58,177 @@
    ift-patch-map-url-template-length ift-patch-map-url-template-ref
    mapping-entries mapping-entries-entry-data mapping-entries-entry-data-bytes
    mapping-entries-entry-data-count mapping-entries-entry-data-ref
-   mapping-entries-p read-entry-data read-glyph-keyed-patch read-glyph-patches
-   read-id-string-data read-ift-glyph-data read-ift-patch-map
-   read-mapping-entries read-table-keyed-patch read-table-patch
-   sanitize-entry-data sanitize-glyph-keyed-patch sanitize-glyph-patches
-   sanitize-id-string-data sanitize-ift-glyph-data sanitize-ift-patch-map
-   sanitize-mapping-entries sanitize-table-keyed-patch sanitize-table-patch
-   table-keyed-patch table-keyed-patch--reserved
-   table-keyed-patch-compatibility-id table-keyed-patch-format-table
-   table-keyed-patch-p table-keyed-patch-patch-offsets
-   table-keyed-patch-patch-offsets-count table-keyed-patch-patch-offsets-ref
-   table-keyed-patch-patches-count table-patch table-patch-brotli-stream
-   table-patch-brotli-stream-bytes table-patch-brotli-stream-count
-   table-patch-brotli-stream-ref table-patch-flags
-   table-patch-max-uncompressed-length table-patch-p table-patch-tag))
+   mapping-entries-p patch-map-field-presence-flags-cff-charstrings-offset-p
+   patch-map-field-presence-flags-cff2-charstrings-offset-p read-entry-data
+   read-glyph-keyed-patch read-glyph-patches read-id-string-data
+   read-ift-glyph-data read-ift-patch-map read-mapping-entries
+   read-table-keyed-patch read-table-patch sanitize-entry-data
+   sanitize-glyph-keyed-patch sanitize-glyph-patches sanitize-id-string-data
+   sanitize-ift-glyph-data sanitize-ift-patch-map sanitize-mapping-entries
+   sanitize-table-keyed-patch sanitize-table-patch table-keyed-patch
+   table-keyed-patch--reserved table-keyed-patch-compatibility-id
+   table-keyed-patch-format-table table-keyed-patch-p
+   table-keyed-patch-patch-offsets table-keyed-patch-patch-offsets-count
+   table-keyed-patch-patch-offsets-ref table-keyed-patch-patches-count
+   table-patch table-patch-brotli-stream table-patch-brotli-stream-bytes
+   table-patch-brotli-stream-count table-patch-brotli-stream-ref
+   table-patch-flags table-patch-flags-drop-table-p
+   table-patch-flags-replace-table-p table-patch-max-uncompressed-length
+   table-patch-p table-patch-tag))
 
 
 (define-constant +patch-map-field-presence-flags-cff-charstrings-offset+ 1)
 
 
+(declaim (inline patch-map-field-presence-flags-cff-charstrings-offset-p))
+
+
+(defun patch-map-field-presence-flags-cff-charstrings-offset-p (flags)
+  (logtest flags +patch-map-field-presence-flags-cff-charstrings-offset+))
+
+
 (define-constant +patch-map-field-presence-flags-cff2-charstrings-offset+ 2)
+
+
+(declaim (inline patch-map-field-presence-flags-cff2-charstrings-offset-p))
+
+
+(defun patch-map-field-presence-flags-cff2-charstrings-offset-p (flags)
+  (logtest flags +patch-map-field-presence-flags-cff2-charstrings-offset+))
 
 
 (define-constant +entry-format-flags-features-and-design-space+ 1)
 
 
+(declaim (inline entry-format-flags-features-and-design-space-p))
+
+
+(defun entry-format-flags-features-and-design-space-p (flags)
+  (logtest flags +entry-format-flags-features-and-design-space+))
+
+
 (define-constant +entry-format-flags-child-indices+ 2)
+
+
+(declaim (inline entry-format-flags-child-indices-p))
+
+
+(defun entry-format-flags-child-indices-p (flags)
+  (logtest flags +entry-format-flags-child-indices+))
 
 
 (define-constant +entry-format-flags-entry-id-delta+ 4)
 
 
+(declaim (inline entry-format-flags-entry-id-delta-p))
+
+
+(defun entry-format-flags-entry-id-delta-p (flags)
+  (logtest flags +entry-format-flags-entry-id-delta+))
+
+
 (define-constant +entry-format-flags-patch-format+ 8)
+
+
+(declaim (inline entry-format-flags-patch-format-p))
+
+
+(defun entry-format-flags-patch-format-p (flags)
+  (logtest flags +entry-format-flags-patch-format+))
 
 
 (define-constant +entry-format-flags-codepoints-bit-1+ 16)
 
 
+(declaim (inline entry-format-flags-codepoints-bit-1-p))
+
+
+(defun entry-format-flags-codepoints-bit-1-p (flags)
+  (logtest flags +entry-format-flags-codepoints-bit-1+))
+
+
 (define-constant +entry-format-flags-codepoints-bit-2+ 32)
+
+
+(declaim (inline entry-format-flags-codepoints-bit-2-p))
+
+
+(defun entry-format-flags-codepoints-bit-2-p (flags)
+  (logtest flags +entry-format-flags-codepoints-bit-2+))
 
 
 (define-constant +entry-format-flags-ignored+ 64)
 
 
+(declaim (inline entry-format-flags-ignored-p))
+
+
+(defun entry-format-flags-ignored-p (flags)
+  (logtest flags +entry-format-flags-ignored+))
+
+
 (define-constant +entry-format-flags-reserved+ 128)
+
+
+(declaim (inline entry-format-flags-reserved-p))
+
+
+(defun entry-format-flags-reserved-p (flags)
+  (logtest flags +entry-format-flags-reserved+))
 
 
 (define-constant +table-patch-flags-replace-table+ 1)
 
 
+(declaim (inline table-patch-flags-replace-table-p))
+
+
+(defun table-patch-flags-replace-table-p (flags)
+  (logtest flags +table-patch-flags-replace-table+))
+
+
 (define-constant +table-patch-flags-drop-table+ 2)
+
+
+(declaim (inline table-patch-flags-drop-table-p))
+
+
+(defun table-patch-flags-drop-table-p (flags)
+  (logtest flags +table-patch-flags-drop-table+))
 
 
 (define-constant +glyph-keyed-flags-none+ 0)
 
 
+(declaim (inline glyph-keyed-flags-none-p))
+
+
+(defun glyph-keyed-flags-none-p (flags)
+  (logtest flags +glyph-keyed-flags-none+))
+
+
 (define-constant +glyph-keyed-flags-wide-glyph-ids+ 1)
+
+
+(declaim (inline glyph-keyed-flags-wide-glyph-ids-p))
+
+
+(defun glyph-keyed-flags-wide-glyph-ids-p (flags)
+  (logtest flags +glyph-keyed-flags-wide-glyph-ids+))
 
 
 (defstruct
     (design-space-segment (:include record-ref)
      (:constructor %make-design-space-segment
       (%record-font-data %record-offset))))
+
+
+(define-constant +design-space-segment-size+ 12)
+
+
+(declaim
+ (inline design-space-segment-axis-tag design-space-segment-start
+  design-space-segment-end))
 
 
 (defun design-space-segment-axis-tag (rec)
@@ -134,27 +249,31 @@
                         (+ (record-ref-offset rec) 8)))
 
 
-(declaim
- (inline design-space-segment-axis-tag design-space-segment-start
-  design-space-segment-end))
-
-
-(define-constant +design-space-segment-size+ 12)
-
-
 (defstruct
     (ift-patch-map (:include table-ref)
      (:constructor %make-ift-patch-map
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline ift-patch-map-format-table ift-patch-map--reserved-0
+  ift-patch-map--reserved-1 ift-patch-map--reserved-2 ift-patch-map-field-flags
+  ift-patch-map-compatibility-id ift-patch-map-default-patch-format
+  ift-patch-map-entry-count ift-patch-map-entries-offset
+  ift-patch-map-entries-offset-offset ift-patch-map-entry-id-string-data-offset
+  ift-patch-map-entry-id-string-data-offset-offset
+  ift-patch-map-url-template-length ift-patch-map-url-template
+  ift-patch-map-url-template-count ift-patch-map-cff-charstrings-offset
+  ift-patch-map-cff2-charstrings-offset ift-patch-map-format-table-raw
+  ift-patch-map--reserved-0-raw ift-patch-map--reserved-1-raw
+  ift-patch-map--reserved-2-raw ift-patch-map-field-flags-raw
+  ift-patch-map-default-patch-format-raw ift-patch-map-url-template-length-raw))
+
+
 (defun ift-patch-map-format-table (table)
   "Format identifier: format = 2"
   (declare (type ift-patch-map table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline ift-patch-map-format-table-raw))
 
 
 (defun ift-patch-map-format-table-raw (font-data offset)
@@ -167,9 +286,6 @@
                      (+ (table-ref-offset table) 1)))
 
 
-(declaim (inline ift-patch-map--reserved-0-raw))
-
-
 (defun ift-patch-map--reserved-0-raw (font-data offset)
   (font-data-read-u8 font-data (+ offset 1)))
 
@@ -178,9 +294,6 @@
   (declare (type ift-patch-map table))
   (font-data-read-u8 (table-ref-font-data table)
                      (+ (table-ref-offset table) 2)))
-
-
-(declaim (inline ift-patch-map--reserved-1-raw))
 
 
 (defun ift-patch-map--reserved-1-raw (font-data offset)
@@ -193,9 +306,6 @@
                      (+ (table-ref-offset table) 3)))
 
 
-(declaim (inline ift-patch-map--reserved-2-raw))
-
-
 (defun ift-patch-map--reserved-2-raw (font-data offset)
   (font-data-read-u8 font-data (+ offset 3)))
 
@@ -204,9 +314,6 @@
   (declare (type ift-patch-map table))
   (font-data-read-u8 (table-ref-font-data table)
                      (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline ift-patch-map-field-flags-raw))
 
 
 (defun ift-patch-map-field-flags-raw (font-data offset)
@@ -218,9 +325,6 @@
   (declare (type ift-patch-map table))
   (font-data-read-u8 (table-ref-font-data table)
                      (+ (table-ref-offset table) 5)))
-
-
-(declaim (inline ift-patch-map-default-patch-format-raw))
 
 
 (defun ift-patch-map-default-patch-format-raw (font-data offset)
@@ -261,9 +365,6 @@
                       (+ (table-ref-offset table) 14)))
 
 
-(declaim (inline ift-patch-map-url-template-length-raw))
-
-
 (defun ift-patch-map-url-template-length-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 14)))
 
@@ -293,18 +394,6 @@
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 16
                          (* (ift-patch-map-url-template-count table) 1))))
-
-
-(declaim
- (inline ift-patch-map-format-table ift-patch-map--reserved-0
-  ift-patch-map--reserved-1 ift-patch-map--reserved-2 ift-patch-map-field-flags
-  ift-patch-map-compatibility-id ift-patch-map-default-patch-format
-  ift-patch-map-entry-count ift-patch-map-entries-offset
-  ift-patch-map-entries-offset-offset ift-patch-map-entry-id-string-data-offset
-  ift-patch-map-entry-id-string-data-offset-offset
-  ift-patch-map-url-template-length ift-patch-map-url-template
-  ift-patch-map-url-template-count ift-patch-map-cff-charstrings-offset
-  ift-patch-map-cff2-charstrings-offset))
 
 
 (defun ift-patch-map-cff2-charstrings-offset (table)
@@ -343,6 +432,9 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim (inline mapping-entries-entry-data mapping-entries-entry-data-count))
+
+
 (defun mapping-entries-entry-data-count (table)
   (max 0 (floor (- (table-ref-length table) (table-ref-offset table)) 1)))
 
@@ -356,9 +448,6 @@
       (error 'font-out-of-bounds-error :pos pos :size 1 :length
              (table-ref-length table)))
     (font-data-read-u8 (table-ref-font-data table) pos)))
-
-
-(declaim (inline mapping-entries-entry-data mapping-entries-entry-data-count))
 
 
 (defun mapping-entries-entry-data-bytes (table)
@@ -389,12 +478,19 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline entry-data-format-flags entry-data-feature-count
+  entry-data-feature-tags entry-data-feature-tags-count
+  entry-data-design-space-count entry-data-design-space-segments
+  entry-data-design-space-segments-count entry-data-match-mode-and-count
+  entry-data-child-indices entry-data-child-indices-count
+  entry-data-trailing-data entry-data-trailing-data-count
+  entry-data-format-flags-raw entry-data-feature-count-raw))
+
+
 (defun entry-data-format-flags (table)
   (declare (type entry-data table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline entry-data-format-flags-raw))
 
 
 (defun entry-data-format-flags-raw (font-data offset)
@@ -405,9 +501,6 @@
   (declare (type entry-data table))
   (font-data-read-u8 (table-ref-font-data table)
                      (+ (table-ref-offset table) 1)))
-
-
-(declaim (inline entry-data-feature-count-raw))
 
 
 (defun entry-data-feature-count-raw (font-data offset)
@@ -493,15 +586,6 @@
     (font-data-read-u8 (table-ref-font-data table) pos)))
 
 
-(declaim
- (inline entry-data-format-flags entry-data-feature-count
-  entry-data-feature-tags entry-data-feature-tags-count
-  entry-data-design-space-count entry-data-design-space-segments
-  entry-data-design-space-segments-count entry-data-match-mode-and-count
-  entry-data-child-indices entry-data-child-indices-count
-  entry-data-trailing-data entry-data-trailing-data-count))
-
-
 (defun entry-data-trailing-data-bytes (table)
   (font-data-slice (table-ref-font-data table)
                    (+ (table-ref-offset table) 4
@@ -540,6 +624,9 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim (inline id-string-data-id-data id-string-data-id-data-count))
+
+
 (defun id-string-data-id-data-count (table)
   (max 0 (floor (- (table-ref-length table) (table-ref-offset table)) 1)))
 
@@ -553,9 +640,6 @@
       (error 'font-out-of-bounds-error :pos pos :size 1 :length
              (table-ref-length table)))
     (font-data-read-u8 (table-ref-font-data table) pos)))
-
-
-(declaim (inline id-string-data-id-data id-string-data-id-data-count))
 
 
 (defun id-string-data-id-data-bytes (table)
@@ -586,13 +670,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline table-keyed-patch-format-table table-keyed-patch--reserved
+  table-keyed-patch-compatibility-id table-keyed-patch-patches-count
+  table-keyed-patch-patch-offsets table-keyed-patch-patch-offsets-count
+  table-keyed-patch-format-table-raw table-keyed-patch--reserved-raw
+  table-keyed-patch-patches-count-raw))
+
+
 (defun table-keyed-patch-format-table (table)
   (declare (type table-keyed-patch table))
   (font-data-read-tag-string (table-ref-font-data table)
                              (table-ref-offset table)))
-
-
-(declaim (inline table-keyed-patch-format-table-raw))
 
 
 (defun table-keyed-patch-format-table-raw (font-data offset)
@@ -605,9 +694,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline table-keyed-patch--reserved-raw))
-
-
 (defun table-keyed-patch--reserved-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 4)))
 
@@ -618,21 +704,12 @@
                       (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline table-keyed-patch-patches-count-raw))
-
-
 (defun table-keyed-patch-patches-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 8)))
 
 
 (defun table-keyed-patch-patch-offsets-count (table)
   (+ (table-keyed-patch-patches-count table) 1))
-
-
-(declaim
- (inline table-keyed-patch-format-table table-keyed-patch--reserved
-  table-keyed-patch-compatibility-id table-keyed-patch-patches-count
-  table-keyed-patch-patch-offsets table-keyed-patch-patch-offsets-count))
 
 
 (defun table-keyed-patch-patch-offsets-ref (table index)
@@ -672,13 +749,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline table-patch-tag table-patch-flags table-patch-max-uncompressed-length
+  table-patch-brotli-stream table-patch-brotli-stream-count table-patch-tag-raw
+  table-patch-flags-raw table-patch-max-uncompressed-length-raw))
+
+
 (defun table-patch-tag (table)
   (declare (type table-patch table))
   (font-data-read-tag-string (table-ref-font-data table)
                              (table-ref-offset table)))
-
-
-(declaim (inline table-patch-tag-raw))
 
 
 (defun table-patch-tag-raw (font-data offset)
@@ -691,9 +771,6 @@
                      (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline table-patch-flags-raw))
-
-
 (defun table-patch-flags-raw (font-data offset)
   (font-data-read-u8 font-data (+ offset 4)))
 
@@ -702,9 +779,6 @@
   (declare (type table-patch table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 5)))
-
-
-(declaim (inline table-patch-max-uncompressed-length-raw))
 
 
 (defun table-patch-max-uncompressed-length-raw (font-data offset)
@@ -724,11 +798,6 @@
       (error 'font-out-of-bounds-error :pos pos :size 1 :length
              (table-ref-length table)))
     (font-data-read-u8 (table-ref-font-data table) pos)))
-
-
-(declaim
- (inline table-patch-tag table-patch-flags table-patch-max-uncompressed-length
-  table-patch-brotli-stream table-patch-brotli-stream-count))
 
 
 (defun table-patch-brotli-stream-bytes (table)
@@ -759,13 +828,19 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline glyph-keyed-patch-format-table glyph-keyed-patch--reserved
+  glyph-keyed-patch-flags glyph-keyed-patch-compatibility-id
+  glyph-keyed-patch-max-uncompressed-length glyph-keyed-patch-brotli-stream
+  glyph-keyed-patch-brotli-stream-count glyph-keyed-patch-format-table-raw
+  glyph-keyed-patch--reserved-raw glyph-keyed-patch-flags-raw
+  glyph-keyed-patch-max-uncompressed-length-raw))
+
+
 (defun glyph-keyed-patch-format-table (table)
   (declare (type glyph-keyed-patch table))
   (font-data-read-tag-string (table-ref-font-data table)
                              (table-ref-offset table)))
-
-
-(declaim (inline glyph-keyed-patch-format-table-raw))
 
 
 (defun glyph-keyed-patch-format-table-raw (font-data offset)
@@ -778,9 +853,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline glyph-keyed-patch--reserved-raw))
-
-
 (defun glyph-keyed-patch--reserved-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 4)))
 
@@ -791,9 +863,6 @@
                      (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline glyph-keyed-patch-flags-raw))
-
-
 (defun glyph-keyed-patch-flags-raw (font-data offset)
   (font-data-read-u8 font-data (+ offset 8)))
 
@@ -802,9 +871,6 @@
   (declare (type glyph-keyed-patch table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 9)))
-
-
-(declaim (inline glyph-keyed-patch-max-uncompressed-length-raw))
 
 
 (defun glyph-keyed-patch-max-uncompressed-length-raw (font-data offset)
@@ -825,13 +891,6 @@
       (error 'font-out-of-bounds-error :pos pos :size 1 :length
              (table-ref-length table)))
     (font-data-read-u8 (table-ref-font-data table) pos)))
-
-
-(declaim
- (inline glyph-keyed-patch-format-table glyph-keyed-patch--reserved
-  glyph-keyed-patch-flags glyph-keyed-patch-compatibility-id
-  glyph-keyed-patch-max-uncompressed-length glyph-keyed-patch-brotli-stream
-  glyph-keyed-patch-brotli-stream-count))
 
 
 (defun glyph-keyed-patch-brotli-stream-bytes (table)
@@ -862,12 +921,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline glyph-patches-glyph-count glyph-patches-table-count
+  glyph-patches-glyph-ids glyph-patches-tables glyph-patches-tables-count
+  glyph-patches-glyph-data-offsets glyph-patches-glyph-data-offsets-count
+  glyph-patches-glyph-count-raw glyph-patches-table-count-raw))
+
+
 (defun glyph-patches-glyph-count (table)
   (declare (type glyph-patches table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline glyph-patches-glyph-count-raw))
 
 
 (defun glyph-patches-glyph-count-raw (font-data offset)
@@ -878,9 +941,6 @@
   (declare (type glyph-patches table))
   (font-data-read-u8 (table-ref-font-data table)
                      (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline glyph-patches-table-count-raw))
 
 
 (defun glyph-patches-table-count-raw (font-data offset)
@@ -901,20 +961,8 @@
     (font-data-read-tag-string (table-ref-font-data table) pos)))
 
 
-(defun glyph-patches-glyph-data-offsets-count (table &optional count)
-  (or count
-      (max 0
-           (floor
-            (- (table-ref-length table)
-               (+ (table-ref-offset table) 5
-                  (* (glyph-patches-tables-count table) 4)))
-            4))))
-
-
-(declaim
- (inline glyph-patches-glyph-count glyph-patches-table-count
-  glyph-patches-glyph-ids glyph-patches-tables glyph-patches-tables-count
-  glyph-patches-glyph-data-offsets glyph-patches-glyph-data-offsets-count))
+(defun glyph-patches-glyph-data-offsets-count (table)
+  (+ (* (glyph-patches-glyph-count table) (glyph-patches-table-count table)) 1))
 
 
 (defun glyph-patches-glyph-data-offsets-ref (table index)
@@ -964,6 +1012,9 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim (inline ift-glyph-data-data ift-glyph-data-data-count))
+
+
 (defun ift-glyph-data-data-count (table)
   (max 0 (floor (- (table-ref-length table) (table-ref-offset table)) 1)))
 
@@ -977,9 +1028,6 @@
       (error 'font-out-of-bounds-error :pos pos :size 1 :length
              (table-ref-length table)))
     (font-data-read-u8 (table-ref-font-data table) pos)))
-
-
-(declaim (inline ift-glyph-data-data ift-glyph-data-data-count))
 
 
 (defun ift-glyph-data-data-bytes (table)

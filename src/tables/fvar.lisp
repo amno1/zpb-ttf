@@ -26,6 +26,15 @@
       (%record-font-data %record-offset))))
 
 
+(define-constant +variation-axis-record-size+ 20)
+
+
+(declaim
+ (inline variation-axis-record-axis-tag variation-axis-record-min-value
+  variation-axis-record-default-value variation-axis-record-max-value
+  variation-axis-record-flags variation-axis-record-axis-name-id))
+
+
 (defun variation-axis-record-axis-tag (rec)
   "Tag identifying the design variation for the axis."
   (declare (type variation-axis-record rec))
@@ -68,27 +77,23 @@
                       (+ (record-ref-offset rec) 18)))
 
 
-(declaim
- (inline variation-axis-record-axis-tag variation-axis-record-min-value
-  variation-axis-record-default-value variation-axis-record-max-value
-  variation-axis-record-flags variation-axis-record-axis-name-id))
-
-
-(define-constant +variation-axis-record-size+ 20)
-
-
 (defstruct
     (fvar (:include table-ref)
      (:constructor %make-fvar (%table-font-data %table-offset %table-length))))
+
+
+(declaim
+ (inline fvar-version fvar-axis-instance-arrays-offset
+  fvar-axis-instance-arrays-offset-offset fvar--reserved fvar-axis-count
+  fvar-axis-size fvar-instance-count fvar-instance-size fvar-version-raw
+  fvar--reserved-raw fvar-axis-count-raw fvar-axis-size-raw
+  fvar-instance-count-raw fvar-instance-size-raw))
 
 
 (defun fvar-version (table)
   "Major version number of the font variations table — set to 1. Minor version number of the font variations table — set to 0."
   (declare (type fvar table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline fvar-version-raw))
 
 
 (defun fvar-version-raw (font-data offset)
@@ -118,9 +123,6 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline fvar--reserved-raw))
-
-
 (defun fvar--reserved-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 6)))
 
@@ -130,9 +132,6 @@
   (declare (type fvar table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline fvar-axis-count-raw))
 
 
 (defun fvar-axis-count-raw (font-data offset)
@@ -146,9 +145,6 @@
                       (+ (table-ref-offset table) 10)))
 
 
-(declaim (inline fvar-axis-size-raw))
-
-
 (defun fvar-axis-size-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 10)))
 
@@ -160,9 +156,6 @@
                       (+ (table-ref-offset table) 12)))
 
 
-(declaim (inline fvar-instance-count-raw))
-
-
 (defun fvar-instance-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 12)))
 
@@ -172,15 +165,6 @@
   (declare (type fvar table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 14)))
-
-
-(declaim (inline fvar-instance-size-raw))
-
-
-(declaim
- (inline fvar-version fvar-axis-instance-arrays-offset
-  fvar-axis-instance-arrays-offset-offset fvar--reserved fvar-axis-count
-  fvar-axis-size fvar-instance-count fvar-instance-size))
 
 
 (defun fvar-instance-size-raw (font-data offset)
@@ -210,15 +194,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline axis-instance-arrays-axes axis-instance-arrays-axes-count
+  axis-instance-arrays-instances))
+
+
 (defun axis-instance-arrays-axes-count (table &optional axis-count)
   "Variation axis record array."
   (or axis-count
       (max 0 (floor (- (table-ref-length table) (table-ref-offset table)) 20))))
-
-
-(declaim
- (inline axis-instance-arrays-axes axis-instance-arrays-axes-count
-  axis-instance-arrays-instances))
 
 
 (defun axis-instance-arrays-axes-ref (table index)

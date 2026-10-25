@@ -337,6 +337,14 @@
      (:constructor %make-base-glyph (%record-font-data %record-offset))))
 
 
+(define-constant +base-glyph-size+ 6)
+
+
+(declaim
+ (inline base-glyph-glyph-id base-glyph-first-layer-index
+  base-glyph-num-layers))
+
+
 (defun base-glyph-glyph-id (rec)
   "Glyph ID of the base glyph."
   (declare (type base-glyph rec))
@@ -355,17 +363,15 @@
   (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 4)))
 
 
-(declaim
- (inline base-glyph-glyph-id base-glyph-first-layer-index
-  base-glyph-num-layers))
-
-
-(define-constant +base-glyph-size+ 6)
-
-
 (defstruct
     (layer (:include record-ref)
      (:constructor %make-layer (%record-font-data %record-offset))))
+
+
+(define-constant +layer-size+ 4)
+
+
+(declaim (inline layer-glyph-id layer-palette-index))
 
 
 (defun layer-glyph-id (rec)
@@ -380,15 +386,15 @@
   (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 2)))
 
 
-(declaim (inline layer-glyph-id layer-palette-index))
-
-
-(define-constant +layer-size+ 4)
-
-
 (defstruct
     (base-glyph-paint (:include record-ref)
      (:constructor %make-base-glyph-paint (%record-font-data %record-offset))))
+
+
+(define-constant +base-glyph-paint-size+ 6)
+
+
+(declaim (inline base-glyph-paint-glyph-id base-glyph-paint-paint-offset))
 
 
 (defun base-glyph-paint-glyph-id (rec)
@@ -403,15 +409,15 @@
   (font-data-read-u32 (record-ref-font-data rec) (+ (record-ref-offset rec) 2)))
 
 
-(declaim (inline base-glyph-paint-glyph-id base-glyph-paint-paint-offset))
-
-
-(define-constant +base-glyph-paint-size+ 6)
-
-
 (defstruct
     (clip (:include record-ref)
      (:constructor %make-clip (%record-font-data %record-offset))))
+
+
+(define-constant +clip-size+ 7)
+
+
+(declaim (inline clip-start-glyph-id clip-end-glyph-id clip-clip-box-offset))
 
 
 (defun clip-start-glyph-id (rec)
@@ -432,15 +438,15 @@
   (font-data-read-u24 (record-ref-font-data rec) (+ (record-ref-offset rec) 4)))
 
 
-(declaim (inline clip-start-glyph-id clip-end-glyph-id clip-clip-box-offset))
-
-
-(define-constant +clip-size+ 7)
-
-
 (defstruct
     (color-index (:include record-ref)
      (:constructor %make-color-index (%record-font-data %record-offset))))
+
+
+(define-constant +color-index-size+ 4)
+
+
+(declaim (inline color-index-palette-index color-index-alpha))
 
 
 (defun color-index-palette-index (rec)
@@ -456,15 +462,17 @@
                           (+ (record-ref-offset rec) 2)))
 
 
-(declaim (inline color-index-palette-index color-index-alpha))
-
-
-(define-constant +color-index-size+ 4)
-
-
 (defstruct
     (var-color-index (:include record-ref)
      (:constructor %make-var-color-index (%record-font-data %record-offset))))
+
+
+(define-constant +var-color-index-size+ 8)
+
+
+(declaim
+ (inline var-color-index-palette-index var-color-index-alpha
+  var-color-index-var-index-base))
 
 
 (defun var-color-index-palette-index (rec)
@@ -486,17 +494,16 @@
   (font-data-read-u32 (record-ref-font-data rec) (+ (record-ref-offset rec) 4)))
 
 
-(declaim
- (inline var-color-index-palette-index var-color-index-alpha
-  var-color-index-var-index-base))
-
-
-(define-constant +var-color-index-size+ 8)
-
-
 (defstruct
     (color-stop (:include record-ref)
      (:constructor %make-color-stop (%record-font-data %record-offset))))
+
+
+(define-constant +color-stop-size+ 6)
+
+
+(declaim
+ (inline color-stop-stop-offset color-stop-palette-index color-stop-alpha))
 
 
 (defun color-stop-stop-offset (rec)
@@ -518,16 +525,17 @@
                           (+ (record-ref-offset rec) 4)))
 
 
-(declaim
- (inline color-stop-stop-offset color-stop-palette-index color-stop-alpha))
-
-
-(define-constant +color-stop-size+ 6)
-
-
 (defstruct
     (var-color-stop (:include record-ref)
      (:constructor %make-var-color-stop (%record-font-data %record-offset))))
+
+
+(define-constant +var-color-stop-size+ 10)
+
+
+(declaim
+ (inline var-color-stop-stop-offset var-color-stop-palette-index
+  var-color-stop-alpha var-color-stop-var-index-base))
 
 
 (defun var-color-stop-stop-offset (rec)
@@ -555,26 +563,28 @@
   (font-data-read-u32 (record-ref-font-data rec) (+ (record-ref-offset rec) 6)))
 
 
-(declaim
- (inline var-color-stop-stop-offset var-color-stop-palette-index
-  var-color-stop-alpha var-color-stop-var-index-base))
-
-
-(define-constant +var-color-stop-size+ 10)
-
-
 (defstruct
     (colr (:include table-ref)
      (:constructor %make-colr (%table-font-data %table-offset %table-length))))
+
+
+(declaim
+ (inline colr-version colr-num-base-glyph-records
+  colr-base-glyph-records-offset colr-base-glyph-records-offset-offset
+  colr-layer-records-offset colr-layer-records-offset-offset
+  colr-num-layer-records colr-base-glyph-list-offset
+  colr-base-glyph-list-offset-offset colr-layer-list-offset
+  colr-layer-list-offset-offset colr-clip-list-offset
+  colr-clip-list-offset-offset colr-var-index-map-offset
+  colr-var-index-map-offset-offset colr-item-variation-store-offset
+  colr-item-variation-store-offset-offset colr-version-raw
+  colr-num-base-glyph-records-raw colr-num-layer-records-raw))
 
 
 (defun colr-version (table)
   "Table version number - set to 0 or 1."
   (declare (type colr table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline colr-version-raw))
 
 
 (defun colr-version-raw (font-data offset)
@@ -586,9 +596,6 @@
   (declare (type colr table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 2)))
-
-
-(declaim (inline colr-num-base-glyph-records-raw))
 
 
 (defun colr-num-base-glyph-records-raw (font-data offset)
@@ -632,9 +639,6 @@
   (declare (type colr table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 12)))
-
-
-(declaim (inline colr-num-layer-records-raw))
 
 
 (defun colr-num-layer-records-raw (font-data offset)
@@ -717,18 +721,6 @@
                         (+ (table-ref-offset table) 30))))
 
 
-(declaim
- (inline colr-version colr-num-base-glyph-records
-  colr-base-glyph-records-offset colr-base-glyph-records-offset-offset
-  colr-layer-records-offset colr-layer-records-offset-offset
-  colr-num-layer-records colr-base-glyph-list-offset
-  colr-base-glyph-list-offset-offset colr-layer-list-offset
-  colr-layer-list-offset-offset colr-clip-list-offset
-  colr-clip-list-offset-offset colr-var-index-map-offset
-  colr-var-index-map-offset-offset colr-item-variation-store-offset
-  colr-item-variation-store-offset-offset))
-
-
 (defun colr-item-variation-store-offset (table)
   "Offset to ItemVariationStore (may be NULL)."
   (declare (type colr table))
@@ -761,12 +753,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline base-glyph-list-num-base-glyph-paint-records
+  base-glyph-list-base-glyph-paint-records
+  base-glyph-list-base-glyph-paint-records-count
+  base-glyph-list-num-base-glyph-paint-records-raw))
+
+
 (defun base-glyph-list-num-base-glyph-paint-records (table)
   (declare (type base-glyph-list table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline base-glyph-list-num-base-glyph-paint-records-raw))
 
 
 (defun base-glyph-list-num-base-glyph-paint-records-raw (font-data offset)
@@ -775,12 +771,6 @@
 
 (defun base-glyph-list-base-glyph-paint-records-count (table)
   (base-glyph-list-num-base-glyph-paint-records table))
-
-
-(declaim
- (inline base-glyph-list-num-base-glyph-paint-records
-  base-glyph-list-base-glyph-paint-records
-  base-glyph-list-base-glyph-paint-records-count))
 
 
 (defun base-glyph-list-base-glyph-paint-records-ref (table index)
@@ -824,12 +814,14 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline layer-list-num-layers layer-list-paint-offsets
+  layer-list-paint-offsets-count layer-list-num-layers-raw))
+
+
 (defun layer-list-num-layers (table)
   (declare (type layer-list table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline layer-list-num-layers-raw))
 
 
 (defun layer-list-num-layers-raw (font-data offset)
@@ -839,11 +831,6 @@
 (defun layer-list-paint-offsets-count (table)
   "Offsets to Paint tables."
   (layer-list-num-layers table))
-
-
-(declaim
- (inline layer-list-num-layers layer-list-paint-offsets
-  layer-list-paint-offsets-count))
 
 
 (defun layer-list-paint-offsets-ref (table index)
@@ -890,13 +877,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline clip-list-format-table clip-list-num-clips clip-list-clips
+  clip-list-clips-count clip-list-format-table-raw clip-list-num-clips-raw))
+
+
 (defun clip-list-format-table (table)
   "Set to 1."
   (declare (type clip-list table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline clip-list-format-table-raw))
 
 
 (defun clip-list-format-table-raw (font-data offset)
@@ -910,9 +899,6 @@
                       (+ (table-ref-offset table) 1)))
 
 
-(declaim (inline clip-list-num-clips-raw))
-
-
 (defun clip-list-num-clips-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 1)))
 
@@ -920,11 +906,6 @@
 (defun clip-list-clips-count (table)
   "Clip records. Sorted by startGlyphID."
   (clip-list-num-clips table))
-
-
-(declaim
- (inline clip-list-format-table clip-list-num-clips clip-list-clips
-  clip-list-clips-count))
 
 
 (defun clip-list-clips-ref (table index)
@@ -980,13 +961,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline clip-box-format1-format-table clip-box-format1-x-min
+  clip-box-format1-y-min clip-box-format1-x-max clip-box-format1-y-max
+  clip-box-format1-format-table-raw clip-box-format1-x-min-raw
+  clip-box-format1-y-min-raw clip-box-format1-x-max-raw
+  clip-box-format1-y-max-raw))
+
+
 (defun clip-box-format1-format-table (table)
   "Set to 1."
   (declare (type clip-box-format1 table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline clip-box-format1-format-table-raw))
 
 
 (defun clip-box-format1-format-table-raw (font-data offset)
@@ -1000,9 +986,6 @@
                         (+ (table-ref-offset table) 1)))
 
 
-(declaim (inline clip-box-format1-x-min-raw))
-
-
 (defun clip-box-format1-x-min-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 1)))
 
@@ -1012,9 +995,6 @@
   (declare (type clip-box-format1 table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 3)))
-
-
-(declaim (inline clip-box-format1-y-min-raw))
 
 
 (defun clip-box-format1-y-min-raw (font-data offset)
@@ -1028,9 +1008,6 @@
                         (+ (table-ref-offset table) 5)))
 
 
-(declaim (inline clip-box-format1-x-max-raw))
-
-
 (defun clip-box-format1-x-max-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 5)))
 
@@ -1040,14 +1017,6 @@
   (declare (type clip-box-format1 table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 7)))
-
-
-(declaim (inline clip-box-format1-y-max-raw))
-
-
-(declaim
- (inline clip-box-format1-format-table clip-box-format1-x-min
-  clip-box-format1-y-min clip-box-format1-x-max clip-box-format1-y-max))
 
 
 (defun clip-box-format1-y-max-raw (font-data offset)
@@ -1077,13 +1046,19 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline clip-box-format2-format-table clip-box-format2-x-min
+  clip-box-format2-y-min clip-box-format2-x-max clip-box-format2-y-max
+  clip-box-format2-var-index-base clip-box-format2-format-table-raw
+  clip-box-format2-x-min-raw clip-box-format2-y-min-raw
+  clip-box-format2-x-max-raw clip-box-format2-y-max-raw
+  clip-box-format2-var-index-base-raw))
+
+
 (defun clip-box-format2-format-table (table)
   "Set to 2."
   (declare (type clip-box-format2 table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline clip-box-format2-format-table-raw))
 
 
 (defun clip-box-format2-format-table-raw (font-data offset)
@@ -1097,9 +1072,6 @@
                         (+ (table-ref-offset table) 1)))
 
 
-(declaim (inline clip-box-format2-x-min-raw))
-
-
 (defun clip-box-format2-x-min-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 1)))
 
@@ -1109,9 +1081,6 @@
   (declare (type clip-box-format2 table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 3)))
-
-
-(declaim (inline clip-box-format2-y-min-raw))
 
 
 (defun clip-box-format2-y-min-raw (font-data offset)
@@ -1125,9 +1094,6 @@
                         (+ (table-ref-offset table) 5)))
 
 
-(declaim (inline clip-box-format2-x-max-raw))
-
-
 (defun clip-box-format2-x-max-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 5)))
 
@@ -1139,9 +1105,6 @@
                         (+ (table-ref-offset table) 7)))
 
 
-(declaim (inline clip-box-format2-y-max-raw))
-
-
 (defun clip-box-format2-y-max-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 7)))
 
@@ -1151,15 +1114,6 @@
   (declare (type clip-box-format2 table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 9)))
-
-
-(declaim (inline clip-box-format2-var-index-base-raw))
-
-
-(declaim
- (inline clip-box-format2-format-table clip-box-format2-x-min
-  clip-box-format2-y-min clip-box-format2-x-max clip-box-format2-y-max
-  clip-box-format2-var-index-base))
 
 
 (defun clip-box-format2-var-index-base-raw (font-data offset)
@@ -1189,13 +1143,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline color-line-extend color-line-num-stops color-line-color-stops
+  color-line-color-stops-count color-line-extend-raw color-line-num-stops-raw))
+
+
 (defun color-line-extend (table)
   "An Extend enum value."
   (declare (type color-line table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline color-line-extend-raw))
 
 
 (defun color-line-extend-raw (font-data offset)
@@ -1209,19 +1165,11 @@
                       (+ (table-ref-offset table) 1)))
 
 
-(declaim (inline color-line-num-stops-raw))
-
-
 (defun color-line-num-stops-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 1)))
 
 
 (defun color-line-color-stops-count (table) (color-line-num-stops table))
-
-
-(declaim
- (inline color-line-extend color-line-num-stops color-line-color-stops
-  color-line-color-stops-count))
 
 
 (defun color-line-color-stops-ref (table index)
@@ -1264,13 +1212,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline var-color-line-extend var-color-line-num-stops
+  var-color-line-color-stops var-color-line-color-stops-count
+  var-color-line-extend-raw var-color-line-num-stops-raw))
+
+
 (defun var-color-line-extend (table)
   "An Extend enum value."
   (declare (type var-color-line table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline var-color-line-extend-raw))
 
 
 (defun var-color-line-extend-raw (font-data offset)
@@ -1284,9 +1235,6 @@
                       (+ (table-ref-offset table) 1)))
 
 
-(declaim (inline var-color-line-num-stops-raw))
-
-
 (defun var-color-line-num-stops-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 1)))
 
@@ -1294,11 +1242,6 @@
 (defun var-color-line-color-stops-count (table)
   "Allows for variations."
   (var-color-line-num-stops table))
-
-
-(declaim
- (inline var-color-line-extend var-color-line-num-stops
-  var-color-line-color-stops var-color-line-color-stops-count))
 
 
 (defun var-color-line-color-stops-ref (table index)
@@ -1374,7 +1317,7 @@
       (30 (read-paint-skew-around-center font-data offset length))
       (31 (read-paint-var-skew-around-center font-data offset length))
       (32 (read-paint-composite font-data offset length))
-      (2 (read-paint-glyph2 font-data offset length))
+      (33 (read-paint-glyph2 font-data offset length))
       (otherwise (error 'unsupported-format-error :format fmt :table 'paint)))))
 
 
@@ -1384,13 +1327,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-colr-layers-format-table paint-colr-layers-num-layers
+  paint-colr-layers-first-layer-index paint-colr-layers-format-table-raw
+  paint-colr-layers-num-layers-raw paint-colr-layers-first-layer-index-raw))
+
+
 (defun paint-colr-layers-format-table (table)
   "Set to 1."
   (declare (type paint-colr-layers table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-colr-layers-format-table-raw))
 
 
 (defun paint-colr-layers-format-table-raw (font-data offset)
@@ -1404,9 +1350,6 @@
                      (+ (table-ref-offset table) 1)))
 
 
-(declaim (inline paint-colr-layers-num-layers-raw))
-
-
 (defun paint-colr-layers-num-layers-raw (font-data offset)
   (font-data-read-u8 font-data (+ offset 1)))
 
@@ -1416,14 +1359,6 @@
   (declare (type paint-colr-layers table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 2)))
-
-
-(declaim (inline paint-colr-layers-first-layer-index-raw))
-
-
-(declaim
- (inline paint-colr-layers-format-table paint-colr-layers-num-layers
-  paint-colr-layers-first-layer-index))
 
 
 (defun paint-colr-layers-first-layer-index-raw (font-data offset)
@@ -1453,13 +1388,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-solid-format-table paint-solid-palette-index paint-solid-alpha
+  paint-solid-format-table-raw paint-solid-palette-index-raw
+  paint-solid-alpha-raw))
+
+
 (defun paint-solid-format-table (table)
   "Set to 2."
   (declare (type paint-solid table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-solid-format-table-raw))
 
 
 (defun paint-solid-format-table-raw (font-data offset)
@@ -1473,9 +1411,6 @@
                       (+ (table-ref-offset table) 1)))
 
 
-(declaim (inline paint-solid-palette-index-raw))
-
-
 (defun paint-solid-palette-index-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 1)))
 
@@ -1485,13 +1420,6 @@
   (declare (type paint-solid table))
   (font-data-read-f2dot14 (table-ref-font-data table)
                           (+ (table-ref-offset table) 3)))
-
-
-(declaim (inline paint-solid-alpha-raw))
-
-
-(declaim
- (inline paint-solid-format-table paint-solid-palette-index paint-solid-alpha))
 
 
 (defun paint-solid-alpha-raw (font-data offset)
@@ -1521,13 +1449,17 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-var-solid-format-table paint-var-solid-palette-index
+  paint-var-solid-alpha paint-var-solid-var-index-base
+  paint-var-solid-format-table-raw paint-var-solid-palette-index-raw
+  paint-var-solid-alpha-raw paint-var-solid-var-index-base-raw))
+
+
 (defun paint-var-solid-format-table (table)
   "Set to 3."
   (declare (type paint-var-solid table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-var-solid-format-table-raw))
 
 
 (defun paint-var-solid-format-table-raw (font-data offset)
@@ -1541,9 +1473,6 @@
                       (+ (table-ref-offset table) 1)))
 
 
-(declaim (inline paint-var-solid-palette-index-raw))
-
-
 (defun paint-var-solid-palette-index-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 1)))
 
@@ -1555,9 +1484,6 @@
                           (+ (table-ref-offset table) 3)))
 
 
-(declaim (inline paint-var-solid-alpha-raw))
-
-
 (defun paint-var-solid-alpha-raw (font-data offset)
   (font-data-read-f2dot14 font-data (+ offset 3)))
 
@@ -1567,14 +1493,6 @@
   (declare (type paint-var-solid table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 5)))
-
-
-(declaim (inline paint-var-solid-var-index-base-raw))
-
-
-(declaim
- (inline paint-var-solid-format-table paint-var-solid-palette-index
-  paint-var-solid-alpha paint-var-solid-var-index-base))
 
 
 (defun paint-var-solid-var-index-base-raw (font-data offset)
@@ -1604,13 +1522,22 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-linear-gradient-format-table
+  paint-linear-gradient-color-line-offset
+  paint-linear-gradient-color-line-offset-offset paint-linear-gradient-x0
+  paint-linear-gradient-y0 paint-linear-gradient-x1 paint-linear-gradient-y1
+  paint-linear-gradient-x2 paint-linear-gradient-y2
+  paint-linear-gradient-format-table-raw paint-linear-gradient-x0-raw
+  paint-linear-gradient-y0-raw paint-linear-gradient-x1-raw
+  paint-linear-gradient-y1-raw paint-linear-gradient-x2-raw
+  paint-linear-gradient-y2-raw))
+
+
 (defun paint-linear-gradient-format-table (table)
   "Set to 4."
   (declare (type paint-linear-gradient table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-linear-gradient-format-table-raw))
 
 
 (defun paint-linear-gradient-format-table-raw (font-data offset)
@@ -1640,9 +1567,6 @@
                         (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-linear-gradient-x0-raw))
-
-
 (defun paint-linear-gradient-x0-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 4)))
 
@@ -1652,9 +1576,6 @@
   (declare (type paint-linear-gradient table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline paint-linear-gradient-y0-raw))
 
 
 (defun paint-linear-gradient-y0-raw (font-data offset)
@@ -1668,9 +1589,6 @@
                         (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline paint-linear-gradient-x1-raw))
-
-
 (defun paint-linear-gradient-x1-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 8)))
 
@@ -1680,9 +1598,6 @@
   (declare (type paint-linear-gradient table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 10)))
-
-
-(declaim (inline paint-linear-gradient-y1-raw))
 
 
 (defun paint-linear-gradient-y1-raw (font-data offset)
@@ -1696,9 +1611,6 @@
                         (+ (table-ref-offset table) 12)))
 
 
-(declaim (inline paint-linear-gradient-x2-raw))
-
-
 (defun paint-linear-gradient-x2-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 12)))
 
@@ -1708,17 +1620,6 @@
   (declare (type paint-linear-gradient table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 14)))
-
-
-(declaim (inline paint-linear-gradient-y2-raw))
-
-
-(declaim
- (inline paint-linear-gradient-format-table
-  paint-linear-gradient-color-line-offset
-  paint-linear-gradient-color-line-offset-offset paint-linear-gradient-x0
-  paint-linear-gradient-y0 paint-linear-gradient-x1 paint-linear-gradient-y1
-  paint-linear-gradient-x2 paint-linear-gradient-y2))
 
 
 (defun paint-linear-gradient-y2-raw (font-data offset)
@@ -1748,13 +1649,25 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-var-linear-gradient-format-table
+  paint-var-linear-gradient-color-line-offset
+  paint-var-linear-gradient-color-line-offset-offset
+  paint-var-linear-gradient-x0 paint-var-linear-gradient-y0
+  paint-var-linear-gradient-x1 paint-var-linear-gradient-y1
+  paint-var-linear-gradient-x2 paint-var-linear-gradient-y2
+  paint-var-linear-gradient-var-index-base
+  paint-var-linear-gradient-format-table-raw paint-var-linear-gradient-x0-raw
+  paint-var-linear-gradient-y0-raw paint-var-linear-gradient-x1-raw
+  paint-var-linear-gradient-y1-raw paint-var-linear-gradient-x2-raw
+  paint-var-linear-gradient-y2-raw
+  paint-var-linear-gradient-var-index-base-raw))
+
+
 (defun paint-var-linear-gradient-format-table (table)
   "Set to 5."
   (declare (type paint-var-linear-gradient table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-var-linear-gradient-format-table-raw))
 
 
 (defun paint-var-linear-gradient-format-table-raw (font-data offset)
@@ -1784,9 +1697,6 @@
                         (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-var-linear-gradient-x0-raw))
-
-
 (defun paint-var-linear-gradient-x0-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 4)))
 
@@ -1796,9 +1706,6 @@
   (declare (type paint-var-linear-gradient table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline paint-var-linear-gradient-y0-raw))
 
 
 (defun paint-var-linear-gradient-y0-raw (font-data offset)
@@ -1812,9 +1719,6 @@
                         (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline paint-var-linear-gradient-x1-raw))
-
-
 (defun paint-var-linear-gradient-x1-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 8)))
 
@@ -1824,9 +1728,6 @@
   (declare (type paint-var-linear-gradient table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 10)))
-
-
-(declaim (inline paint-var-linear-gradient-y1-raw))
 
 
 (defun paint-var-linear-gradient-y1-raw (font-data offset)
@@ -1840,9 +1741,6 @@
                         (+ (table-ref-offset table) 12)))
 
 
-(declaim (inline paint-var-linear-gradient-x2-raw))
-
-
 (defun paint-var-linear-gradient-x2-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 12)))
 
@@ -1854,9 +1752,6 @@
                         (+ (table-ref-offset table) 14)))
 
 
-(declaim (inline paint-var-linear-gradient-y2-raw))
-
-
 (defun paint-var-linear-gradient-y2-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 14)))
 
@@ -1866,19 +1761,6 @@
   (declare (type paint-var-linear-gradient table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 16)))
-
-
-(declaim (inline paint-var-linear-gradient-var-index-base-raw))
-
-
-(declaim
- (inline paint-var-linear-gradient-format-table
-  paint-var-linear-gradient-color-line-offset
-  paint-var-linear-gradient-color-line-offset-offset
-  paint-var-linear-gradient-x0 paint-var-linear-gradient-y0
-  paint-var-linear-gradient-x1 paint-var-linear-gradient-y1
-  paint-var-linear-gradient-x2 paint-var-linear-gradient-y2
-  paint-var-linear-gradient-var-index-base))
 
 
 (defun paint-var-linear-gradient-var-index-base-raw (font-data offset)
@@ -1908,13 +1790,22 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-radial-gradient-format-table
+  paint-radial-gradient-color-line-offset
+  paint-radial-gradient-color-line-offset-offset paint-radial-gradient-x0
+  paint-radial-gradient-y0 paint-radial-gradient-radius0
+  paint-radial-gradient-x1 paint-radial-gradient-y1
+  paint-radial-gradient-radius1 paint-radial-gradient-format-table-raw
+  paint-radial-gradient-x0-raw paint-radial-gradient-y0-raw
+  paint-radial-gradient-radius0-raw paint-radial-gradient-x1-raw
+  paint-radial-gradient-y1-raw paint-radial-gradient-radius1-raw))
+
+
 (defun paint-radial-gradient-format-table (table)
   "Set to 6."
   (declare (type paint-radial-gradient table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-radial-gradient-format-table-raw))
 
 
 (defun paint-radial-gradient-format-table-raw (font-data offset)
@@ -1944,9 +1835,6 @@
                         (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-radial-gradient-x0-raw))
-
-
 (defun paint-radial-gradient-x0-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 4)))
 
@@ -1956,9 +1844,6 @@
   (declare (type paint-radial-gradient table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline paint-radial-gradient-y0-raw))
 
 
 (defun paint-radial-gradient-y0-raw (font-data offset)
@@ -1972,9 +1857,6 @@
                          (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline paint-radial-gradient-radius0-raw))
-
-
 (defun paint-radial-gradient-radius0-raw (font-data offset)
   (font-data-read-ufword font-data (+ offset 8)))
 
@@ -1984,9 +1866,6 @@
   (declare (type paint-radial-gradient table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 10)))
-
-
-(declaim (inline paint-radial-gradient-x1-raw))
 
 
 (defun paint-radial-gradient-x1-raw (font-data offset)
@@ -2000,9 +1879,6 @@
                         (+ (table-ref-offset table) 12)))
 
 
-(declaim (inline paint-radial-gradient-y1-raw))
-
-
 (defun paint-radial-gradient-y1-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 12)))
 
@@ -2012,18 +1888,6 @@
   (declare (type paint-radial-gradient table))
   (font-data-read-ufword (table-ref-font-data table)
                          (+ (table-ref-offset table) 14)))
-
-
-(declaim (inline paint-radial-gradient-radius1-raw))
-
-
-(declaim
- (inline paint-radial-gradient-format-table
-  paint-radial-gradient-color-line-offset
-  paint-radial-gradient-color-line-offset-offset paint-radial-gradient-x0
-  paint-radial-gradient-y0 paint-radial-gradient-radius0
-  paint-radial-gradient-x1 paint-radial-gradient-y1
-  paint-radial-gradient-radius1))
 
 
 (defun paint-radial-gradient-radius1-raw (font-data offset)
@@ -2053,13 +1917,25 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-var-radial-gradient-format-table
+  paint-var-radial-gradient-color-line-offset
+  paint-var-radial-gradient-color-line-offset-offset
+  paint-var-radial-gradient-x0 paint-var-radial-gradient-y0
+  paint-var-radial-gradient-radius0 paint-var-radial-gradient-x1
+  paint-var-radial-gradient-y1 paint-var-radial-gradient-radius1
+  paint-var-radial-gradient-var-index-base
+  paint-var-radial-gradient-format-table-raw paint-var-radial-gradient-x0-raw
+  paint-var-radial-gradient-y0-raw paint-var-radial-gradient-radius0-raw
+  paint-var-radial-gradient-x1-raw paint-var-radial-gradient-y1-raw
+  paint-var-radial-gradient-radius1-raw
+  paint-var-radial-gradient-var-index-base-raw))
+
+
 (defun paint-var-radial-gradient-format-table (table)
   "Set to 7."
   (declare (type paint-var-radial-gradient table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-var-radial-gradient-format-table-raw))
 
 
 (defun paint-var-radial-gradient-format-table-raw (font-data offset)
@@ -2089,9 +1965,6 @@
                         (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-var-radial-gradient-x0-raw))
-
-
 (defun paint-var-radial-gradient-x0-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 4)))
 
@@ -2101,9 +1974,6 @@
   (declare (type paint-var-radial-gradient table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline paint-var-radial-gradient-y0-raw))
 
 
 (defun paint-var-radial-gradient-y0-raw (font-data offset)
@@ -2117,9 +1987,6 @@
                          (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline paint-var-radial-gradient-radius0-raw))
-
-
 (defun paint-var-radial-gradient-radius0-raw (font-data offset)
   (font-data-read-ufword font-data (+ offset 8)))
 
@@ -2129,9 +1996,6 @@
   (declare (type paint-var-radial-gradient table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 10)))
-
-
-(declaim (inline paint-var-radial-gradient-x1-raw))
 
 
 (defun paint-var-radial-gradient-x1-raw (font-data offset)
@@ -2145,9 +2009,6 @@
                         (+ (table-ref-offset table) 12)))
 
 
-(declaim (inline paint-var-radial-gradient-y1-raw))
-
-
 (defun paint-var-radial-gradient-y1-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 12)))
 
@@ -2159,9 +2020,6 @@
                          (+ (table-ref-offset table) 14)))
 
 
-(declaim (inline paint-var-radial-gradient-radius1-raw))
-
-
 (defun paint-var-radial-gradient-radius1-raw (font-data offset)
   (font-data-read-ufword font-data (+ offset 14)))
 
@@ -2171,19 +2029,6 @@
   (declare (type paint-var-radial-gradient table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 16)))
-
-
-(declaim (inline paint-var-radial-gradient-var-index-base-raw))
-
-
-(declaim
- (inline paint-var-radial-gradient-format-table
-  paint-var-radial-gradient-color-line-offset
-  paint-var-radial-gradient-color-line-offset-offset
-  paint-var-radial-gradient-x0 paint-var-radial-gradient-y0
-  paint-var-radial-gradient-radius0 paint-var-radial-gradient-x1
-  paint-var-radial-gradient-y1 paint-var-radial-gradient-radius1
-  paint-var-radial-gradient-var-index-base))
 
 
 (defun paint-var-radial-gradient-var-index-base-raw (font-data offset)
@@ -2213,13 +2058,20 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-sweep-gradient-format-table
+  paint-sweep-gradient-color-line-offset
+  paint-sweep-gradient-color-line-offset-offset paint-sweep-gradient-center-x
+  paint-sweep-gradient-center-y paint-sweep-gradient-start-angle
+  paint-sweep-gradient-end-angle paint-sweep-gradient-format-table-raw
+  paint-sweep-gradient-center-x-raw paint-sweep-gradient-center-y-raw
+  paint-sweep-gradient-start-angle-raw paint-sweep-gradient-end-angle-raw))
+
+
 (defun paint-sweep-gradient-format-table (table)
   "Set to 8."
   (declare (type paint-sweep-gradient table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-sweep-gradient-format-table-raw))
 
 
 (defun paint-sweep-gradient-format-table-raw (font-data offset)
@@ -2249,9 +2101,6 @@
                         (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-sweep-gradient-center-x-raw))
-
-
 (defun paint-sweep-gradient-center-x-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 4)))
 
@@ -2261,9 +2110,6 @@
   (declare (type paint-sweep-gradient table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline paint-sweep-gradient-center-y-raw))
 
 
 (defun paint-sweep-gradient-center-y-raw (font-data offset)
@@ -2277,9 +2123,6 @@
                           (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline paint-sweep-gradient-start-angle-raw))
-
-
 (defun paint-sweep-gradient-start-angle-raw (font-data offset)
   (font-data-read-f2dot14 font-data (+ offset 8)))
 
@@ -2289,17 +2132,6 @@
   (declare (type paint-sweep-gradient table))
   (font-data-read-f2dot14 (table-ref-font-data table)
                           (+ (table-ref-offset table) 10)))
-
-
-(declaim (inline paint-sweep-gradient-end-angle-raw))
-
-
-(declaim
- (inline paint-sweep-gradient-format-table
-  paint-sweep-gradient-color-line-offset
-  paint-sweep-gradient-color-line-offset-offset paint-sweep-gradient-center-x
-  paint-sweep-gradient-center-y paint-sweep-gradient-start-angle
-  paint-sweep-gradient-end-angle))
 
 
 (defun paint-sweep-gradient-end-angle-raw (font-data offset)
@@ -2329,13 +2161,24 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-var-sweep-gradient-format-table
+  paint-var-sweep-gradient-color-line-offset
+  paint-var-sweep-gradient-color-line-offset-offset
+  paint-var-sweep-gradient-center-x paint-var-sweep-gradient-center-y
+  paint-var-sweep-gradient-start-angle paint-var-sweep-gradient-end-angle
+  paint-var-sweep-gradient-var-index-base
+  paint-var-sweep-gradient-format-table-raw
+  paint-var-sweep-gradient-center-x-raw paint-var-sweep-gradient-center-y-raw
+  paint-var-sweep-gradient-start-angle-raw
+  paint-var-sweep-gradient-end-angle-raw
+  paint-var-sweep-gradient-var-index-base-raw))
+
+
 (defun paint-var-sweep-gradient-format-table (table)
   "Set to 9."
   (declare (type paint-var-sweep-gradient table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-var-sweep-gradient-format-table-raw))
 
 
 (defun paint-var-sweep-gradient-format-table-raw (font-data offset)
@@ -2365,9 +2208,6 @@
                         (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-var-sweep-gradient-center-x-raw))
-
-
 (defun paint-var-sweep-gradient-center-x-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 4)))
 
@@ -2377,9 +2217,6 @@
   (declare (type paint-var-sweep-gradient table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline paint-var-sweep-gradient-center-y-raw))
 
 
 (defun paint-var-sweep-gradient-center-y-raw (font-data offset)
@@ -2393,9 +2230,6 @@
                           (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline paint-var-sweep-gradient-start-angle-raw))
-
-
 (defun paint-var-sweep-gradient-start-angle-raw (font-data offset)
   (font-data-read-f2dot14 font-data (+ offset 8)))
 
@@ -2407,9 +2241,6 @@
                           (+ (table-ref-offset table) 10)))
 
 
-(declaim (inline paint-var-sweep-gradient-end-angle-raw))
-
-
 (defun paint-var-sweep-gradient-end-angle-raw (font-data offset)
   (font-data-read-f2dot14 font-data (+ offset 10)))
 
@@ -2419,18 +2250,6 @@
   (declare (type paint-var-sweep-gradient table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 12)))
-
-
-(declaim (inline paint-var-sweep-gradient-var-index-base-raw))
-
-
-(declaim
- (inline paint-var-sweep-gradient-format-table
-  paint-var-sweep-gradient-color-line-offset
-  paint-var-sweep-gradient-color-line-offset-offset
-  paint-var-sweep-gradient-center-x paint-var-sweep-gradient-center-y
-  paint-var-sweep-gradient-start-angle paint-var-sweep-gradient-end-angle
-  paint-var-sweep-gradient-var-index-base))
 
 
 (defun paint-var-sweep-gradient-var-index-base-raw (font-data offset)
@@ -2460,13 +2279,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-glyph-format-table paint-glyph-paint-offset
+  paint-glyph-paint-offset-offset paint-glyph-glyph-id
+  paint-glyph-format-table-raw paint-glyph-glyph-id-raw))
+
+
 (defun paint-glyph-format-table (table)
   "Set to 10."
   (declare (type paint-glyph table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-glyph-format-table-raw))
 
 
 (defun paint-glyph-format-table-raw (font-data offset)
@@ -2496,14 +2318,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-glyph-glyph-id-raw))
-
-
-(declaim
- (inline paint-glyph-format-table paint-glyph-paint-offset
-  paint-glyph-paint-offset-offset paint-glyph-glyph-id))
-
-
 (defun paint-glyph-glyph-id-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
 
@@ -2531,13 +2345,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-glyph2-format-table paint-glyph2-paint-offset
+  paint-glyph2-paint-offset-offset paint-glyph2-glyph-id
+  paint-glyph2-format-table-raw paint-glyph2-glyph-id-raw))
+
+
 (defun paint-glyph2-format-table (table)
   "Set to 33."
   (declare (type paint-glyph2 table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-glyph2-format-table-raw))
 
 
 (defun paint-glyph2-format-table-raw (font-data offset)
@@ -2567,14 +2384,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-glyph2-glyph-id-raw))
-
-
-(declaim
- (inline paint-glyph2-format-table paint-glyph2-paint-offset
-  paint-glyph2-paint-offset-offset paint-glyph2-glyph-id))
-
-
 (defun paint-glyph2-glyph-id-raw (font-data offset)
   (font-data-read-u24 font-data (+ offset 4)))
 
@@ -2602,13 +2411,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-colr-glyph-format-table paint-colr-glyph-glyph-id
+  paint-colr-glyph-format-table-raw paint-colr-glyph-glyph-id-raw))
+
+
 (defun paint-colr-glyph-format-table (table)
   "Set to 11."
   (declare (type paint-colr-glyph table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-colr-glyph-format-table-raw))
 
 
 (defun paint-colr-glyph-format-table-raw (font-data offset)
@@ -2620,12 +2431,6 @@
   (declare (type paint-colr-glyph table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 1)))
-
-
-(declaim (inline paint-colr-glyph-glyph-id-raw))
-
-
-(declaim (inline paint-colr-glyph-format-table paint-colr-glyph-glyph-id))
 
 
 (defun paint-colr-glyph-glyph-id-raw (font-data offset)
@@ -2655,13 +2460,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-transform-format-table paint-transform-paint-offset
+  paint-transform-paint-offset-offset paint-transform-transform-offset
+  paint-transform-transform-offset-offset paint-transform-format-table-raw))
+
+
 (defun paint-transform-format-table (table)
   "Set to 12."
   (declare (type paint-transform table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-transform-format-table-raw))
 
 
 (defun paint-transform-format-table-raw (font-data offset)
@@ -2689,12 +2497,6 @@
   (declare (type paint-transform table))
   (font-data-read-u24 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim
- (inline paint-transform-format-table paint-transform-paint-offset
-  paint-transform-paint-offset-offset paint-transform-transform-offset
-  paint-transform-transform-offset-offset))
 
 
 (defun paint-transform-transform-offset (table)
@@ -2729,13 +2531,17 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-var-transform-format-table paint-var-transform-paint-offset
+  paint-var-transform-paint-offset-offset paint-var-transform-transform-offset
+  paint-var-transform-transform-offset-offset
+  paint-var-transform-format-table-raw))
+
+
 (defun paint-var-transform-format-table (table)
   "Set to 13."
   (declare (type paint-var-transform table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-var-transform-format-table-raw))
 
 
 (defun paint-var-transform-format-table-raw (font-data offset)
@@ -2763,12 +2569,6 @@
   (declare (type paint-var-transform table))
   (font-data-read-u24 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim
- (inline paint-var-transform-format-table paint-var-transform-paint-offset
-  paint-var-transform-paint-offset-offset paint-var-transform-transform-offset
-  paint-var-transform-transform-offset-offset))
 
 
 (defun paint-var-transform-transform-offset (table)
@@ -2803,13 +2603,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline affine2x3-xx affine2x3-yx affine2x3-xy affine2x3-yy affine2x3-dx
+  affine2x3-dy affine2x3-xx-raw affine2x3-yx-raw affine2x3-xy-raw
+  affine2x3-yy-raw affine2x3-dx-raw affine2x3-dy-raw))
+
+
 (defun affine2x3-xx (table)
   "x-component of transformed x-basis vector."
   (declare (type affine2x3 table))
   (font-data-read-fixed (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline affine2x3-xx-raw))
 
 
 (defun affine2x3-xx-raw (font-data offset)
@@ -2823,9 +2626,6 @@
                         (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline affine2x3-yx-raw))
-
-
 (defun affine2x3-yx-raw (font-data offset)
   (font-data-read-fixed font-data (+ offset 4)))
 
@@ -2835,9 +2635,6 @@
   (declare (type affine2x3 table))
   (font-data-read-fixed (table-ref-font-data table)
                         (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline affine2x3-xy-raw))
 
 
 (defun affine2x3-xy-raw (font-data offset)
@@ -2851,9 +2648,6 @@
                         (+ (table-ref-offset table) 12)))
 
 
-(declaim (inline affine2x3-yy-raw))
-
-
 (defun affine2x3-yy-raw (font-data offset)
   (font-data-read-fixed font-data (+ offset 12)))
 
@@ -2865,9 +2659,6 @@
                         (+ (table-ref-offset table) 16)))
 
 
-(declaim (inline affine2x3-dx-raw))
-
-
 (defun affine2x3-dx-raw (font-data offset)
   (font-data-read-fixed font-data (+ offset 16)))
 
@@ -2877,14 +2668,6 @@
   (declare (type affine2x3 table))
   (font-data-read-fixed (table-ref-font-data table)
                         (+ (table-ref-offset table) 20)))
-
-
-(declaim (inline affine2x3-dy-raw))
-
-
-(declaim
- (inline affine2x3-xx affine2x3-yx affine2x3-xy affine2x3-yy affine2x3-dx
-  affine2x3-dy))
 
 
 (defun affine2x3-dy-raw (font-data offset)
@@ -2914,13 +2697,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline var-affine2x3-xx var-affine2x3-yx var-affine2x3-xy var-affine2x3-yy
+  var-affine2x3-dx var-affine2x3-dy var-affine2x3-var-index-base
+  var-affine2x3-xx-raw var-affine2x3-yx-raw var-affine2x3-xy-raw
+  var-affine2x3-yy-raw var-affine2x3-dx-raw var-affine2x3-dy-raw
+  var-affine2x3-var-index-base-raw))
+
+
 (defun var-affine2x3-xx (table)
   "x-component of transformed x-basis vector. For variation, use varIndexBase + 0."
   (declare (type var-affine2x3 table))
   (font-data-read-fixed (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline var-affine2x3-xx-raw))
 
 
 (defun var-affine2x3-xx-raw (font-data offset)
@@ -2934,9 +2722,6 @@
                         (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline var-affine2x3-yx-raw))
-
-
 (defun var-affine2x3-yx-raw (font-data offset)
   (font-data-read-fixed font-data (+ offset 4)))
 
@@ -2946,9 +2731,6 @@
   (declare (type var-affine2x3 table))
   (font-data-read-fixed (table-ref-font-data table)
                         (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline var-affine2x3-xy-raw))
 
 
 (defun var-affine2x3-xy-raw (font-data offset)
@@ -2962,9 +2744,6 @@
                         (+ (table-ref-offset table) 12)))
 
 
-(declaim (inline var-affine2x3-yy-raw))
-
-
 (defun var-affine2x3-yy-raw (font-data offset)
   (font-data-read-fixed font-data (+ offset 12)))
 
@@ -2974,9 +2753,6 @@
   (declare (type var-affine2x3 table))
   (font-data-read-fixed (table-ref-font-data table)
                         (+ (table-ref-offset table) 16)))
-
-
-(declaim (inline var-affine2x3-dx-raw))
 
 
 (defun var-affine2x3-dx-raw (font-data offset)
@@ -2990,9 +2766,6 @@
                         (+ (table-ref-offset table) 20)))
 
 
-(declaim (inline var-affine2x3-dy-raw))
-
-
 (defun var-affine2x3-dy-raw (font-data offset)
   (font-data-read-fixed font-data (+ offset 20)))
 
@@ -3002,14 +2775,6 @@
   (declare (type var-affine2x3 table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 24)))
-
-
-(declaim (inline var-affine2x3-var-index-base-raw))
-
-
-(declaim
- (inline var-affine2x3-xx var-affine2x3-yx var-affine2x3-xy var-affine2x3-yy
-  var-affine2x3-dx var-affine2x3-dy var-affine2x3-var-index-base))
 
 
 (defun var-affine2x3-var-index-base-raw (font-data offset)
@@ -3039,13 +2804,17 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-translate-format-table paint-translate-paint-offset
+  paint-translate-paint-offset-offset paint-translate-dx paint-translate-dy
+  paint-translate-format-table-raw paint-translate-dx-raw
+  paint-translate-dy-raw))
+
+
 (defun paint-translate-format-table (table)
   "Set to 14."
   (declare (type paint-translate table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-translate-format-table-raw))
 
 
 (defun paint-translate-format-table-raw (font-data offset)
@@ -3075,9 +2844,6 @@
                         (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-translate-dx-raw))
-
-
 (defun paint-translate-dx-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 4)))
 
@@ -3087,14 +2853,6 @@
   (declare (type paint-translate table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline paint-translate-dy-raw))
-
-
-(declaim
- (inline paint-translate-format-table paint-translate-paint-offset
-  paint-translate-paint-offset-offset paint-translate-dx paint-translate-dy))
 
 
 (defun paint-translate-dy-raw (font-data offset)
@@ -3124,13 +2882,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-var-translate-format-table paint-var-translate-paint-offset
+  paint-var-translate-paint-offset-offset paint-var-translate-dx
+  paint-var-translate-dy paint-var-translate-var-index-base
+  paint-var-translate-format-table-raw paint-var-translate-dx-raw
+  paint-var-translate-dy-raw paint-var-translate-var-index-base-raw))
+
+
 (defun paint-var-translate-format-table (table)
   "Set to 15."
   (declare (type paint-var-translate table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-var-translate-format-table-raw))
 
 
 (defun paint-var-translate-format-table-raw (font-data offset)
@@ -3160,9 +2923,6 @@
                         (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-var-translate-dx-raw))
-
-
 (defun paint-var-translate-dx-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 4)))
 
@@ -3174,9 +2934,6 @@
                         (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline paint-var-translate-dy-raw))
-
-
 (defun paint-var-translate-dy-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 6)))
 
@@ -3186,15 +2943,6 @@
   (declare (type paint-var-translate table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline paint-var-translate-var-index-base-raw))
-
-
-(declaim
- (inline paint-var-translate-format-table paint-var-translate-paint-offset
-  paint-var-translate-paint-offset-offset paint-var-translate-dx
-  paint-var-translate-dy paint-var-translate-var-index-base))
 
 
 (defun paint-var-translate-var-index-base-raw (font-data offset)
@@ -3224,13 +2972,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-scale-format-table paint-scale-paint-offset
+  paint-scale-paint-offset-offset paint-scale-scale-x paint-scale-scale-y
+  paint-scale-format-table-raw paint-scale-scale-x-raw paint-scale-scale-y-raw))
+
+
 (defun paint-scale-format-table (table)
   "Set to 16."
   (declare (type paint-scale table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-scale-format-table-raw))
 
 
 (defun paint-scale-format-table-raw (font-data offset)
@@ -3260,9 +3011,6 @@
                           (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-scale-scale-x-raw))
-
-
 (defun paint-scale-scale-x-raw (font-data offset)
   (font-data-read-f2dot14 font-data (+ offset 4)))
 
@@ -3272,14 +3020,6 @@
   (declare (type paint-scale table))
   (font-data-read-f2dot14 (table-ref-font-data table)
                           (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline paint-scale-scale-y-raw))
-
-
-(declaim
- (inline paint-scale-format-table paint-scale-paint-offset
-  paint-scale-paint-offset-offset paint-scale-scale-x paint-scale-scale-y))
 
 
 (defun paint-scale-scale-y-raw (font-data offset)
@@ -3309,13 +3049,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-var-scale-format-table paint-var-scale-paint-offset
+  paint-var-scale-paint-offset-offset paint-var-scale-scale-x
+  paint-var-scale-scale-y paint-var-scale-var-index-base
+  paint-var-scale-format-table-raw paint-var-scale-scale-x-raw
+  paint-var-scale-scale-y-raw paint-var-scale-var-index-base-raw))
+
+
 (defun paint-var-scale-format-table (table)
   "Set to 17."
   (declare (type paint-var-scale table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-var-scale-format-table-raw))
 
 
 (defun paint-var-scale-format-table-raw (font-data offset)
@@ -3345,9 +3090,6 @@
                           (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-var-scale-scale-x-raw))
-
-
 (defun paint-var-scale-scale-x-raw (font-data offset)
   (font-data-read-f2dot14 font-data (+ offset 4)))
 
@@ -3359,9 +3101,6 @@
                           (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline paint-var-scale-scale-y-raw))
-
-
 (defun paint-var-scale-scale-y-raw (font-data offset)
   (font-data-read-f2dot14 font-data (+ offset 6)))
 
@@ -3371,15 +3110,6 @@
   (declare (type paint-var-scale table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline paint-var-scale-var-index-base-raw))
-
-
-(declaim
- (inline paint-var-scale-format-table paint-var-scale-paint-offset
-  paint-var-scale-paint-offset-offset paint-var-scale-scale-x
-  paint-var-scale-scale-y paint-var-scale-var-index-base))
 
 
 (defun paint-var-scale-var-index-base-raw (font-data offset)
@@ -3409,13 +3139,22 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-scale-around-center-format-table
+  paint-scale-around-center-paint-offset
+  paint-scale-around-center-paint-offset-offset
+  paint-scale-around-center-scale-x paint-scale-around-center-scale-y
+  paint-scale-around-center-center-x paint-scale-around-center-center-y
+  paint-scale-around-center-format-table-raw
+  paint-scale-around-center-scale-x-raw paint-scale-around-center-scale-y-raw
+  paint-scale-around-center-center-x-raw
+  paint-scale-around-center-center-y-raw))
+
+
 (defun paint-scale-around-center-format-table (table)
   "Set to 18."
   (declare (type paint-scale-around-center table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-scale-around-center-format-table-raw))
 
 
 (defun paint-scale-around-center-format-table-raw (font-data offset)
@@ -3445,9 +3184,6 @@
                           (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-scale-around-center-scale-x-raw))
-
-
 (defun paint-scale-around-center-scale-x-raw (font-data offset)
   (font-data-read-f2dot14 font-data (+ offset 4)))
 
@@ -3457,9 +3193,6 @@
   (declare (type paint-scale-around-center table))
   (font-data-read-f2dot14 (table-ref-font-data table)
                           (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline paint-scale-around-center-scale-y-raw))
 
 
 (defun paint-scale-around-center-scale-y-raw (font-data offset)
@@ -3473,9 +3206,6 @@
                         (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline paint-scale-around-center-center-x-raw))
-
-
 (defun paint-scale-around-center-center-x-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 8)))
 
@@ -3485,17 +3215,6 @@
   (declare (type paint-scale-around-center table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 10)))
-
-
-(declaim (inline paint-scale-around-center-center-y-raw))
-
-
-(declaim
- (inline paint-scale-around-center-format-table
-  paint-scale-around-center-paint-offset
-  paint-scale-around-center-paint-offset-offset
-  paint-scale-around-center-scale-x paint-scale-around-center-scale-y
-  paint-scale-around-center-center-x paint-scale-around-center-center-y))
 
 
 (defun paint-scale-around-center-center-y-raw (font-data offset)
@@ -3525,13 +3244,25 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-var-scale-around-center-format-table
+  paint-var-scale-around-center-paint-offset
+  paint-var-scale-around-center-paint-offset-offset
+  paint-var-scale-around-center-scale-x paint-var-scale-around-center-scale-y
+  paint-var-scale-around-center-center-x paint-var-scale-around-center-center-y
+  paint-var-scale-around-center-var-index-base
+  paint-var-scale-around-center-format-table-raw
+  paint-var-scale-around-center-scale-x-raw
+  paint-var-scale-around-center-scale-y-raw
+  paint-var-scale-around-center-center-x-raw
+  paint-var-scale-around-center-center-y-raw
+  paint-var-scale-around-center-var-index-base-raw))
+
+
 (defun paint-var-scale-around-center-format-table (table)
   "Set to 19."
   (declare (type paint-var-scale-around-center table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-var-scale-around-center-format-table-raw))
 
 
 (defun paint-var-scale-around-center-format-table-raw (font-data offset)
@@ -3561,9 +3292,6 @@
                           (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-var-scale-around-center-scale-x-raw))
-
-
 (defun paint-var-scale-around-center-scale-x-raw (font-data offset)
   (font-data-read-f2dot14 font-data (+ offset 4)))
 
@@ -3573,9 +3301,6 @@
   (declare (type paint-var-scale-around-center table))
   (font-data-read-f2dot14 (table-ref-font-data table)
                           (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline paint-var-scale-around-center-scale-y-raw))
 
 
 (defun paint-var-scale-around-center-scale-y-raw (font-data offset)
@@ -3589,9 +3314,6 @@
                         (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline paint-var-scale-around-center-center-x-raw))
-
-
 (defun paint-var-scale-around-center-center-x-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 8)))
 
@@ -3603,9 +3325,6 @@
                         (+ (table-ref-offset table) 10)))
 
 
-(declaim (inline paint-var-scale-around-center-center-y-raw))
-
-
 (defun paint-var-scale-around-center-center-y-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 10)))
 
@@ -3615,18 +3334,6 @@
   (declare (type paint-var-scale-around-center table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 12)))
-
-
-(declaim (inline paint-var-scale-around-center-var-index-base-raw))
-
-
-(declaim
- (inline paint-var-scale-around-center-format-table
-  paint-var-scale-around-center-paint-offset
-  paint-var-scale-around-center-paint-offset-offset
-  paint-var-scale-around-center-scale-x paint-var-scale-around-center-scale-y
-  paint-var-scale-around-center-center-x paint-var-scale-around-center-center-y
-  paint-var-scale-around-center-var-index-base))
 
 
 (defun paint-var-scale-around-center-var-index-base-raw (font-data offset)
@@ -3656,13 +3363,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-scale-uniform-format-table paint-scale-uniform-paint-offset
+  paint-scale-uniform-paint-offset-offset paint-scale-uniform-scale
+  paint-scale-uniform-format-table-raw paint-scale-uniform-scale-raw))
+
+
 (defun paint-scale-uniform-format-table (table)
   "Set to 20."
   (declare (type paint-scale-uniform table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-scale-uniform-format-table-raw))
 
 
 (defun paint-scale-uniform-format-table-raw (font-data offset)
@@ -3692,14 +3402,6 @@
                           (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-scale-uniform-scale-raw))
-
-
-(declaim
- (inline paint-scale-uniform-format-table paint-scale-uniform-paint-offset
-  paint-scale-uniform-paint-offset-offset paint-scale-uniform-scale))
-
-
 (defun paint-scale-uniform-scale-raw (font-data offset)
   (font-data-read-f2dot14 font-data (+ offset 4)))
 
@@ -3727,13 +3429,19 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-var-scale-uniform-format-table
+  paint-var-scale-uniform-paint-offset
+  paint-var-scale-uniform-paint-offset-offset paint-var-scale-uniform-scale
+  paint-var-scale-uniform-var-index-base
+  paint-var-scale-uniform-format-table-raw paint-var-scale-uniform-scale-raw
+  paint-var-scale-uniform-var-index-base-raw))
+
+
 (defun paint-var-scale-uniform-format-table (table)
   "Set to 21."
   (declare (type paint-var-scale-uniform table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-var-scale-uniform-format-table-raw))
 
 
 (defun paint-var-scale-uniform-format-table-raw (font-data offset)
@@ -3763,9 +3471,6 @@
                           (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-var-scale-uniform-scale-raw))
-
-
 (defun paint-var-scale-uniform-scale-raw (font-data offset)
   (font-data-read-f2dot14 font-data (+ offset 4)))
 
@@ -3775,16 +3480,6 @@
   (declare (type paint-var-scale-uniform table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline paint-var-scale-uniform-var-index-base-raw))
-
-
-(declaim
- (inline paint-var-scale-uniform-format-table
-  paint-var-scale-uniform-paint-offset
-  paint-var-scale-uniform-paint-offset-offset paint-var-scale-uniform-scale
-  paint-var-scale-uniform-var-index-base))
 
 
 (defun paint-var-scale-uniform-var-index-base-raw (font-data offset)
@@ -3814,13 +3509,23 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-scale-uniform-around-center-format-table
+  paint-scale-uniform-around-center-paint-offset
+  paint-scale-uniform-around-center-paint-offset-offset
+  paint-scale-uniform-around-center-scale
+  paint-scale-uniform-around-center-center-x
+  paint-scale-uniform-around-center-center-y
+  paint-scale-uniform-around-center-format-table-raw
+  paint-scale-uniform-around-center-scale-raw
+  paint-scale-uniform-around-center-center-x-raw
+  paint-scale-uniform-around-center-center-y-raw))
+
+
 (defun paint-scale-uniform-around-center-format-table (table)
   "Set to 22."
   (declare (type paint-scale-uniform-around-center table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-scale-uniform-around-center-format-table-raw))
 
 
 (defun paint-scale-uniform-around-center-format-table-raw (font-data offset)
@@ -3850,9 +3555,6 @@
                           (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-scale-uniform-around-center-scale-raw))
-
-
 (defun paint-scale-uniform-around-center-scale-raw (font-data offset)
   (font-data-read-f2dot14 font-data (+ offset 4)))
 
@@ -3864,9 +3566,6 @@
                         (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline paint-scale-uniform-around-center-center-x-raw))
-
-
 (defun paint-scale-uniform-around-center-center-x-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 6)))
 
@@ -3876,18 +3575,6 @@
   (declare (type paint-scale-uniform-around-center table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline paint-scale-uniform-around-center-center-y-raw))
-
-
-(declaim
- (inline paint-scale-uniform-around-center-format-table
-  paint-scale-uniform-around-center-paint-offset
-  paint-scale-uniform-around-center-paint-offset-offset
-  paint-scale-uniform-around-center-scale
-  paint-scale-uniform-around-center-center-x
-  paint-scale-uniform-around-center-center-y))
 
 
 (defun paint-scale-uniform-around-center-center-y-raw (font-data offset)
@@ -3917,13 +3604,25 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-var-scale-uniform-around-center-format-table
+  paint-var-scale-uniform-around-center-paint-offset
+  paint-var-scale-uniform-around-center-paint-offset-offset
+  paint-var-scale-uniform-around-center-scale
+  paint-var-scale-uniform-around-center-center-x
+  paint-var-scale-uniform-around-center-center-y
+  paint-var-scale-uniform-around-center-var-index-base
+  paint-var-scale-uniform-around-center-format-table-raw
+  paint-var-scale-uniform-around-center-scale-raw
+  paint-var-scale-uniform-around-center-center-x-raw
+  paint-var-scale-uniform-around-center-center-y-raw
+  paint-var-scale-uniform-around-center-var-index-base-raw))
+
+
 (defun paint-var-scale-uniform-around-center-format-table (table)
   "Set to 23."
   (declare (type paint-var-scale-uniform-around-center table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-var-scale-uniform-around-center-format-table-raw))
 
 
 (defun paint-var-scale-uniform-around-center-format-table-raw
@@ -3954,9 +3653,6 @@
                           (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-var-scale-uniform-around-center-scale-raw))
-
-
 (defun paint-var-scale-uniform-around-center-scale-raw (font-data offset)
   (font-data-read-f2dot14 font-data (+ offset 4)))
 
@@ -3966,9 +3662,6 @@
   (declare (type paint-var-scale-uniform-around-center table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline paint-var-scale-uniform-around-center-center-x-raw))
 
 
 (defun paint-var-scale-uniform-around-center-center-x-raw (font-data offset)
@@ -3982,9 +3675,6 @@
                         (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline paint-var-scale-uniform-around-center-center-y-raw))
-
-
 (defun paint-var-scale-uniform-around-center-center-y-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 8)))
 
@@ -3994,19 +3684,6 @@
   (declare (type paint-var-scale-uniform-around-center table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 10)))
-
-
-(declaim (inline paint-var-scale-uniform-around-center-var-index-base-raw))
-
-
-(declaim
- (inline paint-var-scale-uniform-around-center-format-table
-  paint-var-scale-uniform-around-center-paint-offset
-  paint-var-scale-uniform-around-center-paint-offset-offset
-  paint-var-scale-uniform-around-center-scale
-  paint-var-scale-uniform-around-center-center-x
-  paint-var-scale-uniform-around-center-center-y
-  paint-var-scale-uniform-around-center-var-index-base))
 
 
 (defun paint-var-scale-uniform-around-center-var-index-base-raw
@@ -4037,13 +3714,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-rotate-format-table paint-rotate-paint-offset
+  paint-rotate-paint-offset-offset paint-rotate-angle
+  paint-rotate-format-table-raw paint-rotate-angle-raw))
+
+
 (defun paint-rotate-format-table (table)
   "Set to 24."
   (declare (type paint-rotate table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-rotate-format-table-raw))
 
 
 (defun paint-rotate-format-table-raw (font-data offset)
@@ -4073,14 +3753,6 @@
                           (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-rotate-angle-raw))
-
-
-(declaim
- (inline paint-rotate-format-table paint-rotate-paint-offset
-  paint-rotate-paint-offset-offset paint-rotate-angle))
-
-
 (defun paint-rotate-angle-raw (font-data offset)
   (font-data-read-f2dot14 font-data (+ offset 4)))
 
@@ -4108,13 +3780,17 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-var-rotate-format-table paint-var-rotate-paint-offset
+  paint-var-rotate-paint-offset-offset paint-var-rotate-angle
+  paint-var-rotate-var-index-base paint-var-rotate-format-table-raw
+  paint-var-rotate-angle-raw paint-var-rotate-var-index-base-raw))
+
+
 (defun paint-var-rotate-format-table (table)
   "Set to 25."
   (declare (type paint-var-rotate table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-var-rotate-format-table-raw))
 
 
 (defun paint-var-rotate-format-table-raw (font-data offset)
@@ -4144,9 +3820,6 @@
                           (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-var-rotate-angle-raw))
-
-
 (defun paint-var-rotate-angle-raw (font-data offset)
   (font-data-read-f2dot14 font-data (+ offset 4)))
 
@@ -4156,15 +3829,6 @@
   (declare (type paint-var-rotate table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline paint-var-rotate-var-index-base-raw))
-
-
-(declaim
- (inline paint-var-rotate-format-table paint-var-rotate-paint-offset
-  paint-var-rotate-paint-offset-offset paint-var-rotate-angle
-  paint-var-rotate-var-index-base))
 
 
 (defun paint-var-rotate-var-index-base-raw (font-data offset)
@@ -4194,13 +3858,21 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-rotate-around-center-format-table
+  paint-rotate-around-center-paint-offset
+  paint-rotate-around-center-paint-offset-offset
+  paint-rotate-around-center-angle paint-rotate-around-center-center-x
+  paint-rotate-around-center-center-y
+  paint-rotate-around-center-format-table-raw
+  paint-rotate-around-center-angle-raw paint-rotate-around-center-center-x-raw
+  paint-rotate-around-center-center-y-raw))
+
+
 (defun paint-rotate-around-center-format-table (table)
   "Set to 26."
   (declare (type paint-rotate-around-center table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-rotate-around-center-format-table-raw))
 
 
 (defun paint-rotate-around-center-format-table-raw (font-data offset)
@@ -4230,9 +3902,6 @@
                           (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-rotate-around-center-angle-raw))
-
-
 (defun paint-rotate-around-center-angle-raw (font-data offset)
   (font-data-read-f2dot14 font-data (+ offset 4)))
 
@@ -4244,9 +3913,6 @@
                         (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline paint-rotate-around-center-center-x-raw))
-
-
 (defun paint-rotate-around-center-center-x-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 6)))
 
@@ -4256,17 +3922,6 @@
   (declare (type paint-rotate-around-center table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline paint-rotate-around-center-center-y-raw))
-
-
-(declaim
- (inline paint-rotate-around-center-format-table
-  paint-rotate-around-center-paint-offset
-  paint-rotate-around-center-paint-offset-offset
-  paint-rotate-around-center-angle paint-rotate-around-center-center-x
-  paint-rotate-around-center-center-y))
 
 
 (defun paint-rotate-around-center-center-y-raw (font-data offset)
@@ -4296,13 +3951,24 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-var-rotate-around-center-format-table
+  paint-var-rotate-around-center-paint-offset
+  paint-var-rotate-around-center-paint-offset-offset
+  paint-var-rotate-around-center-angle paint-var-rotate-around-center-center-x
+  paint-var-rotate-around-center-center-y
+  paint-var-rotate-around-center-var-index-base
+  paint-var-rotate-around-center-format-table-raw
+  paint-var-rotate-around-center-angle-raw
+  paint-var-rotate-around-center-center-x-raw
+  paint-var-rotate-around-center-center-y-raw
+  paint-var-rotate-around-center-var-index-base-raw))
+
+
 (defun paint-var-rotate-around-center-format-table (table)
   "Set to 27."
   (declare (type paint-var-rotate-around-center table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-var-rotate-around-center-format-table-raw))
 
 
 (defun paint-var-rotate-around-center-format-table-raw (font-data offset)
@@ -4332,9 +3998,6 @@
                           (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-var-rotate-around-center-angle-raw))
-
-
 (defun paint-var-rotate-around-center-angle-raw (font-data offset)
   (font-data-read-f2dot14 font-data (+ offset 4)))
 
@@ -4344,9 +4007,6 @@
   (declare (type paint-var-rotate-around-center table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline paint-var-rotate-around-center-center-x-raw))
 
 
 (defun paint-var-rotate-around-center-center-x-raw (font-data offset)
@@ -4360,9 +4020,6 @@
                         (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline paint-var-rotate-around-center-center-y-raw))
-
-
 (defun paint-var-rotate-around-center-center-y-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 8)))
 
@@ -4372,18 +4029,6 @@
   (declare (type paint-var-rotate-around-center table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 10)))
-
-
-(declaim (inline paint-var-rotate-around-center-var-index-base-raw))
-
-
-(declaim
- (inline paint-var-rotate-around-center-format-table
-  paint-var-rotate-around-center-paint-offset
-  paint-var-rotate-around-center-paint-offset-offset
-  paint-var-rotate-around-center-angle paint-var-rotate-around-center-center-x
-  paint-var-rotate-around-center-center-y
-  paint-var-rotate-around-center-var-index-base))
 
 
 (defun paint-var-rotate-around-center-var-index-base-raw (font-data offset)
@@ -4413,13 +4058,17 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-skew-format-table paint-skew-paint-offset
+  paint-skew-paint-offset-offset paint-skew-x-skew-angle
+  paint-skew-y-skew-angle paint-skew-format-table-raw
+  paint-skew-x-skew-angle-raw paint-skew-y-skew-angle-raw))
+
+
 (defun paint-skew-format-table (table)
   "Set to 28."
   (declare (type paint-skew table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-skew-format-table-raw))
 
 
 (defun paint-skew-format-table-raw (font-data offset)
@@ -4449,9 +4098,6 @@
                           (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-skew-x-skew-angle-raw))
-
-
 (defun paint-skew-x-skew-angle-raw (font-data offset)
   (font-data-read-f2dot14 font-data (+ offset 4)))
 
@@ -4461,15 +4107,6 @@
   (declare (type paint-skew table))
   (font-data-read-f2dot14 (table-ref-font-data table)
                           (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline paint-skew-y-skew-angle-raw))
-
-
-(declaim
- (inline paint-skew-format-table paint-skew-paint-offset
-  paint-skew-paint-offset-offset paint-skew-x-skew-angle
-  paint-skew-y-skew-angle))
 
 
 (defun paint-skew-y-skew-angle-raw (font-data offset)
@@ -4499,13 +4136,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-var-skew-format-table paint-var-skew-paint-offset
+  paint-var-skew-paint-offset-offset paint-var-skew-x-skew-angle
+  paint-var-skew-y-skew-angle paint-var-skew-var-index-base
+  paint-var-skew-format-table-raw paint-var-skew-x-skew-angle-raw
+  paint-var-skew-y-skew-angle-raw paint-var-skew-var-index-base-raw))
+
+
 (defun paint-var-skew-format-table (table)
   "Set to 29."
   (declare (type paint-var-skew table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-var-skew-format-table-raw))
 
 
 (defun paint-var-skew-format-table-raw (font-data offset)
@@ -4535,9 +4177,6 @@
                           (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-var-skew-x-skew-angle-raw))
-
-
 (defun paint-var-skew-x-skew-angle-raw (font-data offset)
   (font-data-read-f2dot14 font-data (+ offset 4)))
 
@@ -4549,9 +4188,6 @@
                           (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline paint-var-skew-y-skew-angle-raw))
-
-
 (defun paint-var-skew-y-skew-angle-raw (font-data offset)
   (font-data-read-f2dot14 font-data (+ offset 6)))
 
@@ -4561,15 +4197,6 @@
   (declare (type paint-var-skew table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline paint-var-skew-var-index-base-raw))
-
-
-(declaim
- (inline paint-var-skew-format-table paint-var-skew-paint-offset
-  paint-var-skew-paint-offset-offset paint-var-skew-x-skew-angle
-  paint-var-skew-y-skew-angle paint-var-skew-var-index-base))
 
 
 (defun paint-var-skew-var-index-base-raw (font-data offset)
@@ -4599,13 +4226,22 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-skew-around-center-format-table
+  paint-skew-around-center-paint-offset
+  paint-skew-around-center-paint-offset-offset
+  paint-skew-around-center-x-skew-angle paint-skew-around-center-y-skew-angle
+  paint-skew-around-center-center-x paint-skew-around-center-center-y
+  paint-skew-around-center-format-table-raw
+  paint-skew-around-center-x-skew-angle-raw
+  paint-skew-around-center-y-skew-angle-raw
+  paint-skew-around-center-center-x-raw paint-skew-around-center-center-y-raw))
+
+
 (defun paint-skew-around-center-format-table (table)
   "Set to 30."
   (declare (type paint-skew-around-center table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-skew-around-center-format-table-raw))
 
 
 (defun paint-skew-around-center-format-table-raw (font-data offset)
@@ -4635,9 +4271,6 @@
                           (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-skew-around-center-x-skew-angle-raw))
-
-
 (defun paint-skew-around-center-x-skew-angle-raw (font-data offset)
   (font-data-read-f2dot14 font-data (+ offset 4)))
 
@@ -4647,9 +4280,6 @@
   (declare (type paint-skew-around-center table))
   (font-data-read-f2dot14 (table-ref-font-data table)
                           (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline paint-skew-around-center-y-skew-angle-raw))
 
 
 (defun paint-skew-around-center-y-skew-angle-raw (font-data offset)
@@ -4663,9 +4293,6 @@
                         (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline paint-skew-around-center-center-x-raw))
-
-
 (defun paint-skew-around-center-center-x-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 8)))
 
@@ -4675,17 +4302,6 @@
   (declare (type paint-skew-around-center table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 10)))
-
-
-(declaim (inline paint-skew-around-center-center-y-raw))
-
-
-(declaim
- (inline paint-skew-around-center-format-table
-  paint-skew-around-center-paint-offset
-  paint-skew-around-center-paint-offset-offset
-  paint-skew-around-center-x-skew-angle paint-skew-around-center-y-skew-angle
-  paint-skew-around-center-center-x paint-skew-around-center-center-y))
 
 
 (defun paint-skew-around-center-center-y-raw (font-data offset)
@@ -4715,13 +4331,26 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-var-skew-around-center-format-table
+  paint-var-skew-around-center-paint-offset
+  paint-var-skew-around-center-paint-offset-offset
+  paint-var-skew-around-center-x-skew-angle
+  paint-var-skew-around-center-y-skew-angle
+  paint-var-skew-around-center-center-x paint-var-skew-around-center-center-y
+  paint-var-skew-around-center-var-index-base
+  paint-var-skew-around-center-format-table-raw
+  paint-var-skew-around-center-x-skew-angle-raw
+  paint-var-skew-around-center-y-skew-angle-raw
+  paint-var-skew-around-center-center-x-raw
+  paint-var-skew-around-center-center-y-raw
+  paint-var-skew-around-center-var-index-base-raw))
+
+
 (defun paint-var-skew-around-center-format-table (table)
   "Set to 31."
   (declare (type paint-var-skew-around-center table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-var-skew-around-center-format-table-raw))
 
 
 (defun paint-var-skew-around-center-format-table-raw (font-data offset)
@@ -4751,9 +4380,6 @@
                           (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-var-skew-around-center-x-skew-angle-raw))
-
-
 (defun paint-var-skew-around-center-x-skew-angle-raw (font-data offset)
   (font-data-read-f2dot14 font-data (+ offset 4)))
 
@@ -4763,9 +4389,6 @@
   (declare (type paint-var-skew-around-center table))
   (font-data-read-f2dot14 (table-ref-font-data table)
                           (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline paint-var-skew-around-center-y-skew-angle-raw))
 
 
 (defun paint-var-skew-around-center-y-skew-angle-raw (font-data offset)
@@ -4779,9 +4402,6 @@
                         (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline paint-var-skew-around-center-center-x-raw))
-
-
 (defun paint-var-skew-around-center-center-x-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 8)))
 
@@ -4793,9 +4413,6 @@
                         (+ (table-ref-offset table) 10)))
 
 
-(declaim (inline paint-var-skew-around-center-center-y-raw))
-
-
 (defun paint-var-skew-around-center-center-y-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 10)))
 
@@ -4805,19 +4422,6 @@
   (declare (type paint-var-skew-around-center table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 12)))
-
-
-(declaim (inline paint-var-skew-around-center-var-index-base-raw))
-
-
-(declaim
- (inline paint-var-skew-around-center-format-table
-  paint-var-skew-around-center-paint-offset
-  paint-var-skew-around-center-paint-offset-offset
-  paint-var-skew-around-center-x-skew-angle
-  paint-var-skew-around-center-y-skew-angle
-  paint-var-skew-around-center-center-x paint-var-skew-around-center-center-y
-  paint-var-skew-around-center-var-index-base))
 
 
 (defun paint-var-skew-around-center-var-index-base-raw (font-data offset)
@@ -4847,13 +4451,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline paint-composite-format-table paint-composite-source-paint-offset
+  paint-composite-source-paint-offset-offset paint-composite-composite-mode
+  paint-composite-backdrop-paint-offset
+  paint-composite-backdrop-paint-offset-offset paint-composite-format-table-raw
+  paint-composite-composite-mode-raw))
+
+
 (defun paint-composite-format-table (table)
   "Set to 32."
   (declare (type paint-composite table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline paint-composite-format-table-raw))
 
 
 (defun paint-composite-format-table-raw (font-data offset)
@@ -4883,9 +4492,6 @@
                      (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline paint-composite-composite-mode-raw))
-
-
 (defun paint-composite-composite-mode-raw (font-data offset)
   (font-data-read-u8 font-data (+ offset 4)))
 
@@ -4895,13 +4501,6 @@
   (declare (type paint-composite table))
   (font-data-read-u24 (table-ref-font-data table)
                       (+ (table-ref-offset table) 5)))
-
-
-(declaim
- (inline paint-composite-format-table paint-composite-source-paint-offset
-  paint-composite-source-paint-offset-offset paint-composite-composite-mode
-  paint-composite-backdrop-paint-offset
-  paint-composite-backdrop-paint-offset-offset))
 
 
 (defun paint-composite-backdrop-paint-offset (table)

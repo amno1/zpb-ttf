@@ -28,13 +28,25 @@
      (:constructor %make-maxp (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline maxp-version maxp-num-glyphs maxp-max-points maxp-max-contours
+  maxp-max-composite-points maxp-max-composite-contours maxp-max-zones
+  maxp-max-twilight-points maxp-max-storage maxp-max-function-defs
+  maxp-max-instruction-defs maxp-max-stack-elements
+  maxp-max-size-of-instructions maxp-max-component-elements
+  maxp-max-component-depth maxp-version-raw maxp-num-glyphs-raw
+  maxp-max-points-raw maxp-max-contours-raw maxp-max-composite-points-raw
+  maxp-max-composite-contours-raw maxp-max-zones-raw
+  maxp-max-twilight-points-raw maxp-max-storage-raw maxp-max-function-defs-raw
+  maxp-max-instruction-defs-raw maxp-max-stack-elements-raw
+  maxp-max-size-of-instructions-raw maxp-max-component-elements-raw
+  maxp-max-component-depth-raw))
+
+
 (defun maxp-version (table)
   "The version: 0x00005000 for version 0.5, 0x00010000 for version 1.0."
   (declare (type maxp table))
   (font-data-read-fixed (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline maxp-version-raw))
 
 
 (defun maxp-version-raw (font-data offset)
@@ -46,9 +58,6 @@
   (declare (type maxp table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline maxp-num-glyphs-raw))
 
 
 (defun maxp-num-glyphs-raw (font-data offset)
@@ -63,9 +72,6 @@
                         (+ (table-ref-offset table) 6))))
 
 
-(declaim (inline maxp-max-points-raw))
-
-
 (defun maxp-max-points-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 6)))
 
@@ -76,9 +82,6 @@
   (when (>= (table-ref-length table) 10)
     (font-data-read-u16 (table-ref-font-data table)
                         (+ (table-ref-offset table) 8))))
-
-
-(declaim (inline maxp-max-contours-raw))
 
 
 (defun maxp-max-contours-raw (font-data offset)
@@ -93,9 +96,6 @@
                         (+ (table-ref-offset table) 10))))
 
 
-(declaim (inline maxp-max-composite-points-raw))
-
-
 (defun maxp-max-composite-points-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 10)))
 
@@ -106,9 +106,6 @@
   (when (>= (table-ref-length table) 14)
     (font-data-read-u16 (table-ref-font-data table)
                         (+ (table-ref-offset table) 12))))
-
-
-(declaim (inline maxp-max-composite-contours-raw))
 
 
 (defun maxp-max-composite-contours-raw (font-data offset)
@@ -123,9 +120,6 @@
                         (+ (table-ref-offset table) 14))))
 
 
-(declaim (inline maxp-max-zones-raw))
-
-
 (defun maxp-max-zones-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 14)))
 
@@ -136,9 +130,6 @@
   (when (>= (table-ref-length table) 18)
     (font-data-read-u16 (table-ref-font-data table)
                         (+ (table-ref-offset table) 16))))
-
-
-(declaim (inline maxp-max-twilight-points-raw))
 
 
 (defun maxp-max-twilight-points-raw (font-data offset)
@@ -153,9 +144,6 @@
                         (+ (table-ref-offset table) 18))))
 
 
-(declaim (inline maxp-max-storage-raw))
-
-
 (defun maxp-max-storage-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 18)))
 
@@ -166,9 +154,6 @@
   (when (>= (table-ref-length table) 22)
     (font-data-read-u16 (table-ref-font-data table)
                         (+ (table-ref-offset table) 20))))
-
-
-(declaim (inline maxp-max-function-defs-raw))
 
 
 (defun maxp-max-function-defs-raw (font-data offset)
@@ -183,9 +168,6 @@
                         (+ (table-ref-offset table) 22))))
 
 
-(declaim (inline maxp-max-instruction-defs-raw))
-
-
 (defun maxp-max-instruction-defs-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 22)))
 
@@ -196,9 +178,6 @@
   (when (>= (table-ref-length table) 26)
     (font-data-read-u16 (table-ref-font-data table)
                         (+ (table-ref-offset table) 24))))
-
-
-(declaim (inline maxp-max-stack-elements-raw))
 
 
 (defun maxp-max-stack-elements-raw (font-data offset)
@@ -213,9 +192,6 @@
                         (+ (table-ref-offset table) 26))))
 
 
-(declaim (inline maxp-max-size-of-instructions-raw))
-
-
 (defun maxp-max-size-of-instructions-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 26)))
 
@@ -228,9 +204,6 @@
                         (+ (table-ref-offset table) 28))))
 
 
-(declaim (inline maxp-max-component-elements-raw))
-
-
 (defun maxp-max-component-elements-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 28)))
 
@@ -241,18 +214,6 @@
   (when (>= (table-ref-length table) 32)
     (font-data-read-u16 (table-ref-font-data table)
                         (+ (table-ref-offset table) 30))))
-
-
-(declaim (inline maxp-max-component-depth-raw))
-
-
-(declaim
- (inline maxp-version maxp-num-glyphs maxp-max-points maxp-max-contours
-  maxp-max-composite-points maxp-max-composite-contours maxp-max-zones
-  maxp-max-twilight-points maxp-max-storage maxp-max-function-defs
-  maxp-max-instruction-defs maxp-max-stack-elements
-  maxp-max-size-of-instructions maxp-max-component-elements
-  maxp-max-component-depth))
 
 
 (defun maxp-max-component-depth-raw (font-data offset)
@@ -282,12 +243,29 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline maxp-extended-version maxp-extended-num-glyphs
+  maxp-extended-max-points maxp-extended-max-contours
+  maxp-extended-max-composite-points maxp-extended-max-composite-contours
+  maxp-extended-max-zones maxp-extended-max-twilight-points
+  maxp-extended-max-storage maxp-extended-max-function-defs
+  maxp-extended-max-instruction-defs maxp-extended-max-stack-elements
+  maxp-extended-max-size-of-instructions maxp-extended-max-component-elements
+  maxp-extended-max-component-depth maxp-extended-version-raw
+  maxp-extended-max-points-raw maxp-extended-max-contours-raw
+  maxp-extended-max-composite-points-raw
+  maxp-extended-max-composite-contours-raw maxp-extended-max-zones-raw
+  maxp-extended-max-twilight-points-raw maxp-extended-max-storage-raw
+  maxp-extended-max-function-defs-raw maxp-extended-max-instruction-defs-raw
+  maxp-extended-max-stack-elements-raw
+  maxp-extended-max-size-of-instructions-raw
+  maxp-extended-max-component-elements-raw
+  maxp-extended-max-component-depth-raw))
+
+
 (defun maxp-extended-version (table)
   (declare (type maxp-extended table))
   (font-data-read-fixed (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline maxp-extended-version-raw))
 
 
 (defun maxp-extended-version-raw (font-data offset)
@@ -302,9 +280,6 @@
                         (+ (table-ref-offset table) 4))))
 
 
-(declaim (inline maxp-extended-max-points-raw))
-
-
 (defun maxp-extended-max-points-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
 
@@ -315,9 +290,6 @@
   (when (>= (table-ref-length table) 8)
     (font-data-read-u16 (table-ref-font-data table)
                         (+ (table-ref-offset table) 6))))
-
-
-(declaim (inline maxp-extended-max-contours-raw))
 
 
 (defun maxp-extended-max-contours-raw (font-data offset)
@@ -332,9 +304,6 @@
                         (+ (table-ref-offset table) 8))))
 
 
-(declaim (inline maxp-extended-max-composite-points-raw))
-
-
 (defun maxp-extended-max-composite-points-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 8)))
 
@@ -345,9 +314,6 @@
   (when (>= (table-ref-length table) 12)
     (font-data-read-u16 (table-ref-font-data table)
                         (+ (table-ref-offset table) 10))))
-
-
-(declaim (inline maxp-extended-max-composite-contours-raw))
 
 
 (defun maxp-extended-max-composite-contours-raw (font-data offset)
@@ -362,9 +328,6 @@
                         (+ (table-ref-offset table) 12))))
 
 
-(declaim (inline maxp-extended-max-zones-raw))
-
-
 (defun maxp-extended-max-zones-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 12)))
 
@@ -375,9 +338,6 @@
   (when (>= (table-ref-length table) 16)
     (font-data-read-u16 (table-ref-font-data table)
                         (+ (table-ref-offset table) 14))))
-
-
-(declaim (inline maxp-extended-max-twilight-points-raw))
 
 
 (defun maxp-extended-max-twilight-points-raw (font-data offset)
@@ -392,9 +352,6 @@
                         (+ (table-ref-offset table) 16))))
 
 
-(declaim (inline maxp-extended-max-storage-raw))
-
-
 (defun maxp-extended-max-storage-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 16)))
 
@@ -405,9 +362,6 @@
   (when (>= (table-ref-length table) 20)
     (font-data-read-u16 (table-ref-font-data table)
                         (+ (table-ref-offset table) 18))))
-
-
-(declaim (inline maxp-extended-max-function-defs-raw))
 
 
 (defun maxp-extended-max-function-defs-raw (font-data offset)
@@ -422,9 +376,6 @@
                         (+ (table-ref-offset table) 20))))
 
 
-(declaim (inline maxp-extended-max-instruction-defs-raw))
-
-
 (defun maxp-extended-max-instruction-defs-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 20)))
 
@@ -435,9 +386,6 @@
   (when (>= (table-ref-length table) 24)
     (font-data-read-u16 (table-ref-font-data table)
                         (+ (table-ref-offset table) 22))))
-
-
-(declaim (inline maxp-extended-max-stack-elements-raw))
 
 
 (defun maxp-extended-max-stack-elements-raw (font-data offset)
@@ -452,9 +400,6 @@
                         (+ (table-ref-offset table) 24))))
 
 
-(declaim (inline maxp-extended-max-size-of-instructions-raw))
-
-
 (defun maxp-extended-max-size-of-instructions-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 24)))
 
@@ -467,9 +412,6 @@
                         (+ (table-ref-offset table) 26))))
 
 
-(declaim (inline maxp-extended-max-component-elements-raw))
-
-
 (defun maxp-extended-max-component-elements-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 26)))
 
@@ -480,20 +422,6 @@
   (when (>= (table-ref-length table) 30)
     (font-data-read-u16 (table-ref-font-data table)
                         (+ (table-ref-offset table) 28))))
-
-
-(declaim (inline maxp-extended-max-component-depth-raw))
-
-
-(declaim
- (inline maxp-extended-version maxp-extended-num-glyphs
-  maxp-extended-max-points maxp-extended-max-contours
-  maxp-extended-max-composite-points maxp-extended-max-composite-contours
-  maxp-extended-max-zones maxp-extended-max-twilight-points
-  maxp-extended-max-storage maxp-extended-max-function-defs
-  maxp-extended-max-instruction-defs maxp-extended-max-stack-elements
-  maxp-extended-max-size-of-instructions maxp-extended-max-component-elements
-  maxp-extended-max-component-depth))
 
 
 (defun maxp-extended-max-component-depth-raw (font-data offset)

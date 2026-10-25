@@ -215,36 +215,102 @@
    single-pos-format4-coverage-offset single-pos-format4-coverage-offset-offset
    single-pos-format4-p single-pos-format4-pos-format
    single-pos-format4-value-count single-pos-format4-value-format
-   single-pos-format4-value-records))
+   single-pos-format4-value-records value-format-x-advance-device-p
+   value-format-x-advance-p value-format-x-placement-device-p
+   value-format-x-placement-p value-format-y-advance-device-p
+   value-format-y-advance-p value-format-y-placement-device-p
+   value-format-y-placement-p))
 
 
 (define-constant +value-format-x-placement+ 1)
 
 
+(declaim (inline value-format-x-placement-p))
+
+
+(defun value-format-x-placement-p (flags)
+  (logtest flags +value-format-x-placement+))
+
+
 (define-constant +value-format-y-placement+ 2)
+
+
+(declaim (inline value-format-y-placement-p))
+
+
+(defun value-format-y-placement-p (flags)
+  (logtest flags +value-format-y-placement+))
 
 
 (define-constant +value-format-x-advance+ 4)
 
 
+(declaim (inline value-format-x-advance-p))
+
+
+(defun value-format-x-advance-p (flags)
+  (logtest flags +value-format-x-advance+))
+
+
 (define-constant +value-format-y-advance+ 8)
+
+
+(declaim (inline value-format-y-advance-p))
+
+
+(defun value-format-y-advance-p (flags)
+  (logtest flags +value-format-y-advance+))
 
 
 (define-constant +value-format-x-placement-device+ 16)
 
 
+(declaim (inline value-format-x-placement-device-p))
+
+
+(defun value-format-x-placement-device-p (flags)
+  (logtest flags +value-format-x-placement-device+))
+
+
 (define-constant +value-format-y-placement-device+ 32)
+
+
+(declaim (inline value-format-y-placement-device-p))
+
+
+(defun value-format-y-placement-device-p (flags)
+  (logtest flags +value-format-y-placement-device+))
 
 
 (define-constant +value-format-x-advance-device+ 64)
 
 
+(declaim (inline value-format-x-advance-device-p))
+
+
+(defun value-format-x-advance-device-p (flags)
+  (logtest flags +value-format-x-advance-device+))
+
+
 (define-constant +value-format-y-advance-device+ 128)
+
+
+(declaim (inline value-format-y-advance-device-p))
+
+
+(defun value-format-y-advance-device-p (flags)
+  (logtest flags +value-format-y-advance-device+))
 
 
 (defstruct
     (mark-record (:include record-ref)
      (:constructor %make-mark-record (%record-font-data %record-offset))))
+
+
+(define-constant +mark-record-size+ 4)
+
+
+(declaim (inline mark-record-mark-class mark-record-mark-anchor-offset))
 
 
 (defun mark-record-mark-class (rec)
@@ -259,15 +325,17 @@
   (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 2)))
 
 
-(declaim (inline mark-record-mark-class mark-record-mark-anchor-offset))
-
-
-(define-constant +mark-record-size+ 4)
-
-
 (defstruct
     (pair-value-record (:include record-ref)
      (:constructor %make-pair-value-record (%record-font-data %record-offset))))
+
+
+(define-constant +pair-value-record-size+ 18)
+
+
+(declaim
+ (inline pair-value-record-second-glyph pair-value-record-value-record1
+  pair-value-record-value-record2))
 
 
 (defun pair-value-record-second-glyph (rec)
@@ -289,28 +357,26 @@
    (+ (record-ref-offset rec) 10)))
 
 
-(declaim
- (inline pair-value-record-second-glyph pair-value-record-value-record1
-  pair-value-record-value-record2))
-
-
-(define-constant +pair-value-record-size+ 18)
-
-
 (defstruct
     (class1-record (:include record-ref)
      (:constructor %make-class1-record (%record-font-data %record-offset))))
 
 
-(declaim (inline class1-record-class2-records))
-
-
 (define-constant +class1-record-size+ 0)
+
+
+(declaim (inline class1-record-class2-records))
 
 
 (defstruct
     (class2-record (:include record-ref)
      (:constructor %make-class2-record (%record-font-data %record-offset))))
+
+
+(define-constant +class2-record-size+ 16)
+
+
+(declaim (inline class2-record-value-record1 class2-record-value-record2))
 
 
 (defun class2-record-value-record1 (rec)
@@ -325,15 +391,17 @@
   (%make-value-record (record-ref-font-data rec) (+ (record-ref-offset rec) 8)))
 
 
-(declaim (inline class2-record-value-record1 class2-record-value-record2))
-
-
-(define-constant +class2-record-size+ 16)
-
-
 (defstruct
     (entry-exit-record (:include record-ref)
      (:constructor %make-entry-exit-record (%record-font-data %record-offset))))
+
+
+(define-constant +entry-exit-record-size+ 4)
+
+
+(declaim
+ (inline entry-exit-record-entry-anchor-offset
+  entry-exit-record-exit-anchor-offset))
 
 
 (defun entry-exit-record-entry-anchor-offset (rec)
@@ -348,26 +416,18 @@
   (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 2)))
 
 
-(declaim
- (inline entry-exit-record-entry-anchor-offset
-  entry-exit-record-exit-anchor-offset))
-
-
-(define-constant +entry-exit-record-size+ 4)
-
-
 (defstruct
     (base-record (:include record-ref)
      (:constructor %make-base-record (%record-font-data %record-offset))))
+
+
+(declaim (inline base-record-base-anchor-offsets))
 
 
 (defun base-record-base-anchor-offsets-count (rec &optional mark-class-count)
   "Array of offsets (one per mark class) to Anchor tables. Offsets are from beginning of BaseArray table, ordered by class (offsets may be NULL)."
   (declare (type base-record rec))
   mark-class-count)
-
-
-(declaim (inline base-record-base-anchor-offsets))
 
 
 (defun base-record-base-anchor-offsets-ref (rec index)
@@ -383,14 +443,14 @@
      (:constructor %make-component-record (%record-font-data %record-offset))))
 
 
+(declaim (inline component-record-ligature-anchor-offsets))
+
+
 (defun component-record-ligature-anchor-offsets-count
        (rec &optional mark-class-count)
   "Array of offsets (one per class) to Anchor tables. Offsets are from beginning of LigatureAttach table, ordered by class (offsets may be NULL)."
   (declare (type component-record rec))
   mark-class-count)
-
-
-(declaim (inline component-record-ligature-anchor-offsets))
 
 
 (defun component-record-ligature-anchor-offsets-ref (rec index)
@@ -406,13 +466,13 @@
      (:constructor %make-mark2-record (%record-font-data %record-offset))))
 
 
+(declaim (inline mark2-record-mark2-anchor-offsets))
+
+
 (defun mark2-record-mark2-anchor-offsets-count (rec &optional mark-class-count)
   "Array of offsets (one per class) to Anchor tables. Offsets are from beginning of Mark2Array table, in class order (offsets may be NULL)."
   (declare (type mark2-record rec))
   mark-class-count)
-
-
-(declaim (inline mark2-record-mark2-anchor-offsets))
 
 
 (defun mark2-record-mark2-anchor-offsets-ref (rec index)
@@ -427,6 +487,14 @@
     (pair-value-record2 (:include record-ref)
      (:constructor %make-pair-value-record2
       (%record-font-data %record-offset))))
+
+
+(define-constant +pair-value-record2-size+ 19)
+
+
+(declaim
+ (inline pair-value-record2-second-glyph pair-value-record2-value-record1
+  pair-value-record2-value-record2))
 
 
 (defun pair-value-record2-second-glyph (rec)
@@ -448,18 +516,18 @@
    (+ (record-ref-offset rec) 11)))
 
 
-(declaim
- (inline pair-value-record2-second-glyph pair-value-record2-value-record1
-  pair-value-record2-value-record2))
-
-
-(define-constant +pair-value-record2-size+ 19)
-
-
 (defstruct
     (entry-exit-record2 (:include record-ref)
      (:constructor %make-entry-exit-record2
       (%record-font-data %record-offset))))
+
+
+(define-constant +entry-exit-record2-size+ 6)
+
+
+(declaim
+ (inline entry-exit-record2-entry-anchor-offset
+  entry-exit-record2-exit-anchor-offset))
 
 
 (defun entry-exit-record2-entry-anchor-offset (rec)
@@ -474,26 +542,18 @@
   (font-data-read-u24 (record-ref-font-data rec) (+ (record-ref-offset rec) 3)))
 
 
-(declaim
- (inline entry-exit-record2-entry-anchor-offset
-  entry-exit-record2-exit-anchor-offset))
-
-
-(define-constant +entry-exit-record2-size+ 6)
-
-
 (defstruct
     (base-record2 (:include record-ref)
      (:constructor %make-base-record2 (%record-font-data %record-offset))))
+
+
+(declaim (inline base-record2-base-anchor-offsets))
 
 
 (defun base-record2-base-anchor-offsets-count (rec &optional mark-class-count)
   "Array of offsets (one per mark class) to Anchor tables. Offsets are from beginning of BaseArray table, ordered by class (offsets may be NULL)."
   (declare (type base-record2 rec))
   mark-class-count)
-
-
-(declaim (inline base-record2-base-anchor-offsets))
 
 
 (defun base-record2-base-anchor-offsets-ref (rec index)
@@ -509,14 +569,14 @@
      (:constructor %make-component-record2 (%record-font-data %record-offset))))
 
 
+(declaim (inline component-record2-ligature-anchor-offsets))
+
+
 (defun component-record2-ligature-anchor-offsets-count
        (rec &optional mark-class-count)
   "Array of offsets (one per class) to Anchor tables. Offsets are from beginning of LigatureAttach table, ordered by class (offsets may be NULL)."
   (declare (type component-record2 rec))
   mark-class-count)
-
-
-(declaim (inline component-record2-ligature-anchor-offsets))
 
 
 (defun component-record2-ligature-anchor-offsets-ref (rec index)
@@ -532,14 +592,14 @@
      (:constructor %make-mark2-record2 (%record-font-data %record-offset))))
 
 
+(declaim (inline mark2-record2-mark2-anchor-offsets))
+
+
 (defun mark2-record2-mark2-anchor-offsets-count
        (rec &optional mark-class-count)
   "Array of offsets (one per class) to Anchor tables. Offsets are from beginning of Mark2Array table, in class order (offsets may be NULL)."
   (declare (type mark2-record2 rec))
   mark-class-count)
-
-
-(declaim (inline mark2-record2-mark2-anchor-offsets))
 
 
 (defun mark2-record2-mark2-anchor-offsets-ref (rec index)
@@ -555,6 +615,12 @@
      (:constructor %make-mark-record2 (%record-font-data %record-offset))))
 
 
+(define-constant +mark-record2-size+ 5)
+
+
+(declaim (inline mark-record2-mark-class mark-record2-mark-anchor-offset))
+
+
 (defun mark-record2-mark-class (rec)
   "Class defined for the associated mark."
   (declare (type mark-record2 rec))
@@ -567,24 +633,25 @@
   (font-data-read-u24 (record-ref-font-data rec) (+ (record-ref-offset rec) 2)))
 
 
-(declaim (inline mark-record2-mark-class mark-record2-mark-anchor-offset))
-
-
-(define-constant +mark-record2-size+ 5)
-
-
 (defstruct
     (gpos (:include table-ref)
      (:constructor %make-gpos (%table-font-data %table-offset %table-length))))
+
+
+(declaim
+ (inline gpos-version gpos-script-list-offset gpos-script-list-offset-offset
+  gpos-feature-list-offset gpos-feature-list-offset-offset
+  gpos-lookup-list-offset gpos-lookup-list-offset-offset
+  gpos-feature-variations-offset gpos-feature-variations-offset-offset
+  gpos-script-list2-offset gpos-script-list2-offset-offset
+  gpos-feature-list2-offset gpos-feature-list2-offset-offset
+  gpos-lookup-list2-offset gpos-lookup-list2-offset-offset gpos-version-raw))
 
 
 (defun gpos-version (table)
   "The major and minor version of the GPOS table, as a tuple (u16, u16)"
   (declare (type gpos table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline gpos-version-raw))
 
 
 (defun gpos-version-raw (font-data offset)
@@ -696,16 +763,6 @@
                         (+ (table-ref-offset table) 22))))
 
 
-(declaim
- (inline gpos-version gpos-script-list-offset gpos-script-list-offset-offset
-  gpos-feature-list-offset gpos-feature-list-offset-offset
-  gpos-lookup-list-offset gpos-lookup-list-offset-offset
-  gpos-feature-variations-offset gpos-feature-variations-offset-offset
-  gpos-script-list2-offset gpos-script-list2-offset-offset
-  gpos-feature-list2-offset gpos-feature-list2-offset-offset
-  gpos-lookup-list2-offset gpos-lookup-list2-offset-offset))
-
-
 (defun gpos-lookup-list2-offset (table)
   "32-bit offset to LookupList2, taking precedence when nonzero."
   (declare (type gpos table))
@@ -751,13 +808,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline anchor-format1-anchor-format anchor-format1-x-coordinate
+  anchor-format1-y-coordinate anchor-format1-anchor-format-raw
+  anchor-format1-x-coordinate-raw anchor-format1-y-coordinate-raw))
+
+
 (defun anchor-format1-anchor-format (table)
   "Format identifier, = 1"
   (declare (type anchor-format1 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline anchor-format1-anchor-format-raw))
 
 
 (defun anchor-format1-anchor-format-raw (font-data offset)
@@ -771,9 +831,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline anchor-format1-x-coordinate-raw))
-
-
 (defun anchor-format1-x-coordinate-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 2)))
 
@@ -783,14 +840,6 @@
   (declare (type anchor-format1 table))
   (font-data-read-i16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline anchor-format1-y-coordinate-raw))
-
-
-(declaim
- (inline anchor-format1-anchor-format anchor-format1-x-coordinate
-  anchor-format1-y-coordinate))
 
 
 (defun anchor-format1-y-coordinate-raw (font-data offset)
@@ -820,13 +869,17 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline anchor-format2-anchor-format anchor-format2-x-coordinate
+  anchor-format2-y-coordinate anchor-format2-anchor-point
+  anchor-format2-anchor-format-raw anchor-format2-x-coordinate-raw
+  anchor-format2-y-coordinate-raw anchor-format2-anchor-point-raw))
+
+
 (defun anchor-format2-anchor-format (table)
   "Format identifier, = 2"
   (declare (type anchor-format2 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline anchor-format2-anchor-format-raw))
 
 
 (defun anchor-format2-anchor-format-raw (font-data offset)
@@ -840,9 +893,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline anchor-format2-x-coordinate-raw))
-
-
 (defun anchor-format2-x-coordinate-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 2)))
 
@@ -854,9 +904,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline anchor-format2-y-coordinate-raw))
-
-
 (defun anchor-format2-y-coordinate-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 4)))
 
@@ -866,14 +913,6 @@
   (declare (type anchor-format2 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline anchor-format2-anchor-point-raw))
-
-
-(declaim
- (inline anchor-format2-anchor-format anchor-format2-x-coordinate
-  anchor-format2-y-coordinate anchor-format2-anchor-point))
 
 
 (defun anchor-format2-anchor-point-raw (font-data offset)
@@ -903,13 +942,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline anchor-format3-anchor-format anchor-format3-x-coordinate
+  anchor-format3-y-coordinate anchor-format3-x-device-offset
+  anchor-format3-x-device-offset-offset anchor-format3-y-device-offset
+  anchor-format3-y-device-offset-offset anchor-format3-anchor-format-raw
+  anchor-format3-x-coordinate-raw anchor-format3-y-coordinate-raw))
+
+
 (defun anchor-format3-anchor-format (table)
   "Format identifier, = 3"
   (declare (type anchor-format3 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline anchor-format3-anchor-format-raw))
 
 
 (defun anchor-format3-anchor-format-raw (font-data offset)
@@ -923,9 +967,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline anchor-format3-x-coordinate-raw))
-
-
 (defun anchor-format3-x-coordinate-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 2)))
 
@@ -935,9 +976,6 @@
   (declare (type anchor-format3 table))
   (font-data-read-i16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline anchor-format3-y-coordinate-raw))
 
 
 (defun anchor-format3-y-coordinate-raw (font-data offset)
@@ -965,13 +1003,6 @@
   (declare (type anchor-format3 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 8)))
-
-
-(declaim
- (inline anchor-format3-anchor-format anchor-format3-x-coordinate
-  anchor-format3-y-coordinate anchor-format3-x-device-offset
-  anchor-format3-x-device-offset-offset anchor-format3-y-device-offset
-  anchor-format3-y-device-offset-offset))
 
 
 (defun anchor-format3-y-device-offset (table)
@@ -1006,13 +1037,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline mark-array-mark-count mark-array-mark-records
+  mark-array-mark-records-count mark-array-mark-count-raw))
+
+
 (defun mark-array-mark-count (table)
   "Number of MarkRecords"
   (declare (type mark-array table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline mark-array-mark-count-raw))
 
 
 (defun mark-array-mark-count-raw (font-data offset)
@@ -1022,11 +1055,6 @@
 (defun mark-array-mark-records-count (table)
   "Array of MarkRecords, ordered by corresponding glyphs in the associated mark Coverage table."
   (mark-array-mark-count table))
-
-
-(declaim
- (inline mark-array-mark-count mark-array-mark-records
-  mark-array-mark-records-count))
 
 
 (defun mark-array-mark-records-ref (table index)
@@ -1084,13 +1112,17 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline single-pos-format1-pos-format single-pos-format1-coverage-offset
+  single-pos-format1-coverage-offset-offset single-pos-format1-value-format
+  single-pos-format1-value-record single-pos-format1-pos-format-raw
+  single-pos-format1-value-format-raw))
+
+
 (defun single-pos-format1-pos-format (table)
   "Format identifier: format = 1"
   (declare (type single-pos-format1 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline single-pos-format1-pos-format-raw))
 
 
 (defun single-pos-format1-pos-format-raw (font-data offset)
@@ -1120,25 +1152,23 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline single-pos-format1-value-format-raw))
-
-
-(declaim
- (inline single-pos-format1-pos-format single-pos-format1-coverage-offset
-  single-pos-format1-coverage-offset-offset single-pos-format1-value-format
-  single-pos-format1-value-record))
-
-
 (defun single-pos-format1-value-format-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
+
+
+(defun single-pos-format1-value-record (table)
+  "Defines positioning value(s) — applied to all glyphs in the Coverage table."
+  (declare (type single-pos-format1 table))
+  (%make-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 6)))
 
 
 (defun sanitize-single-pos-format1 (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 6 length) (font-data-valid-range-p font-data offset 6))
-    (error 'font-out-of-bounds-error :pos offset :size 6 :length
+  (unless (and (<= 14 length) (font-data-valid-range-p font-data offset 14))
+    (error 'font-out-of-bounds-error :pos offset :size 14 :length
            (font-data-length font-data)))
   t)
 
@@ -1156,13 +1186,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline single-pos-format2-pos-format single-pos-format2-coverage-offset
+  single-pos-format2-coverage-offset-offset single-pos-format2-value-format
+  single-pos-format2-value-count single-pos-format2-value-records
+  single-pos-format2-pos-format-raw single-pos-format2-value-format-raw
+  single-pos-format2-value-count-raw))
+
+
 (defun single-pos-format2-pos-format (table)
   "Format identifier: format = 2"
   (declare (type single-pos-format2 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline single-pos-format2-pos-format-raw))
 
 
 (defun single-pos-format2-pos-format-raw (font-data offset)
@@ -1192,9 +1227,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline single-pos-format2-value-format-raw))
-
-
 (defun single-pos-format2-value-format-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
 
@@ -1204,15 +1236,6 @@
   (declare (type single-pos-format2 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline single-pos-format2-value-count-raw))
-
-
-(declaim
- (inline single-pos-format2-pos-format single-pos-format2-coverage-offset
-  single-pos-format2-coverage-offset-offset single-pos-format2-value-format
-  single-pos-format2-value-count single-pos-format2-value-records))
 
 
 (defun single-pos-format2-value-count-raw (font-data offset)
@@ -1256,13 +1279,19 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline pair-pos-format1-pos-format pair-pos-format1-coverage-offset
+  pair-pos-format1-coverage-offset-offset pair-pos-format1-value-format1
+  pair-pos-format1-value-format2 pair-pos-format1-pair-set-count
+  pair-pos-format1-pair-set-offsets pair-pos-format1-pair-set-offsets-count
+  pair-pos-format1-pos-format-raw pair-pos-format1-value-format1-raw
+  pair-pos-format1-value-format2-raw pair-pos-format1-pair-set-count-raw))
+
+
 (defun pair-pos-format1-pos-format (table)
   "Format identifier: format = 1"
   (declare (type pair-pos-format1 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline pair-pos-format1-pos-format-raw))
 
 
 (defun pair-pos-format1-pos-format-raw (font-data offset)
@@ -1292,9 +1321,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline pair-pos-format1-value-format1-raw))
-
-
 (defun pair-pos-format1-value-format1-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
 
@@ -1304,9 +1330,6 @@
   (declare (type pair-pos-format1 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline pair-pos-format1-value-format2-raw))
 
 
 (defun pair-pos-format1-value-format2-raw (font-data offset)
@@ -1320,9 +1343,6 @@
                       (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline pair-pos-format1-pair-set-count-raw))
-
-
 (defun pair-pos-format1-pair-set-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 8)))
 
@@ -1330,13 +1350,6 @@
 (defun pair-pos-format1-pair-set-offsets-count (table)
   "Array of offsets to PairSet tables. Offsets are from beginning of PairPos subtable, ordered by Coverage Index."
   (pair-pos-format1-pair-set-count table))
-
-
-(declaim
- (inline pair-pos-format1-pos-format pair-pos-format1-coverage-offset
-  pair-pos-format1-coverage-offset-offset pair-pos-format1-value-format1
-  pair-pos-format1-value-format2 pair-pos-format1-pair-set-count
-  pair-pos-format1-pair-set-offsets pair-pos-format1-pair-set-offsets-count))
 
 
 (defun pair-pos-format1-pair-set-offsets-ref (table index)
@@ -1383,16 +1396,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline pair-set-pair-value-count pair-set-pair-value-records
+  pair-set-pair-value-count-raw))
+
+
 (defun pair-set-pair-value-count (table)
   "Number of PairValueRecords"
   (declare (type pair-set table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline pair-set-pair-value-count-raw))
-
-
-(declaim (inline pair-set-pair-value-count pair-set-pair-value-records))
 
 
 (defun pair-set-pair-value-count-raw (font-data offset)
@@ -1422,13 +1434,22 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline pair-pos-format2-pos-format pair-pos-format2-coverage-offset
+  pair-pos-format2-coverage-offset-offset pair-pos-format2-value-format1
+  pair-pos-format2-value-format2 pair-pos-format2-class-def1-offset
+  pair-pos-format2-class-def1-offset-offset pair-pos-format2-class-def2-offset
+  pair-pos-format2-class-def2-offset-offset pair-pos-format2-class1-count
+  pair-pos-format2-class2-count pair-pos-format2-class1-records
+  pair-pos-format2-pos-format-raw pair-pos-format2-value-format1-raw
+  pair-pos-format2-value-format2-raw pair-pos-format2-class1-count-raw
+  pair-pos-format2-class2-count-raw))
+
+
 (defun pair-pos-format2-pos-format (table)
   "Format identifier: format = 2"
   (declare (type pair-pos-format2 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline pair-pos-format2-pos-format-raw))
 
 
 (defun pair-pos-format2-pos-format-raw (font-data offset)
@@ -1458,9 +1479,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline pair-pos-format2-value-format1-raw))
-
-
 (defun pair-pos-format2-value-format1-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
 
@@ -1470,9 +1488,6 @@
   (declare (type pair-pos-format2 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline pair-pos-format2-value-format2-raw))
 
 
 (defun pair-pos-format2-value-format2-raw (font-data offset)
@@ -1518,9 +1533,6 @@
                       (+ (table-ref-offset table) 12)))
 
 
-(declaim (inline pair-pos-format2-class1-count-raw))
-
-
 (defun pair-pos-format2-class1-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 12)))
 
@@ -1530,18 +1542,6 @@
   (declare (type pair-pos-format2 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 14)))
-
-
-(declaim (inline pair-pos-format2-class2-count-raw))
-
-
-(declaim
- (inline pair-pos-format2-pos-format pair-pos-format2-coverage-offset
-  pair-pos-format2-coverage-offset-offset pair-pos-format2-value-format1
-  pair-pos-format2-value-format2 pair-pos-format2-class-def1-offset
-  pair-pos-format2-class-def1-offset-offset pair-pos-format2-class-def2-offset
-  pair-pos-format2-class-def2-offset-offset pair-pos-format2-class1-count
-  pair-pos-format2-class2-count pair-pos-format2-class1-records))
 
 
 (defun pair-pos-format2-class2-count-raw (font-data offset)
@@ -1571,13 +1571,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline cursive-pos-format1-pos-format cursive-pos-format1-coverage-offset
+  cursive-pos-format1-coverage-offset-offset
+  cursive-pos-format1-entry-exit-count cursive-pos-format1-entry-exit-record
+  cursive-pos-format1-entry-exit-record-count
+  cursive-pos-format1-pos-format-raw cursive-pos-format1-entry-exit-count-raw))
+
+
 (defun cursive-pos-format1-pos-format (table)
   "Format identifier: format = 1"
   (declare (type cursive-pos-format1 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline cursive-pos-format1-pos-format-raw))
 
 
 (defun cursive-pos-format1-pos-format-raw (font-data offset)
@@ -1607,9 +1612,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline cursive-pos-format1-entry-exit-count-raw))
-
-
 (defun cursive-pos-format1-entry-exit-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
 
@@ -1617,13 +1619,6 @@
 (defun cursive-pos-format1-entry-exit-record-count (table)
   "Array of EntryExit records, in Coverage index order."
   (cursive-pos-format1-entry-exit-count table))
-
-
-(declaim
- (inline cursive-pos-format1-pos-format cursive-pos-format1-coverage-offset
-  cursive-pos-format1-coverage-offset-offset
-  cursive-pos-format1-entry-exit-count cursive-pos-format1-entry-exit-record
-  cursive-pos-format1-entry-exit-record-count))
 
 
 (defun cursive-pos-format1-entry-exit-record-ref (table index)
@@ -1667,13 +1662,25 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline mark-base-pos-format1-pos-format
+  mark-base-pos-format1-mark-coverage-offset
+  mark-base-pos-format1-mark-coverage-offset-offset
+  mark-base-pos-format1-base-coverage-offset
+  mark-base-pos-format1-base-coverage-offset-offset
+  mark-base-pos-format1-mark-class-count
+  mark-base-pos-format1-mark-array-offset
+  mark-base-pos-format1-mark-array-offset-offset
+  mark-base-pos-format1-base-array-offset
+  mark-base-pos-format1-base-array-offset-offset
+  mark-base-pos-format1-pos-format-raw
+  mark-base-pos-format1-mark-class-count-raw))
+
+
 (defun mark-base-pos-format1-pos-format (table)
   "Format identifier: format = 1"
   (declare (type mark-base-pos-format1 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline mark-base-pos-format1-pos-format-raw))
 
 
 (defun mark-base-pos-format1-pos-format-raw (font-data offset)
@@ -1719,9 +1726,6 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline mark-base-pos-format1-mark-class-count-raw))
-
-
 (defun mark-base-pos-format1-mark-class-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 6)))
 
@@ -1747,19 +1751,6 @@
   (declare (type mark-base-pos-format1 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 10)))
-
-
-(declaim
- (inline mark-base-pos-format1-pos-format
-  mark-base-pos-format1-mark-coverage-offset
-  mark-base-pos-format1-mark-coverage-offset-offset
-  mark-base-pos-format1-base-coverage-offset
-  mark-base-pos-format1-base-coverage-offset-offset
-  mark-base-pos-format1-mark-class-count
-  mark-base-pos-format1-mark-array-offset
-  mark-base-pos-format1-mark-array-offset-offset
-  mark-base-pos-format1-base-array-offset
-  mark-base-pos-format1-base-array-offset-offset))
 
 
 (defun mark-base-pos-format1-base-array-offset (table)
@@ -1794,16 +1785,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline base-array-base-count base-array-base-records
+  base-array-base-count-raw))
+
+
 (defun base-array-base-count (table)
   "Number of BaseRecords"
   (declare (type base-array table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline base-array-base-count-raw))
-
-
-(declaim (inline base-array-base-count base-array-base-records))
 
 
 (defun base-array-base-count-raw (font-data offset)
@@ -1833,13 +1823,24 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline mark-lig-pos-format1-pos-format
+  mark-lig-pos-format1-mark-coverage-offset
+  mark-lig-pos-format1-mark-coverage-offset-offset
+  mark-lig-pos-format1-ligature-coverage-offset
+  mark-lig-pos-format1-ligature-coverage-offset-offset
+  mark-lig-pos-format1-mark-class-count mark-lig-pos-format1-mark-array-offset
+  mark-lig-pos-format1-mark-array-offset-offset
+  mark-lig-pos-format1-ligature-array-offset
+  mark-lig-pos-format1-ligature-array-offset-offset
+  mark-lig-pos-format1-pos-format-raw
+  mark-lig-pos-format1-mark-class-count-raw))
+
+
 (defun mark-lig-pos-format1-pos-format (table)
   "Format identifier: format = 1"
   (declare (type mark-lig-pos-format1 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline mark-lig-pos-format1-pos-format-raw))
 
 
 (defun mark-lig-pos-format1-pos-format-raw (font-data offset)
@@ -1885,9 +1886,6 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline mark-lig-pos-format1-mark-class-count-raw))
-
-
 (defun mark-lig-pos-format1-mark-class-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 6)))
 
@@ -1913,18 +1911,6 @@
   (declare (type mark-lig-pos-format1 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 10)))
-
-
-(declaim
- (inline mark-lig-pos-format1-pos-format
-  mark-lig-pos-format1-mark-coverage-offset
-  mark-lig-pos-format1-mark-coverage-offset-offset
-  mark-lig-pos-format1-ligature-coverage-offset
-  mark-lig-pos-format1-ligature-coverage-offset-offset
-  mark-lig-pos-format1-mark-class-count mark-lig-pos-format1-mark-array-offset
-  mark-lig-pos-format1-mark-array-offset-offset
-  mark-lig-pos-format1-ligature-array-offset
-  mark-lig-pos-format1-ligature-array-offset-offset))
 
 
 (defun mark-lig-pos-format1-ligature-array-offset (table)
@@ -1959,13 +1945,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline ligature-array-ligature-count ligature-array-ligature-attach-offsets
+  ligature-array-ligature-attach-offsets-count
+  ligature-array-ligature-count-raw))
+
+
 (defun ligature-array-ligature-count (table)
   "Number of LigatureAttach table offsets"
   (declare (type ligature-array table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline ligature-array-ligature-count-raw))
 
 
 (defun ligature-array-ligature-count-raw (font-data offset)
@@ -1975,11 +1964,6 @@
 (defun ligature-array-ligature-attach-offsets-count (table)
   "Array of offsets to LigatureAttach tables. Offsets are from beginning of LigatureArray table, ordered by ligatureCoverage index."
   (ligature-array-ligature-count table))
-
-
-(declaim
- (inline ligature-array-ligature-count ligature-array-ligature-attach-offsets
-  ligature-array-ligature-attach-offsets-count))
 
 
 (defun ligature-array-ligature-attach-offsets-ref (table index)
@@ -2026,17 +2010,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline ligature-attach-component-count ligature-attach-component-records
+  ligature-attach-component-count-raw))
+
+
 (defun ligature-attach-component-count (table)
   "Number of ComponentRecords in this ligature"
   (declare (type ligature-attach table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline ligature-attach-component-count-raw))
-
-
-(declaim
- (inline ligature-attach-component-count ligature-attach-component-records))
 
 
 (defun ligature-attach-component-count-raw (font-data offset)
@@ -2066,13 +2048,25 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline mark-mark-pos-format1-pos-format
+  mark-mark-pos-format1-mark1-coverage-offset
+  mark-mark-pos-format1-mark1-coverage-offset-offset
+  mark-mark-pos-format1-mark2-coverage-offset
+  mark-mark-pos-format1-mark2-coverage-offset-offset
+  mark-mark-pos-format1-mark-class-count
+  mark-mark-pos-format1-mark1-array-offset
+  mark-mark-pos-format1-mark1-array-offset-offset
+  mark-mark-pos-format1-mark2-array-offset
+  mark-mark-pos-format1-mark2-array-offset-offset
+  mark-mark-pos-format1-pos-format-raw
+  mark-mark-pos-format1-mark-class-count-raw))
+
+
 (defun mark-mark-pos-format1-pos-format (table)
   "Format identifier: format = 1"
   (declare (type mark-mark-pos-format1 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline mark-mark-pos-format1-pos-format-raw))
 
 
 (defun mark-mark-pos-format1-pos-format-raw (font-data offset)
@@ -2118,9 +2112,6 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline mark-mark-pos-format1-mark-class-count-raw))
-
-
 (defun mark-mark-pos-format1-mark-class-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 6)))
 
@@ -2146,19 +2137,6 @@
   (declare (type mark-mark-pos-format1 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 10)))
-
-
-(declaim
- (inline mark-mark-pos-format1-pos-format
-  mark-mark-pos-format1-mark1-coverage-offset
-  mark-mark-pos-format1-mark1-coverage-offset-offset
-  mark-mark-pos-format1-mark2-coverage-offset
-  mark-mark-pos-format1-mark2-coverage-offset-offset
-  mark-mark-pos-format1-mark-class-count
-  mark-mark-pos-format1-mark1-array-offset
-  mark-mark-pos-format1-mark1-array-offset-offset
-  mark-mark-pos-format1-mark2-array-offset
-  mark-mark-pos-format1-mark2-array-offset-offset))
 
 
 (defun mark-mark-pos-format1-mark2-array-offset (table)
@@ -2193,16 +2171,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline mark2-array-mark2-count mark2-array-mark2-records
+  mark2-array-mark2-count-raw))
+
+
 (defun mark2-array-mark2-count (table)
   "Number of Mark2 records"
   (declare (type mark2-array table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline mark2-array-mark2-count-raw))
-
-
-(declaim (inline mark2-array-mark2-count mark2-array-mark2-records))
 
 
 (defun mark2-array-mark2-count-raw (font-data offset)
@@ -2232,13 +2209,19 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline extension-pos-format1-pos-format
+  extension-pos-format1-extension-lookup-type
+  extension-pos-format1-extension-offset
+  extension-pos-format1-extension-offset-offset
+  extension-pos-format1-pos-format-raw
+  extension-pos-format1-extension-lookup-type-raw))
+
+
 (defun extension-pos-format1-pos-format (table)
   "Format identifier: format = 1"
   (declare (type extension-pos-format1 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline extension-pos-format1-pos-format-raw))
 
 
 (defun extension-pos-format1-pos-format-raw (font-data offset)
@@ -2252,9 +2235,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline extension-pos-format1-extension-lookup-type-raw))
-
-
 (defun extension-pos-format1-extension-lookup-type-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -2264,13 +2244,6 @@
   (declare (type extension-pos-format1 table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim
- (inline extension-pos-format1-pos-format
-  extension-pos-format1-extension-lookup-type
-  extension-pos-format1-extension-offset
-  extension-pos-format1-extension-offset-offset))
 
 
 (defun extension-pos-format1-extension-offset (table)
@@ -2305,13 +2278,17 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline single-pos-format3-pos-format single-pos-format3-coverage-offset
+  single-pos-format3-coverage-offset-offset single-pos-format3-value-format
+  single-pos-format3-value-record single-pos-format3-pos-format-raw
+  single-pos-format3-value-format-raw))
+
+
 (defun single-pos-format3-pos-format (table)
   "Format identifier: format = 3"
   (declare (type single-pos-format3 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline single-pos-format3-pos-format-raw))
 
 
 (defun single-pos-format3-pos-format-raw (font-data offset)
@@ -2341,25 +2318,23 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline single-pos-format3-value-format-raw))
-
-
-(declaim
- (inline single-pos-format3-pos-format single-pos-format3-coverage-offset
-  single-pos-format3-coverage-offset-offset single-pos-format3-value-format
-  single-pos-format3-value-record))
-
-
 (defun single-pos-format3-value-format-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 6)))
+
+
+(defun single-pos-format3-value-record (table)
+  "Defines positioning value(s) — applied to all glyphs in the Coverage table."
+  (declare (type single-pos-format3 table))
+  (%make-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 8)))
 
 
 (defun sanitize-single-pos-format3 (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 8 length) (font-data-valid-range-p font-data offset 8))
-    (error 'font-out-of-bounds-error :pos offset :size 8 :length
+  (unless (and (<= 16 length) (font-data-valid-range-p font-data offset 16))
+    (error 'font-out-of-bounds-error :pos offset :size 16 :length
            (font-data-length font-data)))
   t)
 
@@ -2377,13 +2352,17 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline single-pos-format4-pos-format single-pos-format4-coverage-offset
+  single-pos-format4-coverage-offset-offset single-pos-format4-value-format
+  single-pos-format4-value-count single-pos-format4-value-records
+  single-pos-format4-pos-format-raw single-pos-format4-value-format-raw))
+
+
 (defun single-pos-format4-pos-format (table)
   "Format identifier: format = 4"
   (declare (type single-pos-format4 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline single-pos-format4-pos-format-raw))
 
 
 (defun single-pos-format4-pos-format-raw (font-data offset)
@@ -2413,15 +2392,6 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline single-pos-format4-value-format-raw))
-
-
-(declaim
- (inline single-pos-format4-pos-format single-pos-format4-coverage-offset
-  single-pos-format4-coverage-offset-offset single-pos-format4-value-format
-  single-pos-format4-value-count single-pos-format4-value-records))
-
-
 (defun single-pos-format4-value-format-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 6)))
 
@@ -2449,13 +2419,19 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline pair-pos-format3-pos-format pair-pos-format3-coverage-offset
+  pair-pos-format3-coverage-offset-offset pair-pos-format3-value-format1
+  pair-pos-format3-value-format2 pair-pos-format3-pair-set-count
+  pair-pos-format3-pair-set-offsets pair-pos-format3-pair-set-offsets-count
+  pair-pos-format3-pos-format-raw pair-pos-format3-value-format1-raw
+  pair-pos-format3-value-format2-raw))
+
+
 (defun pair-pos-format3-pos-format (table)
   "Format identifier: format = 3"
   (declare (type pair-pos-format3 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline pair-pos-format3-pos-format-raw))
 
 
 (defun pair-pos-format3-pos-format-raw (font-data offset)
@@ -2485,9 +2461,6 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline pair-pos-format3-value-format1-raw))
-
-
 (defun pair-pos-format3-value-format1-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 6)))
 
@@ -2499,9 +2472,6 @@
                       (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline pair-pos-format3-value-format2-raw))
-
-
 (defun pair-pos-format3-value-format2-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 8)))
 
@@ -2509,13 +2479,6 @@
 (defun pair-pos-format3-pair-set-offsets-count (table)
   "Array of offsets to PairSet tables. Offsets are from beginning of PairPos subtable, ordered by Coverage Index."
   (pair-pos-format3-pair-set-count table))
-
-
-(declaim
- (inline pair-pos-format3-pos-format pair-pos-format3-coverage-offset
-  pair-pos-format3-coverage-offset-offset pair-pos-format3-value-format1
-  pair-pos-format3-value-format2 pair-pos-format3-pair-set-count
-  pair-pos-format3-pair-set-offsets pair-pos-format3-pair-set-offsets-count))
 
 
 (defun pair-pos-format3-pair-set-offsets-ref (table index)
@@ -2556,13 +2519,13 @@
   (%make-pair-pos-format3 font-data offset length))
 
 
-(declaim (inline pair-set2-pair-value-count pair-set2-pair-value-records))
-
-
 (defstruct
     (pair-set2 (:include table-ref)
      (:constructor %make-pair-set2
       (%table-font-data %table-offset %table-length))))
+
+
+(declaim (inline pair-set2-pair-value-count pair-set2-pair-value-records))
 
 
 (defun sanitize-pair-set2 (font-data offset length)
@@ -2588,13 +2551,22 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline pair-pos-format4-pos-format pair-pos-format4-coverage-offset
+  pair-pos-format4-coverage-offset-offset pair-pos-format4-value-format1
+  pair-pos-format4-value-format2 pair-pos-format4-class-def1-offset
+  pair-pos-format4-class-def1-offset-offset pair-pos-format4-class-def2-offset
+  pair-pos-format4-class-def2-offset-offset pair-pos-format4-class1-count
+  pair-pos-format4-class2-count pair-pos-format4-class1-records
+  pair-pos-format4-pos-format-raw pair-pos-format4-value-format1-raw
+  pair-pos-format4-value-format2-raw pair-pos-format4-class1-count-raw
+  pair-pos-format4-class2-count-raw))
+
+
 (defun pair-pos-format4-pos-format (table)
   "Format identifier: format = 4"
   (declare (type pair-pos-format4 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline pair-pos-format4-pos-format-raw))
 
 
 (defun pair-pos-format4-pos-format-raw (font-data offset)
@@ -2624,9 +2596,6 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline pair-pos-format4-value-format1-raw))
-
-
 (defun pair-pos-format4-value-format1-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 6)))
 
@@ -2636,9 +2605,6 @@
   (declare (type pair-pos-format4 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline pair-pos-format4-value-format2-raw))
 
 
 (defun pair-pos-format4-value-format2-raw (font-data offset)
@@ -2684,9 +2650,6 @@
                       (+ (table-ref-offset table) 18)))
 
 
-(declaim (inline pair-pos-format4-class1-count-raw))
-
-
 (defun pair-pos-format4-class1-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 18)))
 
@@ -2696,18 +2659,6 @@
   (declare (type pair-pos-format4 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 20)))
-
-
-(declaim (inline pair-pos-format4-class2-count-raw))
-
-
-(declaim
- (inline pair-pos-format4-pos-format pair-pos-format4-coverage-offset
-  pair-pos-format4-coverage-offset-offset pair-pos-format4-value-format1
-  pair-pos-format4-value-format2 pair-pos-format4-class-def1-offset
-  pair-pos-format4-class-def1-offset-offset pair-pos-format4-class-def2-offset
-  pair-pos-format4-class-def2-offset-offset pair-pos-format4-class1-count
-  pair-pos-format4-class2-count pair-pos-format4-class1-records))
 
 
 (defun pair-pos-format4-class2-count-raw (font-data offset)
@@ -2737,13 +2688,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline cursive-pos-format2-pos-format cursive-pos-format2-coverage-offset
+  cursive-pos-format2-coverage-offset-offset
+  cursive-pos-format2-entry-exit-count cursive-pos-format2-entry-exit-record
+  cursive-pos-format2-entry-exit-record-count
+  cursive-pos-format2-pos-format-raw))
+
+
 (defun cursive-pos-format2-pos-format (table)
   "Format identifier: format = 2"
   (declare (type cursive-pos-format2 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline cursive-pos-format2-pos-format-raw))
 
 
 (defun cursive-pos-format2-pos-format-raw (font-data offset)
@@ -2769,13 +2725,6 @@
 (defun cursive-pos-format2-entry-exit-record-count (table)
   "Array of EntryExit records, in Coverage index order."
   (cursive-pos-format2-entry-exit-count table))
-
-
-(declaim
- (inline cursive-pos-format2-pos-format cursive-pos-format2-coverage-offset
-  cursive-pos-format2-coverage-offset-offset
-  cursive-pos-format2-entry-exit-count cursive-pos-format2-entry-exit-record
-  cursive-pos-format2-entry-exit-record-count))
 
 
 (defun cursive-pos-format2-entry-exit-record-ref (table index)
@@ -2819,13 +2768,25 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline mark-base-pos-format2-pos-format
+  mark-base-pos-format2-mark-coverage-offset
+  mark-base-pos-format2-mark-coverage-offset-offset
+  mark-base-pos-format2-base-coverage-offset
+  mark-base-pos-format2-base-coverage-offset-offset
+  mark-base-pos-format2-mark-class-count
+  mark-base-pos-format2-mark-array-offset
+  mark-base-pos-format2-mark-array-offset-offset
+  mark-base-pos-format2-base-array-offset
+  mark-base-pos-format2-base-array-offset-offset
+  mark-base-pos-format2-pos-format-raw
+  mark-base-pos-format2-mark-class-count-raw))
+
+
 (defun mark-base-pos-format2-pos-format (table)
   "Format identifier: format = 2"
   (declare (type mark-base-pos-format2 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline mark-base-pos-format2-pos-format-raw))
 
 
 (defun mark-base-pos-format2-pos-format-raw (font-data offset)
@@ -2871,9 +2832,6 @@
                       (+ (table-ref-offset table) 10)))
 
 
-(declaim (inline mark-base-pos-format2-mark-class-count-raw))
-
-
 (defun mark-base-pos-format2-mark-class-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 10)))
 
@@ -2899,19 +2857,6 @@
   (declare (type mark-base-pos-format2 table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 16)))
-
-
-(declaim
- (inline mark-base-pos-format2-pos-format
-  mark-base-pos-format2-mark-coverage-offset
-  mark-base-pos-format2-mark-coverage-offset-offset
-  mark-base-pos-format2-base-coverage-offset
-  mark-base-pos-format2-base-coverage-offset-offset
-  mark-base-pos-format2-mark-class-count
-  mark-base-pos-format2-mark-array-offset
-  mark-base-pos-format2-mark-array-offset-offset
-  mark-base-pos-format2-base-array-offset
-  mark-base-pos-format2-base-array-offset-offset))
 
 
 (defun mark-base-pos-format2-base-array-offset (table)
@@ -2940,13 +2885,13 @@
   (%make-mark-base-pos-format2 font-data offset length))
 
 
-(declaim (inline base-array2-base-count base-array2-base-records))
-
-
 (defstruct
     (base-array2 (:include table-ref)
      (:constructor %make-base-array2
       (%table-font-data %table-offset %table-length))))
+
+
+(declaim (inline base-array2-base-count base-array2-base-records))
 
 
 (defun sanitize-base-array2 (font-data offset length)
@@ -2972,13 +2917,24 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline mark-lig-pos-format2-pos-format
+  mark-lig-pos-format2-mark-coverage-offset
+  mark-lig-pos-format2-mark-coverage-offset-offset
+  mark-lig-pos-format2-ligature-coverage-offset
+  mark-lig-pos-format2-ligature-coverage-offset-offset
+  mark-lig-pos-format2-mark-class-count mark-lig-pos-format2-mark-array-offset
+  mark-lig-pos-format2-mark-array-offset-offset
+  mark-lig-pos-format2-ligature-array-offset
+  mark-lig-pos-format2-ligature-array-offset-offset
+  mark-lig-pos-format2-pos-format-raw
+  mark-lig-pos-format2-mark-class-count-raw))
+
+
 (defun mark-lig-pos-format2-pos-format (table)
   "Format identifier: format = 2"
   (declare (type mark-lig-pos-format2 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline mark-lig-pos-format2-pos-format-raw))
 
 
 (defun mark-lig-pos-format2-pos-format-raw (font-data offset)
@@ -3024,9 +2980,6 @@
                       (+ (table-ref-offset table) 10)))
 
 
-(declaim (inline mark-lig-pos-format2-mark-class-count-raw))
-
-
 (defun mark-lig-pos-format2-mark-class-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 10)))
 
@@ -3052,18 +3005,6 @@
   (declare (type mark-lig-pos-format2 table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 16)))
-
-
-(declaim
- (inline mark-lig-pos-format2-pos-format
-  mark-lig-pos-format2-mark-coverage-offset
-  mark-lig-pos-format2-mark-coverage-offset-offset
-  mark-lig-pos-format2-ligature-coverage-offset
-  mark-lig-pos-format2-ligature-coverage-offset-offset
-  mark-lig-pos-format2-mark-class-count mark-lig-pos-format2-mark-array-offset
-  mark-lig-pos-format2-mark-array-offset-offset
-  mark-lig-pos-format2-ligature-array-offset
-  mark-lig-pos-format2-ligature-array-offset-offset))
 
 
 (defun mark-lig-pos-format2-ligature-array-offset (table)
@@ -3098,14 +3039,14 @@
       (%table-font-data %table-offset %table-length))))
 
 
-(defun ligature-array2-ligature-attach-offsets-count (table)
-  "Array of offsets to LigatureAttach tables. Offsets are from beginning of LigatureArray2 table, ordered by ligatureCoverage index."
-  (ligature-array2-ligature-count table))
-
-
 (declaim
  (inline ligature-array2-ligature-count ligature-array2-ligature-attach-offsets
   ligature-array2-ligature-attach-offsets-count))
+
+
+(defun ligature-array2-ligature-attach-offsets-count (table)
+  "Array of offsets to LigatureAttach tables. Offsets are from beginning of LigatureArray2 table, ordered by ligatureCoverage index."
+  (ligature-array2-ligature-count table))
 
 
 (defun ligature-array2-ligature-attach-offsets-ref (table index)
@@ -3152,17 +3093,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline ligature-attach2-component-count ligature-attach2-component-records
+  ligature-attach2-component-count-raw))
+
+
 (defun ligature-attach2-component-count (table)
   "Number of ComponentRecords in this ligature"
   (declare (type ligature-attach2 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline ligature-attach2-component-count-raw))
-
-
-(declaim
- (inline ligature-attach2-component-count ligature-attach2-component-records))
 
 
 (defun ligature-attach2-component-count-raw (font-data offset)
@@ -3192,13 +3131,25 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline mark-mark-pos-format2-pos-format
+  mark-mark-pos-format2-mark1-coverage-offset
+  mark-mark-pos-format2-mark1-coverage-offset-offset
+  mark-mark-pos-format2-mark2-coverage-offset
+  mark-mark-pos-format2-mark2-coverage-offset-offset
+  mark-mark-pos-format2-mark-class-count
+  mark-mark-pos-format2-mark1-array-offset
+  mark-mark-pos-format2-mark1-array-offset-offset
+  mark-mark-pos-format2-mark2-array-offset
+  mark-mark-pos-format2-mark2-array-offset-offset
+  mark-mark-pos-format2-pos-format-raw
+  mark-mark-pos-format2-mark-class-count-raw))
+
+
 (defun mark-mark-pos-format2-pos-format (table)
   "Format identifier: format = 2"
   (declare (type mark-mark-pos-format2 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline mark-mark-pos-format2-pos-format-raw))
 
 
 (defun mark-mark-pos-format2-pos-format-raw (font-data offset)
@@ -3244,9 +3195,6 @@
                       (+ (table-ref-offset table) 10)))
 
 
-(declaim (inline mark-mark-pos-format2-mark-class-count-raw))
-
-
 (defun mark-mark-pos-format2-mark-class-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 10)))
 
@@ -3272,19 +3220,6 @@
   (declare (type mark-mark-pos-format2 table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 16)))
-
-
-(declaim
- (inline mark-mark-pos-format2-pos-format
-  mark-mark-pos-format2-mark1-coverage-offset
-  mark-mark-pos-format2-mark1-coverage-offset-offset
-  mark-mark-pos-format2-mark2-coverage-offset
-  mark-mark-pos-format2-mark2-coverage-offset-offset
-  mark-mark-pos-format2-mark-class-count
-  mark-mark-pos-format2-mark1-array-offset
-  mark-mark-pos-format2-mark1-array-offset-offset
-  mark-mark-pos-format2-mark2-array-offset
-  mark-mark-pos-format2-mark2-array-offset-offset))
 
 
 (defun mark-mark-pos-format2-mark2-array-offset (table)
@@ -3319,16 +3254,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline mark2-array2-mark2-count mark2-array2-mark2-records
+  mark2-array2-mark2-count-raw))
+
+
 (defun mark2-array2-mark2-count (table)
   "Number of Mark2 records"
   (declare (type mark2-array2 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline mark2-array2-mark2-count-raw))
-
-
-(declaim (inline mark2-array2-mark2-count mark2-array2-mark2-records))
 
 
 (defun mark2-array2-mark2-count-raw (font-data offset)
@@ -3358,14 +3292,14 @@
       (%table-font-data %table-offset %table-length))))
 
 
-(defun mark-array2-mark-records-count (table)
-  "Array of MarkRecords, ordered by corresponding glyphs in the associated mark Coverage table."
-  (mark-array2-mark-count table))
-
-
 (declaim
  (inline mark-array2-mark-count mark-array2-mark-records
   mark-array2-mark-records-count))
+
+
+(defun mark-array2-mark-records-count (table)
+  "Array of MarkRecords, ordered by corresponding glyphs in the associated mark Coverage table."
+  (mark-array2-mark-count table))
 
 
 (defun mark-array2-mark-records-ref (table index)

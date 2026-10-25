@@ -23,6 +23,15 @@
      (:constructor %make-feature-name (%record-font-data %record-offset))))
 
 
+(define-constant +feature-name-size+ 12)
+
+
+(declaim
+ (inline feature-name-feature feature-name-n-settings
+  feature-name-setting-table-offset feature-name-feature-flags
+  feature-name-name-index))
+
+
 (defun feature-name-feature (rec)
   "Feature type."
   (declare (type feature-name rec))
@@ -54,18 +63,15 @@
                       (+ (record-ref-offset rec) 10)))
 
 
-(declaim
- (inline feature-name-feature feature-name-n-settings
-  feature-name-setting-table-offset feature-name-feature-flags
-  feature-name-name-index))
-
-
-(define-constant +feature-name-size+ 12)
-
-
 (defstruct
     (setting-name (:include record-ref)
      (:constructor %make-setting-name (%record-font-data %record-offset))))
+
+
+(define-constant +setting-name-size+ 4)
+
+
+(declaim (inline setting-name-setting setting-name-name-index))
 
 
 (defun setting-name-setting (rec)
@@ -80,24 +86,21 @@
   (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 2)))
 
 
-(declaim (inline setting-name-setting setting-name-name-index))
-
-
-(define-constant +setting-name-size+ 4)
-
-
 (defstruct
     (feat (:include table-ref)
      (:constructor %make-feat (%table-font-data %table-offset %table-length))))
+
+
+(declaim
+ (inline feat-version feat-feature-name-count feat--reserved1 feat--reserved2
+  feat-names feat-names-count feat-version-raw feat-feature-name-count-raw
+  feat--reserved1-raw feat--reserved2-raw))
 
 
 (defun feat-version (table)
   "Version number of the feature name table (0x00010000 for the current version)."
   (declare (type feat table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline feat-version-raw))
 
 
 (defun feat-version-raw (font-data offset)
@@ -111,9 +114,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline feat-feature-name-count-raw))
-
-
 (defun feat-feature-name-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
 
@@ -123,9 +123,6 @@
   (declare (type feat table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline feat--reserved1-raw))
 
 
 (defun feat--reserved1-raw (font-data offset)
@@ -139,9 +136,6 @@
                       (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline feat--reserved2-raw))
-
-
 (defun feat--reserved2-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 8)))
 
@@ -149,11 +143,6 @@
 (defun feat-names-count (table)
   "The feature name array, sorted by feature type."
   (feat-feature-name-count table))
-
-
-(declaim
- (inline feat-version feat-feature-name-count feat--reserved1 feat--reserved2
-  feat-names feat-names-count))
 
 
 (defun feat-names-ref (table index)
@@ -197,13 +186,13 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim (inline setting-name-array-settings setting-name-array-settings-count))
+
+
 (defun setting-name-array-settings-count (table &optional n-settings)
   "List of setting names for a feature."
   (or n-settings
       (max 0 (floor (- (table-ref-length table) (table-ref-offset table)) 4))))
-
-
-(declaim (inline setting-name-array-settings setting-name-array-settings-count))
 
 
 (defun setting-name-array-settings-ref (table index)

@@ -29,6 +29,14 @@
      (:constructor %make-morx-feature (%record-font-data %record-offset))))
 
 
+(define-constant +morx-feature-size+ 12)
+
+
+(declaim
+ (inline morx-feature-feature-type morx-feature-feature-settings
+  morx-feature-enable-flags morx-feature-disable-flags))
+
+
 (defun morx-feature-feature-type (rec)
   "The type of feature."
   (declare (type morx-feature rec))
@@ -53,18 +61,17 @@
   (font-data-read-u32 (record-ref-font-data rec) (+ (record-ref-offset rec) 8)))
 
 
-(declaim
- (inline morx-feature-feature-type morx-feature-feature-settings
-  morx-feature-enable-flags morx-feature-disable-flags))
-
-
-(define-constant +morx-feature-size+ 12)
-
-
 (defstruct
     (contextual-entry-data (:include record-ref)
      (:constructor %make-contextual-entry-data
       (%record-font-data %record-offset))))
+
+
+(define-constant +contextual-entry-data-size+ 4)
+
+
+(declaim
+ (inline contextual-entry-data-mark-index contextual-entry-data-current-index))
 
 
 (defun contextual-entry-data-mark-index (rec)
@@ -79,17 +86,18 @@
   (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 2)))
 
 
-(declaim
- (inline contextual-entry-data-mark-index contextual-entry-data-current-index))
-
-
-(define-constant +contextual-entry-data-size+ 4)
-
-
 (defstruct
     (insertion-entry-data (:include record-ref)
      (:constructor %make-insertion-entry-data
       (%record-font-data %record-offset))))
+
+
+(define-constant +insertion-entry-data-size+ 4)
+
+
+(declaim
+ (inline insertion-entry-data-current-insert-index
+  insertion-entry-data-marked-insert-index))
 
 
 (defun insertion-entry-data-current-insert-index (rec)
@@ -104,26 +112,20 @@
   (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 2)))
 
 
-(declaim
- (inline insertion-entry-data-current-insert-index
-  insertion-entry-data-marked-insert-index))
-
-
-(define-constant +insertion-entry-data-size+ 4)
-
-
 (defstruct
     (morx (:include table-ref)
      (:constructor %make-morx (%table-font-data %table-offset %table-length))))
+
+
+(declaim
+ (inline morx-version morx-unused morx-n-chains morx-chains morx-version-raw
+  morx-unused-raw morx-n-chains-raw))
 
 
 (defun morx-version (table)
   "Version number of the extended glyph metamorphosis table (either 2 or 3)."
   (declare (type morx table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline morx-version-raw))
 
 
 (defun morx-version-raw (font-data offset)
@@ -137,9 +139,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline morx-unused-raw))
-
-
 (defun morx-unused-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -149,12 +148,6 @@
   (declare (type morx table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline morx-n-chains-raw))
-
-
-(declaim (inline morx-version morx-unused morx-n-chains morx-chains))
 
 
 (defun morx-n-chains-raw (font-data offset)
@@ -183,13 +176,17 @@
      (:constructor %make-chain (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline chain-default-flags chain-chain-length chain-n-feature-entries
+  chain-n-subtables chain-features chain-features-count chain-subtables
+  chain-default-flags-raw chain-chain-length-raw chain-n-feature-entries-raw
+  chain-n-subtables-raw))
+
+
 (defun chain-default-flags (table)
   "The default specification for subtables."
   (declare (type chain table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline chain-default-flags-raw))
 
 
 (defun chain-default-flags-raw (font-data offset)
@@ -203,9 +200,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline chain-chain-length-raw))
-
-
 (defun chain-chain-length-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 4)))
 
@@ -215,9 +209,6 @@
   (declare (type chain table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline chain-n-feature-entries-raw))
 
 
 (defun chain-n-feature-entries-raw (font-data offset)
@@ -231,9 +222,6 @@
                       (+ (table-ref-offset table) 12)))
 
 
-(declaim (inline chain-n-subtables-raw))
-
-
 (defun chain-n-subtables-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 12)))
 
@@ -241,11 +229,6 @@
 (defun chain-features-count (table)
   "Feature entries for this chain."
   (chain-n-feature-entries table))
-
-
-(declaim
- (inline chain-default-flags chain-chain-length chain-n-feature-entries
-  chain-n-subtables chain-features chain-features-count chain-subtables))
 
 
 (defun chain-features-ref (table index)
@@ -289,13 +272,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline subtable-length subtable-coverage subtable-sub-feature-flags
+  subtable-data subtable-data-count subtable-length-raw subtable-coverage-raw
+  subtable-sub-feature-flags-raw))
+
+
 (defun subtable-length (table)
   "Total subtable length, including this header."
   (declare (type subtable table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline subtable-length-raw))
 
 
 (defun subtable-length-raw (font-data offset)
@@ -309,9 +295,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline subtable-coverage-raw))
-
-
 (defun subtable-coverage-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 4)))
 
@@ -321,9 +304,6 @@
   (declare (type subtable table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline subtable-sub-feature-flags-raw))
 
 
 (defun subtable-sub-feature-flags-raw (font-data offset)
@@ -346,11 +326,6 @@
       (error 'font-out-of-bounds-error :pos pos :size 1 :length
              (table-ref-length table)))
     (font-data-read-u8 (table-ref-font-data table) pos)))
-
-
-(declaim
- (inline subtable-length subtable-coverage subtable-sub-feature-flags
-  subtable-data subtable-data-count))
 
 
 (defun subtable-data-bytes (table)

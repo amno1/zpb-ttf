@@ -24,6 +24,14 @@
       (%record-font-data %record-offset))))
 
 
+(define-constant +svg-document-record-size+ 12)
+
+
+(declaim
+ (inline svg-document-record-start-glyph-id svg-document-record-end-glyph-id
+  svg-document-record-svg-doc-offset svg-document-record-svg-doc-length))
+
+
 (defun svg-document-record-start-glyph-id (rec)
   "The first glyph ID for the range covered by this record."
   (declare (type svg-document-record rec))
@@ -48,26 +56,21 @@
   (font-data-read-u32 (record-ref-font-data rec) (+ (record-ref-offset rec) 8)))
 
 
-(declaim
- (inline svg-document-record-start-glyph-id svg-document-record-end-glyph-id
-  svg-document-record-svg-doc-offset svg-document-record-svg-doc-length))
-
-
-(define-constant +svg-document-record-size+ 12)
-
-
 (defstruct
     (svg (:include table-ref)
      (:constructor %make-svg (%table-font-data %table-offset %table-length))))
+
+
+(declaim
+ (inline svg-version svg-svg-document-list-offset
+  svg-svg-document-list-offset-offset svg--reserved svg-version-raw
+  svg--reserved-raw))
 
 
 (defun svg-version (table)
   "Table version (starting at 0). Set to 0."
   (declare (type svg table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline svg-version-raw))
 
 
 (defun svg-version-raw (font-data offset) (font-data-read-u16 font-data offset))
@@ -94,14 +97,6 @@
   (declare (type svg table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline svg--reserved-raw))
-
-
-(declaim
- (inline svg-version svg-svg-document-list-offset
-  svg-svg-document-list-offset-offset svg--reserved))
 
 
 (defun svg--reserved-raw (font-data offset)
@@ -131,13 +126,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline svg-document-list-num-entries svg-document-list-document-records
+  svg-document-list-document-records-count svg-document-list-num-entries-raw))
+
+
 (defun svg-document-list-num-entries (table)
   "Number of SVGDocumentRecords. Must be non-zero."
   (declare (type svg-document-list table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline svg-document-list-num-entries-raw))
 
 
 (defun svg-document-list-num-entries-raw (font-data offset)
@@ -147,11 +144,6 @@
 (defun svg-document-list-document-records-count (table)
   "Array of SVGDocumentRecords."
   (svg-document-list-num-entries table))
-
-
-(declaim
- (inline svg-document-list-num-entries svg-document-list-document-records
-  svg-document-list-document-records-count))
 
 
 (defun svg-document-list-document-records-ref (table index)

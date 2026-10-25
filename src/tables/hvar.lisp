@@ -19,13 +19,18 @@
      (:constructor %make-hvar (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline hvar-version hvar-item-variation-store-offset
+  hvar-item-variation-store-offset-offset hvar-advance-width-mapping-offset
+  hvar-advance-width-mapping-offset-offset hvar-lsb-mapping-offset
+  hvar-lsb-mapping-offset-offset hvar-rsb-mapping-offset
+  hvar-rsb-mapping-offset-offset hvar-version-raw))
+
+
 (defun hvar-version (table)
   "Major version number of the horizontal metrics variations table — set to 1. Minor version number of the horizontal metrics variations table — set to 0."
   (declare (type hvar table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline hvar-version-raw))
 
 
 (defun hvar-version-raw (font-data offset)
@@ -85,14 +90,6 @@
   (declare (type hvar table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 16)))
-
-
-(declaim
- (inline hvar-version hvar-item-variation-store-offset
-  hvar-item-variation-store-offset-offset hvar-advance-width-mapping-offset
-  hvar-advance-width-mapping-offset-offset hvar-lsb-mapping-offset
-  hvar-lsb-mapping-offset-offset hvar-rsb-mapping-offset
-  hvar-rsb-mapping-offset-offset))
 
 
 (defun hvar-rsb-mapping-offset (table)

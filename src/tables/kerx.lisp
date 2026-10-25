@@ -26,6 +26,14 @@
       (%record-font-data %record-offset))))
 
 
+(define-constant +kerx-subtable0-pair-size+ 6)
+
+
+(declaim
+ (inline kerx-subtable0-pair-left kerx-subtable0-pair-right
+  kerx-subtable0-pair-value))
+
+
 (defun kerx-subtable0-pair-left (rec)
   "The glyph index for the lefthand glyph in the kerning pair."
   (declare (type kerx-subtable0-pair rec))
@@ -44,26 +52,20 @@
   (font-data-read-i16 (record-ref-font-data rec) (+ (record-ref-offset rec) 4)))
 
 
-(declaim
- (inline kerx-subtable0-pair-left kerx-subtable0-pair-right
-  kerx-subtable0-pair-value))
-
-
-(define-constant +kerx-subtable0-pair-size+ 6)
-
-
 (defstruct
     (kerx (:include table-ref)
      (:constructor %make-kerx (%table-font-data %table-offset %table-length))))
+
+
+(declaim
+ (inline kerx-version kerx-padding kerx-n-tables kerx-subtables
+  kerx-version-raw kerx-padding-raw kerx-n-tables-raw))
 
 
 (defun kerx-version (table)
   "The version number of the extended kerning table (currently 2, 3, or 4)"
   (declare (type kerx table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline kerx-version-raw))
 
 
 (defun kerx-version-raw (font-data offset)
@@ -77,9 +79,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline kerx-padding-raw))
-
-
 (defun kerx-padding-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -89,12 +88,6 @@
   (declare (type kerx table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline kerx-n-tables-raw))
-
-
-(declaim (inline kerx-version kerx-padding kerx-n-tables kerx-subtables))
 
 
 (defun kerx-n-tables-raw (font-data offset)
@@ -124,13 +117,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline kerx-subtable-length kerx-subtable-coverage kerx-subtable-tuple-count
+  kerx-subtable-data kerx-subtable-data-count kerx-subtable-length-raw
+  kerx-subtable-coverage-raw kerx-subtable-tuple-count-raw))
+
+
 (defun kerx-subtable-length (table)
   "The length of this subtable in bytes, including this header."
   (declare (type kerx-subtable table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline kerx-subtable-length-raw))
 
 
 (defun kerx-subtable-length-raw (font-data offset)
@@ -144,9 +140,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline kerx-subtable-coverage-raw))
-
-
 (defun kerx-subtable-coverage-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 4)))
 
@@ -156,9 +149,6 @@
   (declare (type kerx-subtable table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline kerx-subtable-tuple-count-raw))
 
 
 (defun kerx-subtable-tuple-count-raw (font-data offset)
@@ -181,11 +171,6 @@
       (error 'font-out-of-bounds-error :pos pos :size 1 :length
              (table-ref-length table)))
     (font-data-read-u8 (table-ref-font-data table) pos)))
-
-
-(declaim
- (inline kerx-subtable-length kerx-subtable-coverage kerx-subtable-tuple-count
-  kerx-subtable-data kerx-subtable-data-count))
 
 
 (defun kerx-subtable-data-bytes (table)
@@ -217,13 +202,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline kerx-subtable0-n-pairs kerx-subtable0-search-range
+  kerx-subtable0-entry-selector kerx-subtable0-range-shift kerx-subtable0-pairs
+  kerx-subtable0-pairs-count kerx-subtable0-n-pairs-raw
+  kerx-subtable0-search-range-raw kerx-subtable0-entry-selector-raw
+  kerx-subtable0-range-shift-raw))
+
+
 (defun kerx-subtable0-n-pairs (table)
   "The number of kerning pairs in this subtable."
   (declare (type kerx-subtable0 table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline kerx-subtable0-n-pairs-raw))
 
 
 (defun kerx-subtable0-n-pairs-raw (font-data offset)
@@ -237,9 +227,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline kerx-subtable0-search-range-raw))
-
-
 (defun kerx-subtable0-search-range-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 4)))
 
@@ -249,9 +236,6 @@
   (declare (type kerx-subtable0 table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline kerx-subtable0-entry-selector-raw))
 
 
 (defun kerx-subtable0-entry-selector-raw (font-data offset)
@@ -265,9 +249,6 @@
                       (+ (table-ref-offset table) 12)))
 
 
-(declaim (inline kerx-subtable0-range-shift-raw))
-
-
 (defun kerx-subtable0-range-shift-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 12)))
 
@@ -275,12 +256,6 @@
 (defun kerx-subtable0-pairs-count (table)
   "Kerning records."
   (kerx-subtable0-n-pairs table))
-
-
-(declaim
- (inline kerx-subtable0-n-pairs kerx-subtable0-search-range
-  kerx-subtable0-entry-selector kerx-subtable0-range-shift kerx-subtable0-pairs
-  kerx-subtable0-pairs-count))
 
 
 (defun kerx-subtable0-pairs-ref (table index)

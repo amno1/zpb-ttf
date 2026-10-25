@@ -20,13 +20,21 @@
      (:constructor %make-post (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline post-version post-italic-angle post-underline-position
+  post-underline-thickness post-is-fixed-pitch post-min-mem-type42
+  post-max-mem-type42 post-min-mem-type1 post-max-mem-type1 post-num-glyphs
+  post-glyph-name-index post-glyph-name-index-count post-string-data
+  post-version-raw post-italic-angle-raw post-underline-position-raw
+  post-underline-thickness-raw post-is-fixed-pitch-raw post-min-mem-type42-raw
+  post-max-mem-type42-raw post-min-mem-type1-raw post-max-mem-type1-raw
+  post-num-glyphs-raw))
+
+
 (defun post-version (table)
   "0x00010000 for version 1.0 0x00020000 for version 2.0 0x00025000 for version 2.5 (deprecated) 0x00030000 for version 3.0"
   (declare (type post table))
   (font-data-read-fixed (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline post-version-raw))
 
 
 (defun post-version-raw (font-data offset)
@@ -40,9 +48,6 @@
                         (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline post-italic-angle-raw))
-
-
 (defun post-italic-angle-raw (font-data offset)
   (font-data-read-fixed font-data (+ offset 4)))
 
@@ -52,9 +57,6 @@
   (declare (type post table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline post-underline-position-raw))
 
 
 (defun post-underline-position-raw (font-data offset)
@@ -68,9 +70,6 @@
                         (+ (table-ref-offset table) 10)))
 
 
-(declaim (inline post-underline-thickness-raw))
-
-
 (defun post-underline-thickness-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 10)))
 
@@ -80,9 +79,6 @@
   (declare (type post table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 12)))
-
-
-(declaim (inline post-is-fixed-pitch-raw))
 
 
 (defun post-is-fixed-pitch-raw (font-data offset)
@@ -96,9 +92,6 @@
                       (+ (table-ref-offset table) 16)))
 
 
-(declaim (inline post-min-mem-type42-raw))
-
-
 (defun post-min-mem-type42-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 16)))
 
@@ -108,9 +101,6 @@
   (declare (type post table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 20)))
-
-
-(declaim (inline post-max-mem-type42-raw))
 
 
 (defun post-max-mem-type42-raw (font-data offset)
@@ -124,9 +114,6 @@
                       (+ (table-ref-offset table) 24)))
 
 
-(declaim (inline post-min-mem-type1-raw))
-
-
 (defun post-min-mem-type1-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 24)))
 
@@ -136,9 +123,6 @@
   (declare (type post table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 28)))
-
-
-(declaim (inline post-max-mem-type1-raw))
 
 
 (defun post-max-mem-type1-raw (font-data offset)
@@ -153,9 +137,6 @@
                         (+ (table-ref-offset table) 32))))
 
 
-(declaim (inline post-num-glyphs-raw))
-
-
 (defun post-num-glyphs-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 32)))
 
@@ -163,13 +144,6 @@
 (defun post-glyph-name-index-count (table)
   "Array of indices into the string data. See below for details."
   (post-num-glyphs table))
-
-
-(declaim
- (inline post-version post-italic-angle post-underline-position
-  post-underline-thickness post-is-fixed-pitch post-min-mem-type42
-  post-max-mem-type42 post-min-mem-type1 post-max-mem-type1 post-num-glyphs
-  post-glyph-name-index post-glyph-name-index-count post-string-data))
 
 
 (defun post-glyph-name-index-ref (table index)

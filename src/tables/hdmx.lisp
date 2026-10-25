@@ -16,13 +16,15 @@
      (:constructor %make-hdmx (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline hdmx-version hdmx-num-records hdmx-size-device-record hdmx-records
+  hdmx-version-raw hdmx-num-records-raw hdmx-size-device-record-raw))
+
+
 (defun hdmx-version (table)
   "Table version number (set to 0)."
   (declare (type hdmx table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline hdmx-version-raw))
 
 
 (defun hdmx-version-raw (font-data offset)
@@ -36,9 +38,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline hdmx-num-records-raw))
-
-
 (defun hdmx-num-records-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -48,13 +47,6 @@
   (declare (type hdmx table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline hdmx-size-device-record-raw))
-
-
-(declaim
- (inline hdmx-version hdmx-num-records hdmx-size-device-record hdmx-records))
 
 
 (defun hdmx-size-device-record-raw (font-data offset)

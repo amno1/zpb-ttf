@@ -21,6 +21,12 @@
      (:constructor %make-anchor-point (%record-font-data %record-offset))))
 
 
+(define-constant +anchor-point-size+ 4)
+
+
+(declaim (inline anchor-point-x anchor-point-y))
+
+
 (defun anchor-point-x (rec)
   (declare (type anchor-point rec))
   (font-data-read-i16 (record-ref-font-data rec) (record-ref-offset rec)))
@@ -31,24 +37,21 @@
   (font-data-read-i16 (record-ref-font-data rec) (+ (record-ref-offset rec) 2)))
 
 
-(declaim (inline anchor-point-x anchor-point-y))
-
-
-(define-constant +anchor-point-size+ 4)
-
-
 (defstruct
     (ankr (:include table-ref)
      (:constructor %make-ankr (%table-font-data %table-offset %table-length))))
+
+
+(declaim
+ (inline ankr-version ankr-flags ankr-lookup-table-offset
+  ankr-lookup-table-offset-offset ankr-glyph-data-table-offset ankr-version-raw
+  ankr-flags-raw ankr-glyph-data-table-offset-raw))
 
 
 (defun ankr-version (table)
   "Version number (set to zero)."
   (declare (type ankr table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline ankr-version-raw))
 
 
 (defun ankr-version-raw (font-data offset)
@@ -60,9 +63,6 @@
   (declare (type ankr table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 2)))
-
-
-(declaim (inline ankr-flags-raw))
 
 
 (defun ankr-flags-raw (font-data offset)
@@ -92,14 +92,6 @@
                       (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline ankr-glyph-data-table-offset-raw))
-
-
-(declaim
- (inline ankr-version ankr-flags ankr-lookup-table-offset
-  ankr-lookup-table-offset-offset ankr-glyph-data-table-offset))
-
-
 (defun ankr-glyph-data-table-offset-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 8)))
 
@@ -127,13 +119,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline glyph-data-entry-num-points glyph-data-entry-anchor-points
+  glyph-data-entry-anchor-points-count glyph-data-entry-num-points-raw))
+
+
 (defun glyph-data-entry-num-points (table)
   "Number of anchor points for this glyph."
   (declare (type glyph-data-entry table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline glyph-data-entry-num-points-raw))
 
 
 (defun glyph-data-entry-num-points-raw (font-data offset)
@@ -143,11 +137,6 @@
 (defun glyph-data-entry-anchor-points-count (table)
   "Individual anchor points."
   (glyph-data-entry-num-points table))
-
-
-(declaim
- (inline glyph-data-entry-num-points glyph-data-entry-anchor-points
-  glyph-data-entry-anchor-points-count))
 
 
 (defun glyph-data-entry-anchor-points-ref (table index)

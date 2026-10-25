@@ -13,60 +13,169 @@
    +flags-lossless-transformed-font-data+ +flags-lsb-at-x-0+
    +flags-optimized-for-cleartype+ +mac-style-bold+ +mac-style-condensed+
    +mac-style-extended+ +mac-style-italic+ +mac-style-outline+
-   +mac-style-shadow+ +mac-style-underline+ head head-checksum-adjustment
-   head-created head-flags head-font-direction-hint head-font-revision
+   +mac-style-shadow+ +mac-style-underline+ flags-baseline-at-y-0-p
+   flags-converted-font-p flags-force-integer-ppem-p
+   flags-instructions-may-alter-advance-width-p
+   flags-instructions-may-depend-on-point-size-p flags-last-resort-font-p
+   flags-lossless-transformed-font-data-p flags-lsb-at-x-0-p
+   flags-optimized-for-cleartype-p head head-checksum-adjustment head-created
+   head-flags head-font-direction-hint head-font-revision
    head-glyph-data-format head-index-to-loc-format head-lowest-rec-ppem
    head-mac-style head-magic-number head-modified head-p head-units-per-em
-   head-version head-x-max head-x-min head-y-max head-y-min read-head
+   head-version head-x-max head-x-min head-y-max head-y-min mac-style-bold-p
+   mac-style-condensed-p mac-style-extended-p mac-style-italic-p
+   mac-style-outline-p mac-style-shadow-p mac-style-underline-p read-head
    sanitize-head))
 
 
 (define-constant +mac-style-bold+ 1)
 
 
+(declaim (inline mac-style-bold-p))
+
+
+(defun mac-style-bold-p (flags) (logtest flags +mac-style-bold+))
+
+
 (define-constant +mac-style-italic+ 2)
+
+
+(declaim (inline mac-style-italic-p))
+
+
+(defun mac-style-italic-p (flags) (logtest flags +mac-style-italic+))
 
 
 (define-constant +mac-style-underline+ 4)
 
 
+(declaim (inline mac-style-underline-p))
+
+
+(defun mac-style-underline-p (flags) (logtest flags +mac-style-underline+))
+
+
 (define-constant +mac-style-outline+ 8)
+
+
+(declaim (inline mac-style-outline-p))
+
+
+(defun mac-style-outline-p (flags) (logtest flags +mac-style-outline+))
 
 
 (define-constant +mac-style-shadow+ 16)
 
 
+(declaim (inline mac-style-shadow-p))
+
+
+(defun mac-style-shadow-p (flags) (logtest flags +mac-style-shadow+))
+
+
 (define-constant +mac-style-condensed+ 32)
+
+
+(declaim (inline mac-style-condensed-p))
+
+
+(defun mac-style-condensed-p (flags) (logtest flags +mac-style-condensed+))
 
 
 (define-constant +mac-style-extended+ 64)
 
 
+(declaim (inline mac-style-extended-p))
+
+
+(defun mac-style-extended-p (flags) (logtest flags +mac-style-extended+))
+
+
 (define-constant +flags-baseline-at-y-0+ 1)
+
+
+(declaim (inline flags-baseline-at-y-0-p))
+
+
+(defun flags-baseline-at-y-0-p (flags) (logtest flags +flags-baseline-at-y-0+))
 
 
 (define-constant +flags-lsb-at-x-0+ 2)
 
 
+(declaim (inline flags-lsb-at-x-0-p))
+
+
+(defun flags-lsb-at-x-0-p (flags) (logtest flags +flags-lsb-at-x-0+))
+
+
 (define-constant +flags-instructions-may-depend-on-point-size+ 4)
+
+
+(declaim (inline flags-instructions-may-depend-on-point-size-p))
+
+
+(defun flags-instructions-may-depend-on-point-size-p (flags)
+  (logtest flags +flags-instructions-may-depend-on-point-size+))
 
 
 (define-constant +flags-force-integer-ppem+ 8)
 
 
+(declaim (inline flags-force-integer-ppem-p))
+
+
+(defun flags-force-integer-ppem-p (flags)
+  (logtest flags +flags-force-integer-ppem+))
+
+
 (define-constant +flags-instructions-may-alter-advance-width+ 16)
+
+
+(declaim (inline flags-instructions-may-alter-advance-width-p))
+
+
+(defun flags-instructions-may-alter-advance-width-p (flags)
+  (logtest flags +flags-instructions-may-alter-advance-width+))
 
 
 (define-constant +flags-lossless-transformed-font-data+ 2048)
 
 
+(declaim (inline flags-lossless-transformed-font-data-p))
+
+
+(defun flags-lossless-transformed-font-data-p (flags)
+  (logtest flags +flags-lossless-transformed-font-data+))
+
+
 (define-constant +flags-converted-font+ 4096)
+
+
+(declaim (inline flags-converted-font-p))
+
+
+(defun flags-converted-font-p (flags) (logtest flags +flags-converted-font+))
 
 
 (define-constant +flags-optimized-for-cleartype+ 8192)
 
 
+(declaim (inline flags-optimized-for-cleartype-p))
+
+
+(defun flags-optimized-for-cleartype-p (flags)
+  (logtest flags +flags-optimized-for-cleartype+))
+
+
 (define-constant +flags-last-resort-font+ 16384)
+
+
+(declaim (inline flags-last-resort-font-p))
+
+
+(defun flags-last-resort-font-p (flags)
+  (logtest flags +flags-last-resort-font+))
 
 
 (defstruct
@@ -74,13 +183,23 @@
      (:constructor %make-head (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline head-version head-font-revision head-checksum-adjustment
+  head-magic-number head-flags head-units-per-em head-created head-modified
+  head-x-min head-y-min head-x-max head-y-max head-mac-style
+  head-lowest-rec-ppem head-font-direction-hint head-index-to-loc-format
+  head-glyph-data-format head-version-raw head-font-revision-raw
+  head-checksum-adjustment-raw head-magic-number-raw head-flags-raw
+  head-units-per-em-raw head-created-raw head-modified-raw head-x-min-raw
+  head-y-min-raw head-x-max-raw head-y-max-raw head-mac-style-raw
+  head-lowest-rec-ppem-raw head-font-direction-hint-raw
+  head-index-to-loc-format-raw head-glyph-data-format-raw))
+
+
 (defun head-version (table)
   "Version number of the font header table, set to (1, 0)"
   (declare (type head table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline head-version-raw))
 
 
 (defun head-version-raw (font-data offset)
@@ -94,9 +213,6 @@
                         (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline head-font-revision-raw))
-
-
 (defun head-font-revision-raw (font-data offset)
   (font-data-read-fixed font-data (+ offset 4)))
 
@@ -106,9 +222,6 @@
   (declare (type head table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline head-checksum-adjustment-raw))
 
 
 (defun head-checksum-adjustment-raw (font-data offset)
@@ -122,9 +235,6 @@
                       (+ (table-ref-offset table) 12)))
 
 
-(declaim (inline head-magic-number-raw))
-
-
 (defun head-magic-number-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 12)))
 
@@ -134,9 +244,6 @@
   (declare (type head table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 16)))
-
-
-(declaim (inline head-flags-raw))
 
 
 (defun head-flags-raw (font-data offset)
@@ -150,9 +257,6 @@
                       (+ (table-ref-offset table) 18)))
 
 
-(declaim (inline head-units-per-em-raw))
-
-
 (defun head-units-per-em-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 18)))
 
@@ -162,9 +266,6 @@
   (declare (type head table))
   (font-data-read-u64 (table-ref-font-data table)
                       (+ (table-ref-offset table) 20)))
-
-
-(declaim (inline head-created-raw))
 
 
 (defun head-created-raw (font-data offset)
@@ -178,9 +279,6 @@
                       (+ (table-ref-offset table) 28)))
 
 
-(declaim (inline head-modified-raw))
-
-
 (defun head-modified-raw (font-data offset)
   (font-data-read-u64 font-data (+ offset 28)))
 
@@ -190,9 +288,6 @@
   (declare (type head table))
   (font-data-read-i16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 36)))
-
-
-(declaim (inline head-x-min-raw))
 
 
 (defun head-x-min-raw (font-data offset)
@@ -206,9 +301,6 @@
                       (+ (table-ref-offset table) 38)))
 
 
-(declaim (inline head-y-min-raw))
-
-
 (defun head-y-min-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 38)))
 
@@ -218,9 +310,6 @@
   (declare (type head table))
   (font-data-read-i16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 40)))
-
-
-(declaim (inline head-x-max-raw))
 
 
 (defun head-x-max-raw (font-data offset)
@@ -234,9 +323,6 @@
                       (+ (table-ref-offset table) 42)))
 
 
-(declaim (inline head-y-max-raw))
-
-
 (defun head-y-max-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 42)))
 
@@ -246,9 +332,6 @@
   (declare (type head table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 44)))
-
-
-(declaim (inline head-mac-style-raw))
 
 
 (defun head-mac-style-raw (font-data offset)
@@ -262,9 +345,6 @@
                       (+ (table-ref-offset table) 46)))
 
 
-(declaim (inline head-lowest-rec-ppem-raw))
-
-
 (defun head-lowest-rec-ppem-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 46)))
 
@@ -274,9 +354,6 @@
   (declare (type head table))
   (font-data-read-i16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 48)))
-
-
-(declaim (inline head-font-direction-hint-raw))
 
 
 (defun head-font-direction-hint-raw (font-data offset)
@@ -290,9 +367,6 @@
                       (+ (table-ref-offset table) 50)))
 
 
-(declaim (inline head-index-to-loc-format-raw))
-
-
 (defun head-index-to-loc-format-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 50)))
 
@@ -302,17 +376,6 @@
   (declare (type head table))
   (font-data-read-i16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 52)))
-
-
-(declaim (inline head-glyph-data-format-raw))
-
-
-(declaim
- (inline head-version head-font-revision head-checksum-adjustment
-  head-magic-number head-flags head-units-per-em head-created head-modified
-  head-x-min head-y-min head-x-max head-y-max head-mac-style
-  head-lowest-rec-ppem head-font-direction-hint head-index-to-loc-format
-  head-glyph-data-format))
 
 
 (defun head-glyph-data-format-raw (font-data offset)

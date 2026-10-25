@@ -18,18 +18,41 @@
    cpal-palette-entry-labels-array-offset-offset
    cpal-palette-labels-array-offset cpal-palette-labels-array-offset-offset
    cpal-palette-types-array-offset cpal-palette-types-array-offset-offset
-   cpal-version read-cpal sanitize-cpal))
+   cpal-version palette-type-usable-with-dark-background-p
+   palette-type-usable-with-light-background-p read-cpal sanitize-cpal))
 
 
 (define-constant +palette-type-usable-with-light-background+ 1)
 
 
+(declaim (inline palette-type-usable-with-light-background-p))
+
+
+(defun palette-type-usable-with-light-background-p (flags)
+  (logtest flags +palette-type-usable-with-light-background+))
+
+
 (define-constant +palette-type-usable-with-dark-background+ 2)
+
+
+(declaim (inline palette-type-usable-with-dark-background-p))
+
+
+(defun palette-type-usable-with-dark-background-p (flags)
+  (logtest flags +palette-type-usable-with-dark-background+))
 
 
 (defstruct
     (color-record (:include record-ref)
      (:constructor %make-color-record (%record-font-data %record-offset))))
+
+
+(define-constant +color-record-size+ 4)
+
+
+(declaim
+ (inline color-record-blue color-record-green color-record-red
+  color-record-alpha))
 
 
 (defun color-record-blue (rec)
@@ -56,26 +79,28 @@
   (font-data-read-u8 (record-ref-font-data rec) (+ (record-ref-offset rec) 3)))
 
 
-(declaim
- (inline color-record-blue color-record-green color-record-red
-  color-record-alpha))
-
-
-(define-constant +color-record-size+ 4)
-
-
 (defstruct
     (cpal (:include table-ref)
      (:constructor %make-cpal (%table-font-data %table-offset %table-length))))
+
+
+(declaim
+ (inline cpal-version cpal-num-palette-entries cpal-num-palettes
+  cpal-num-color-records cpal-color-records-array-offset
+  cpal-color-records-array-offset-offset cpal-color-record-indices
+  cpal-color-record-indices-count cpal-palette-types-array-offset
+  cpal-palette-types-array-offset-offset cpal-palette-labels-array-offset
+  cpal-palette-labels-array-offset-offset
+  cpal-palette-entry-labels-array-offset
+  cpal-palette-entry-labels-array-offset-offset cpal-version-raw
+  cpal-num-palette-entries-raw cpal-num-palettes-raw
+  cpal-num-color-records-raw))
 
 
 (defun cpal-version (table)
   "Table version number (=0)."
   (declare (type cpal table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline cpal-version-raw))
 
 
 (defun cpal-version-raw (font-data offset)
@@ -89,9 +114,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline cpal-num-palette-entries-raw))
-
-
 (defun cpal-num-palette-entries-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -103,9 +125,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline cpal-num-palettes-raw))
-
-
 (defun cpal-num-palettes-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
 
@@ -115,9 +134,6 @@
   (declare (type cpal table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline cpal-num-color-records-raw))
 
 
 (defun cpal-num-color-records-raw (font-data offset)
@@ -200,17 +216,6 @@
     (font-data-read-u32 (table-ref-font-data table)
                         (+ (table-ref-offset table) 20
                            (* (cpal-color-record-indices-count table) 2)))))
-
-
-(declaim
- (inline cpal-version cpal-num-palette-entries cpal-num-palettes
-  cpal-num-color-records cpal-color-records-array-offset
-  cpal-color-records-array-offset-offset cpal-color-record-indices
-  cpal-color-record-indices-count cpal-palette-types-array-offset
-  cpal-palette-types-array-offset-offset cpal-palette-labels-array-offset
-  cpal-palette-labels-array-offset-offset
-  cpal-palette-entry-labels-array-offset
-  cpal-palette-entry-labels-array-offset-offset))
 
 
 (defun cpal-palette-entry-labels-array-offset (table)

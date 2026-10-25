@@ -30,9 +30,11 @@
    axis-value-format4-flags axis-value-format4-format-table
    axis-value-format4-p axis-value-format4-value-name-id axis-value-record
    axis-value-record-axis-index axis-value-record-p axis-value-record-value
-   read-axis-value read-axis-value-array read-axis-value-format1
-   read-axis-value-format2 read-axis-value-format3 read-axis-value-format4
-   read-stat sanitize-axis-value-array sanitize-axis-value-format1
+   axis-value-table-flags-elidable-axis-value-name-p
+   axis-value-table-flags-older-sibling-font-attribute-p read-axis-value
+   read-axis-value-array read-axis-value-format1 read-axis-value-format2
+   read-axis-value-format3 read-axis-value-format4 read-stat
+   sanitize-axis-value-array sanitize-axis-value-format1
    sanitize-axis-value-format2 sanitize-axis-value-format3
    sanitize-axis-value-format4 sanitize-stat stat stat-axis-value-count
    stat-design-axes-offset stat-design-axes-offset-offset
@@ -44,12 +46,34 @@
 (define-constant +axis-value-table-flags-older-sibling-font-attribute+ 1)
 
 
+(declaim (inline axis-value-table-flags-older-sibling-font-attribute-p))
+
+
+(defun axis-value-table-flags-older-sibling-font-attribute-p (flags)
+  (logtest flags +axis-value-table-flags-older-sibling-font-attribute+))
+
+
 (define-constant +axis-value-table-flags-elidable-axis-value-name+ 2)
+
+
+(declaim (inline axis-value-table-flags-elidable-axis-value-name-p))
+
+
+(defun axis-value-table-flags-elidable-axis-value-name-p (flags)
+  (logtest flags +axis-value-table-flags-elidable-axis-value-name+))
 
 
 (defstruct
     (axis-record (:include record-ref)
      (:constructor %make-axis-record (%record-font-data %record-offset))))
+
+
+(define-constant +axis-record-size+ 8)
+
+
+(declaim
+ (inline axis-record-axis-tag axis-record-axis-name-id
+  axis-record-axis-ordering))
 
 
 (defun axis-record-axis-tag (rec)
@@ -71,17 +95,15 @@
   (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 6)))
 
 
-(declaim
- (inline axis-record-axis-tag axis-record-axis-name-id
-  axis-record-axis-ordering))
-
-
-(define-constant +axis-record-size+ 8)
-
-
 (defstruct
     (axis-value-record (:include record-ref)
      (:constructor %make-axis-value-record (%record-font-data %record-offset))))
+
+
+(define-constant +axis-value-record-size+ 6)
+
+
+(declaim (inline axis-value-record-axis-index axis-value-record-value))
 
 
 (defun axis-value-record-axis-index (rec)
@@ -97,24 +119,24 @@
                         (+ (record-ref-offset rec) 2)))
 
 
-(declaim (inline axis-value-record-axis-index axis-value-record-value))
-
-
-(define-constant +axis-value-record-size+ 6)
-
-
 (defstruct
     (stat (:include table-ref)
      (:constructor %make-stat (%table-font-data %table-offset %table-length))))
+
+
+(declaim
+ (inline stat-version stat-design-axis-size stat-design-axis-count
+  stat-design-axes-offset stat-design-axes-offset-offset stat-axis-value-count
+  stat-offset-to-axis-value-offsets stat-offset-to-axis-value-offsets-offset
+  stat-elided-fallback-name-id stat-version-raw stat-design-axis-size-raw
+  stat-design-axis-count-raw stat-axis-value-count-raw
+  stat-elided-fallback-name-id-raw))
 
 
 (defun stat-version (table)
   "Major/minor version number. Set to 1.2 for new fonts."
   (declare (type stat table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline stat-version-raw))
 
 
 (defun stat-version-raw (font-data offset)
@@ -128,9 +150,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline stat-design-axis-size-raw))
-
-
 (defun stat-design-axis-size-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
 
@@ -140,9 +159,6 @@
   (declare (type stat table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline stat-design-axis-count-raw))
 
 
 (defun stat-design-axis-count-raw (font-data offset)
@@ -170,9 +186,6 @@
   (declare (type stat table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 12)))
-
-
-(declaim (inline stat-axis-value-count-raw))
 
 
 (defun stat-axis-value-count-raw (font-data offset)
@@ -203,16 +216,6 @@
                         (+ (table-ref-offset table) 18))))
 
 
-(declaim (inline stat-elided-fallback-name-id-raw))
-
-
-(declaim
- (inline stat-version stat-design-axis-size stat-design-axis-count
-  stat-design-axes-offset stat-design-axes-offset-offset stat-axis-value-count
-  stat-offset-to-axis-value-offsets stat-offset-to-axis-value-offsets-offset
-  stat-elided-fallback-name-id))
-
-
 (defun stat-elided-fallback-name-id-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 18)))
 
@@ -240,16 +243,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline axis-value-array-axis-value-offsets
+  axis-value-array-axis-value-offsets-count))
+
+
 (defun axis-value-array-axis-value-offsets-count
        (table &optional axis-value-count)
   "Array of offsets to axis value tables, in bytes from the start of the axis value offsets array."
   (or axis-value-count
       (max 0 (floor (- (table-ref-length table) (table-ref-offset table)) 2))))
-
-
-(declaim
- (inline axis-value-array-axis-value-offsets
-  axis-value-array-axis-value-offsets-count))
 
 
 (defun axis-value-array-axis-value-offsets-ref (table index)
@@ -304,13 +307,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline axis-value-format1-format-table axis-value-format1-axis-index
+  axis-value-format1-flags axis-value-format1-value-name-id
+  axis-value-format1-value axis-value-format1-format-table-raw
+  axis-value-format1-axis-index-raw axis-value-format1-flags-raw
+  axis-value-format1-value-name-id-raw axis-value-format1-value-raw))
+
+
 (defun axis-value-format1-format-table (table)
   "Format identifier — set to 1."
   (declare (type axis-value-format1 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline axis-value-format1-format-table-raw))
 
 
 (defun axis-value-format1-format-table-raw (font-data offset)
@@ -324,9 +332,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline axis-value-format1-axis-index-raw))
-
-
 (defun axis-value-format1-axis-index-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -336,9 +341,6 @@
   (declare (type axis-value-format1 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline axis-value-format1-flags-raw))
 
 
 (defun axis-value-format1-flags-raw (font-data offset)
@@ -352,9 +354,6 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline axis-value-format1-value-name-id-raw))
-
-
 (defun axis-value-format1-value-name-id-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 6)))
 
@@ -364,15 +363,6 @@
   (declare (type axis-value-format1 table))
   (font-data-read-fixed (table-ref-font-data table)
                         (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline axis-value-format1-value-raw))
-
-
-(declaim
- (inline axis-value-format1-format-table axis-value-format1-axis-index
-  axis-value-format1-flags axis-value-format1-value-name-id
-  axis-value-format1-value))
 
 
 (defun axis-value-format1-value-raw (font-data offset)
@@ -402,13 +392,21 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline axis-value-format2-format-table axis-value-format2-axis-index
+  axis-value-format2-flags axis-value-format2-value-name-id
+  axis-value-format2-nominal-value axis-value-format2-range-min-value
+  axis-value-format2-range-max-value axis-value-format2-format-table-raw
+  axis-value-format2-axis-index-raw axis-value-format2-flags-raw
+  axis-value-format2-value-name-id-raw axis-value-format2-nominal-value-raw
+  axis-value-format2-range-min-value-raw
+  axis-value-format2-range-max-value-raw))
+
+
 (defun axis-value-format2-format-table (table)
   "Format identifier — set to 2."
   (declare (type axis-value-format2 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline axis-value-format2-format-table-raw))
 
 
 (defun axis-value-format2-format-table-raw (font-data offset)
@@ -422,9 +420,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline axis-value-format2-axis-index-raw))
-
-
 (defun axis-value-format2-axis-index-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -434,9 +429,6 @@
   (declare (type axis-value-format2 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline axis-value-format2-flags-raw))
 
 
 (defun axis-value-format2-flags-raw (font-data offset)
@@ -450,9 +442,6 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline axis-value-format2-value-name-id-raw))
-
-
 (defun axis-value-format2-value-name-id-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 6)))
 
@@ -462,9 +451,6 @@
   (declare (type axis-value-format2 table))
   (font-data-read-fixed (table-ref-font-data table)
                         (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline axis-value-format2-nominal-value-raw))
 
 
 (defun axis-value-format2-nominal-value-raw (font-data offset)
@@ -478,9 +464,6 @@
                         (+ (table-ref-offset table) 12)))
 
 
-(declaim (inline axis-value-format2-range-min-value-raw))
-
-
 (defun axis-value-format2-range-min-value-raw (font-data offset)
   (font-data-read-fixed font-data (+ offset 12)))
 
@@ -490,16 +473,6 @@
   (declare (type axis-value-format2 table))
   (font-data-read-fixed (table-ref-font-data table)
                         (+ (table-ref-offset table) 16)))
-
-
-(declaim (inline axis-value-format2-range-max-value-raw))
-
-
-(declaim
- (inline axis-value-format2-format-table axis-value-format2-axis-index
-  axis-value-format2-flags axis-value-format2-value-name-id
-  axis-value-format2-nominal-value axis-value-format2-range-min-value
-  axis-value-format2-range-max-value))
 
 
 (defun axis-value-format2-range-max-value-raw (font-data offset)
@@ -529,13 +502,19 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline axis-value-format3-format-table axis-value-format3-axis-index
+  axis-value-format3-flags axis-value-format3-value-name-id
+  axis-value-format3-value axis-value-format3-linked-value
+  axis-value-format3-format-table-raw axis-value-format3-axis-index-raw
+  axis-value-format3-flags-raw axis-value-format3-value-name-id-raw
+  axis-value-format3-value-raw axis-value-format3-linked-value-raw))
+
+
 (defun axis-value-format3-format-table (table)
   "Format identifier — set to 3."
   (declare (type axis-value-format3 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline axis-value-format3-format-table-raw))
 
 
 (defun axis-value-format3-format-table-raw (font-data offset)
@@ -549,9 +528,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline axis-value-format3-axis-index-raw))
-
-
 (defun axis-value-format3-axis-index-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -561,9 +537,6 @@
   (declare (type axis-value-format3 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline axis-value-format3-flags-raw))
 
 
 (defun axis-value-format3-flags-raw (font-data offset)
@@ -577,9 +550,6 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline axis-value-format3-value-name-id-raw))
-
-
 (defun axis-value-format3-value-name-id-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 6)))
 
@@ -591,9 +561,6 @@
                         (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline axis-value-format3-value-raw))
-
-
 (defun axis-value-format3-value-raw (font-data offset)
   (font-data-read-fixed font-data (+ offset 8)))
 
@@ -603,15 +570,6 @@
   (declare (type axis-value-format3 table))
   (font-data-read-fixed (table-ref-font-data table)
                         (+ (table-ref-offset table) 12)))
-
-
-(declaim (inline axis-value-format3-linked-value-raw))
-
-
-(declaim
- (inline axis-value-format3-format-table axis-value-format3-axis-index
-  axis-value-format3-flags axis-value-format3-value-name-id
-  axis-value-format3-value axis-value-format3-linked-value))
 
 
 (defun axis-value-format3-linked-value-raw (font-data offset)
@@ -641,13 +599,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline axis-value-format4-format-table axis-value-format4-axis-count
+  axis-value-format4-flags axis-value-format4-value-name-id
+  axis-value-format4-axis-values axis-value-format4-axis-values-count
+  axis-value-format4-format-table-raw axis-value-format4-axis-count-raw
+  axis-value-format4-flags-raw axis-value-format4-value-name-id-raw))
+
+
 (defun axis-value-format4-format-table (table)
   "Format identifier — set to 4."
   (declare (type axis-value-format4 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline axis-value-format4-format-table-raw))
 
 
 (defun axis-value-format4-format-table-raw (font-data offset)
@@ -661,9 +624,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline axis-value-format4-axis-count-raw))
-
-
 (defun axis-value-format4-axis-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -673,9 +633,6 @@
   (declare (type axis-value-format4 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline axis-value-format4-flags-raw))
 
 
 (defun axis-value-format4-flags-raw (font-data offset)
@@ -689,9 +646,6 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline axis-value-format4-value-name-id-raw))
-
-
 (defun axis-value-format4-value-name-id-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 6)))
 
@@ -699,12 +653,6 @@
 (defun axis-value-format4-axis-values-count (table)
   "Array of AxisValue records that provide the combination of axis values, one for each contributing axis."
   (axis-value-format4-axis-count table))
-
-
-(declaim
- (inline axis-value-format4-format-table axis-value-format4-axis-count
-  axis-value-format4-flags axis-value-format4-value-name-id
-  axis-value-format4-axis-values axis-value-format4-axis-values-count))
 
 
 (defun axis-value-format4-axis-values-ref (table index)

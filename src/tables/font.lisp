@@ -26,6 +26,14 @@
      (:constructor %make-table-record (%record-font-data %record-offset))))
 
 
+(define-constant +table-record-size+ 16)
+
+
+(declaim
+ (inline table-record-tag table-record-checksum table-record-offset
+  table-record-length))
+
+
 (defun table-record-tag (rec)
   "Table identifier."
   (declare (type table-record rec))
@@ -52,27 +60,25 @@
                       (+ (record-ref-offset rec) 12)))
 
 
-(declaim
- (inline table-record-tag table-record-checksum table-record-offset
-  table-record-length))
-
-
-(define-constant +table-record-size+ 16)
-
-
 (defstruct
     (table-directory (:include table-ref)
      (:constructor %make-table-directory
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline table-directory-sfnt-version table-directory-num-tables
+  table-directory-search-range table-directory-entry-selector
+  table-directory-range-shift table-directory-table-records
+  table-directory-table-records-count table-directory-sfnt-version-raw
+  table-directory-num-tables-raw table-directory-search-range-raw
+  table-directory-entry-selector-raw table-directory-range-shift-raw))
+
+
 (defun table-directory-sfnt-version (table)
   "0x00010000 or 0x4F54544F"
   (declare (type table-directory table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline table-directory-sfnt-version-raw))
 
 
 (defun table-directory-sfnt-version-raw (font-data offset)
@@ -86,9 +92,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline table-directory-num-tables-raw))
-
-
 (defun table-directory-num-tables-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
 
@@ -97,9 +100,6 @@
   (declare (type table-directory table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline table-directory-search-range-raw))
 
 
 (defun table-directory-search-range-raw (font-data offset)
@@ -112,9 +112,6 @@
                       (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline table-directory-entry-selector-raw))
-
-
 (defun table-directory-entry-selector-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 8)))
 
@@ -125,9 +122,6 @@
                       (+ (table-ref-offset table) 10)))
 
 
-(declaim (inline table-directory-range-shift-raw))
-
-
 (defun table-directory-range-shift-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 10)))
 
@@ -135,13 +129,6 @@
 (defun table-directory-table-records-count (table)
   "Table records array—one for each top-level table in the font"
   (table-directory-num-tables table))
-
-
-(declaim
- (inline table-directory-sfnt-version table-directory-num-tables
-  table-directory-search-range table-directory-entry-selector
-  table-directory-range-shift table-directory-table-records
-  table-directory-table-records-count))
 
 
 (defun table-directory-table-records-ref (table index)
@@ -185,14 +172,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline ttc-header-ttc-tag ttc-header-version ttc-header-num-fonts
+  ttc-header-table-directory-offsets ttc-header-table-directory-offsets-count
+  ttc-header-dsig-tag ttc-header-dsig-length ttc-header-dsig-offset
+  ttc-header-ttc-tag-raw ttc-header-version-raw ttc-header-num-fonts-raw))
+
+
 (defun ttc-header-ttc-tag (table)
   "Font Collection ID string: \"ttcf\""
   (declare (type ttc-header table))
   (font-data-read-tag-string (table-ref-font-data table)
                              (table-ref-offset table)))
-
-
-(declaim (inline ttc-header-ttc-tag-raw))
 
 
 (defun ttc-header-ttc-tag-raw (font-data offset)
@@ -206,9 +197,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline ttc-header-version-raw))
-
-
 (defun ttc-header-version-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 4)))
 
@@ -218,9 +206,6 @@
   (declare (type ttc-header table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline ttc-header-num-fonts-raw))
 
 
 (defun ttc-header-num-fonts-raw (font-data offset)
@@ -262,12 +247,6 @@
                         (+ (table-ref-offset table) 16
                            (* (ttc-header-table-directory-offsets-count table)
                               4)))))
-
-
-(declaim
- (inline ttc-header-ttc-tag ttc-header-version ttc-header-num-fonts
-  ttc-header-table-directory-offsets ttc-header-table-directory-offsets-count
-  ttc-header-dsig-tag ttc-header-dsig-length ttc-header-dsig-offset))
 
 
 (defun ttc-header-dsig-offset (table)

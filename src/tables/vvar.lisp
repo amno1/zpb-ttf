@@ -20,13 +20,19 @@
      (:constructor %make-vvar (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline vvar-version vvar-item-variation-store-offset
+  vvar-item-variation-store-offset-offset vvar-advance-height-mapping-offset
+  vvar-advance-height-mapping-offset-offset vvar-tsb-mapping-offset
+  vvar-tsb-mapping-offset-offset vvar-bsb-mapping-offset
+  vvar-bsb-mapping-offset-offset vvar-v-org-mapping-offset
+  vvar-v-org-mapping-offset-offset vvar-version-raw))
+
+
 (defun vvar-version (table)
   "Major version number of the horizontal metrics variations table — set to 1. Minor version number of the horizontal metrics variations table — set to 0."
   (declare (type vvar table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline vvar-version-raw))
 
 
 (defun vvar-version-raw (font-data offset)
@@ -102,15 +108,6 @@
   (declare (type vvar table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 20)))
-
-
-(declaim
- (inline vvar-version vvar-item-variation-store-offset
-  vvar-item-variation-store-offset-offset vvar-advance-height-mapping-offset
-  vvar-advance-height-mapping-offset-offset vvar-tsb-mapping-offset
-  vvar-tsb-mapping-offset-offset vvar-bsb-mapping-offset
-  vvar-bsb-mapping-offset-offset vvar-v-org-mapping-offset
-  vvar-v-org-mapping-offset-offset))
 
 
 (defun vvar-v-org-mapping-offset (table)

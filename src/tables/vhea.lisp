@@ -28,13 +28,25 @@
      (:constructor %make-vhea (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline vhea-version vhea-ascender vhea-descender vhea-line-gap
+  vhea-advance-height-max vhea-min-top-side-bearing
+  vhea-min-bottom-side-bearing vhea-y-max-extent vhea-caret-slope-rise
+  vhea-caret-slope-run vhea-caret-offset vhea-reserved1 vhea-reserved2
+  vhea-reserved3 vhea-reserved4 vhea-metric-data-format
+  vhea-number-of-long-ver-metrics vhea-version-raw vhea-ascender-raw
+  vhea-descender-raw vhea-line-gap-raw vhea-advance-height-max-raw
+  vhea-min-top-side-bearing-raw vhea-min-bottom-side-bearing-raw
+  vhea-y-max-extent-raw vhea-caret-slope-rise-raw vhea-caret-slope-run-raw
+  vhea-caret-offset-raw vhea-reserved1-raw vhea-reserved2-raw
+  vhea-reserved3-raw vhea-reserved4-raw vhea-metric-data-format-raw
+  vhea-number-of-long-ver-metrics-raw))
+
+
 (defun vhea-version (table)
   "The major/minor version (1, 0 or 1, 1)"
   (declare (type vhea table))
   (font-data-read-fixed (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline vhea-version-raw))
 
 
 (defun vhea-version-raw (font-data offset)
@@ -48,9 +60,6 @@
                         (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline vhea-ascender-raw))
-
-
 (defun vhea-ascender-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 4)))
 
@@ -60,9 +69,6 @@
   (declare (type vhea table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline vhea-descender-raw))
 
 
 (defun vhea-descender-raw (font-data offset)
@@ -76,9 +82,6 @@
                         (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline vhea-line-gap-raw))
-
-
 (defun vhea-line-gap-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 8)))
 
@@ -88,9 +91,6 @@
   (declare (type vhea table))
   (font-data-read-ufword (table-ref-font-data table)
                          (+ (table-ref-offset table) 10)))
-
-
-(declaim (inline vhea-advance-height-max-raw))
 
 
 (defun vhea-advance-height-max-raw (font-data offset)
@@ -104,9 +104,6 @@
                         (+ (table-ref-offset table) 12)))
 
 
-(declaim (inline vhea-min-top-side-bearing-raw))
-
-
 (defun vhea-min-top-side-bearing-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 12)))
 
@@ -116,9 +113,6 @@
   (declare (type vhea table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 14)))
-
-
-(declaim (inline vhea-min-bottom-side-bearing-raw))
 
 
 (defun vhea-min-bottom-side-bearing-raw (font-data offset)
@@ -132,9 +126,6 @@
                         (+ (table-ref-offset table) 16)))
 
 
-(declaim (inline vhea-y-max-extent-raw))
-
-
 (defun vhea-y-max-extent-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 16)))
 
@@ -144,9 +135,6 @@
   (declare (type vhea table))
   (font-data-read-i16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 18)))
-
-
-(declaim (inline vhea-caret-slope-rise-raw))
 
 
 (defun vhea-caret-slope-rise-raw (font-data offset)
@@ -160,9 +148,6 @@
                       (+ (table-ref-offset table) 20)))
 
 
-(declaim (inline vhea-caret-slope-run-raw))
-
-
 (defun vhea-caret-slope-run-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 20)))
 
@@ -172,9 +157,6 @@
   (declare (type vhea table))
   (font-data-read-i16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 22)))
-
-
-(declaim (inline vhea-caret-offset-raw))
 
 
 (defun vhea-caret-offset-raw (font-data offset)
@@ -188,9 +170,6 @@
                       (+ (table-ref-offset table) 24)))
 
 
-(declaim (inline vhea-reserved1-raw))
-
-
 (defun vhea-reserved1-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 24)))
 
@@ -200,9 +179,6 @@
   (declare (type vhea table))
   (font-data-read-i16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 26)))
-
-
-(declaim (inline vhea-reserved2-raw))
 
 
 (defun vhea-reserved2-raw (font-data offset)
@@ -216,9 +192,6 @@
                       (+ (table-ref-offset table) 28)))
 
 
-(declaim (inline vhea-reserved3-raw))
-
-
 (defun vhea-reserved3-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 28)))
 
@@ -228,9 +201,6 @@
   (declare (type vhea table))
   (font-data-read-i16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 30)))
-
-
-(declaim (inline vhea-reserved4-raw))
 
 
 (defun vhea-reserved4-raw (font-data offset)
@@ -244,9 +214,6 @@
                       (+ (table-ref-offset table) 32)))
 
 
-(declaim (inline vhea-metric-data-format-raw))
-
-
 (defun vhea-metric-data-format-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 32)))
 
@@ -256,18 +223,6 @@
   (declare (type vhea table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 34)))
-
-
-(declaim (inline vhea-number-of-long-ver-metrics-raw))
-
-
-(declaim
- (inline vhea-version vhea-ascender vhea-descender vhea-line-gap
-  vhea-advance-height-max vhea-min-top-side-bearing
-  vhea-min-bottom-side-bearing vhea-y-max-extent vhea-caret-slope-rise
-  vhea-caret-slope-run vhea-caret-offset vhea-reserved1 vhea-reserved2
-  vhea-reserved3 vhea-reserved4 vhea-metric-data-format
-  vhea-number-of-long-ver-metrics))
 
 
 (defun vhea-number-of-long-ver-metrics-raw (font-data offset)
@@ -297,12 +252,29 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline vhea-extended-version vhea-extended-ascender vhea-extended-descender
+  vhea-extended-line-gap vhea-extended-advance-height-max
+  vhea-extended-min-top-side-bearing vhea-extended-min-bottom-side-bearing
+  vhea-extended-y-max-extent vhea-extended-caret-slope-rise
+  vhea-extended-caret-slope-run vhea-extended-caret-offset
+  vhea-extended-reserved1 vhea-extended-reserved2 vhea-extended-reserved3
+  vhea-extended-reserved4 vhea-extended-metric-data-format
+  vhea-extended-number-of-long-ver-metrics vhea-extended-version-raw
+  vhea-extended-ascender-raw vhea-extended-descender-raw
+  vhea-extended-line-gap-raw vhea-extended-advance-height-max-raw
+  vhea-extended-min-top-side-bearing-raw
+  vhea-extended-min-bottom-side-bearing-raw vhea-extended-y-max-extent-raw
+  vhea-extended-caret-slope-rise-raw vhea-extended-caret-slope-run-raw
+  vhea-extended-caret-offset-raw vhea-extended-reserved1-raw
+  vhea-extended-reserved2-raw vhea-extended-reserved3-raw
+  vhea-extended-reserved4-raw vhea-extended-metric-data-format-raw
+  vhea-extended-number-of-long-ver-metrics-raw))
+
+
 (defun vhea-extended-version (table)
   (declare (type vhea-extended table))
   (font-data-read-fixed (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline vhea-extended-version-raw))
 
 
 (defun vhea-extended-version-raw (font-data offset)
@@ -315,9 +287,6 @@
                         (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline vhea-extended-ascender-raw))
-
-
 (defun vhea-extended-ascender-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 4)))
 
@@ -326,9 +295,6 @@
   (declare (type vhea-extended table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline vhea-extended-descender-raw))
 
 
 (defun vhea-extended-descender-raw (font-data offset)
@@ -341,9 +307,6 @@
                         (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline vhea-extended-line-gap-raw))
-
-
 (defun vhea-extended-line-gap-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 8)))
 
@@ -352,9 +315,6 @@
   (declare (type vhea-extended table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 10)))
-
-
-(declaim (inline vhea-extended-advance-height-max-raw))
 
 
 (defun vhea-extended-advance-height-max-raw (font-data offset)
@@ -367,9 +327,6 @@
                         (+ (table-ref-offset table) 12)))
 
 
-(declaim (inline vhea-extended-min-top-side-bearing-raw))
-
-
 (defun vhea-extended-min-top-side-bearing-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 12)))
 
@@ -378,9 +335,6 @@
   (declare (type vhea-extended table))
   (font-data-read-fword (table-ref-font-data table)
                         (+ (table-ref-offset table) 14)))
-
-
-(declaim (inline vhea-extended-min-bottom-side-bearing-raw))
 
 
 (defun vhea-extended-min-bottom-side-bearing-raw (font-data offset)
@@ -393,9 +347,6 @@
                         (+ (table-ref-offset table) 16)))
 
 
-(declaim (inline vhea-extended-y-max-extent-raw))
-
-
 (defun vhea-extended-y-max-extent-raw (font-data offset)
   (font-data-read-fword font-data (+ offset 16)))
 
@@ -404,9 +355,6 @@
   (declare (type vhea-extended table))
   (font-data-read-i16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 18)))
-
-
-(declaim (inline vhea-extended-caret-slope-rise-raw))
 
 
 (defun vhea-extended-caret-slope-rise-raw (font-data offset)
@@ -419,9 +367,6 @@
                       (+ (table-ref-offset table) 20)))
 
 
-(declaim (inline vhea-extended-caret-slope-run-raw))
-
-
 (defun vhea-extended-caret-slope-run-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 20)))
 
@@ -430,9 +375,6 @@
   (declare (type vhea-extended table))
   (font-data-read-i16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 22)))
-
-
-(declaim (inline vhea-extended-caret-offset-raw))
 
 
 (defun vhea-extended-caret-offset-raw (font-data offset)
@@ -445,9 +387,6 @@
                       (+ (table-ref-offset table) 24)))
 
 
-(declaim (inline vhea-extended-reserved1-raw))
-
-
 (defun vhea-extended-reserved1-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 24)))
 
@@ -456,9 +395,6 @@
   (declare (type vhea-extended table))
   (font-data-read-i16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 26)))
-
-
-(declaim (inline vhea-extended-reserved2-raw))
 
 
 (defun vhea-extended-reserved2-raw (font-data offset)
@@ -471,9 +407,6 @@
                       (+ (table-ref-offset table) 28)))
 
 
-(declaim (inline vhea-extended-reserved3-raw))
-
-
 (defun vhea-extended-reserved3-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 28)))
 
@@ -482,9 +415,6 @@
   (declare (type vhea-extended table))
   (font-data-read-i16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 30)))
-
-
-(declaim (inline vhea-extended-reserved4-raw))
 
 
 (defun vhea-extended-reserved4-raw (font-data offset)
@@ -497,9 +427,6 @@
                       (+ (table-ref-offset table) 32)))
 
 
-(declaim (inline vhea-extended-metric-data-format-raw))
-
-
 (defun vhea-extended-metric-data-format-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 32)))
 
@@ -509,20 +436,6 @@
   (declare (type vhea-extended table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 34)))
-
-
-(declaim (inline vhea-extended-number-of-long-ver-metrics-raw))
-
-
-(declaim
- (inline vhea-extended-version vhea-extended-ascender vhea-extended-descender
-  vhea-extended-line-gap vhea-extended-advance-height-max
-  vhea-extended-min-top-side-bearing vhea-extended-min-bottom-side-bearing
-  vhea-extended-y-max-extent vhea-extended-caret-slope-rise
-  vhea-extended-caret-slope-run vhea-extended-caret-offset
-  vhea-extended-reserved1 vhea-extended-reserved2 vhea-extended-reserved3
-  vhea-extended-reserved4 vhea-extended-metric-data-format
-  vhea-extended-number-of-long-ver-metrics))
 
 
 (defun vhea-extended-number-of-long-ver-metrics-raw (font-data offset)

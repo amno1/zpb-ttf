@@ -10,8 +10,8 @@
  '(+permission-flags-cannot-be-resigned+ +signature-record-size+ dsig
    dsig-flags dsig-num-signatures dsig-p dsig-signature-records
    dsig-signature-records-count dsig-signature-records-ref dsig-version
-   read-dsig read-signature-block-format1 sanitize-dsig
-   sanitize-signature-block-format1 signature-block-format1
+   permission-flags-cannot-be-resigned-p read-dsig read-signature-block-format1
+   sanitize-dsig sanitize-signature-block-format1 signature-block-format1
    signature-block-format1--reserved1 signature-block-format1--reserved2
    signature-block-format1-p signature-block-format1-signature
    signature-block-format1-signature-bytes
@@ -25,9 +25,24 @@
 (define-constant +permission-flags-cannot-be-resigned+ 1)
 
 
+(declaim (inline permission-flags-cannot-be-resigned-p))
+
+
+(defun permission-flags-cannot-be-resigned-p (flags)
+  (logtest flags +permission-flags-cannot-be-resigned+))
+
+
 (defstruct
     (signature-record (:include record-ref)
      (:constructor %make-signature-record (%record-font-data %record-offset))))
+
+
+(define-constant +signature-record-size+ 12)
+
+
+(declaim
+ (inline signature-record-format-table signature-record-length
+  signature-record-signature-block-offset))
 
 
 (defun signature-record-format-table (rec)
@@ -48,26 +63,21 @@
   (font-data-read-u32 (record-ref-font-data rec) (+ (record-ref-offset rec) 8)))
 
 
-(declaim
- (inline signature-record-format-table signature-record-length
-  signature-record-signature-block-offset))
-
-
-(define-constant +signature-record-size+ 12)
-
-
 (defstruct
     (dsig (:include table-ref)
      (:constructor %make-dsig (%table-font-data %table-offset %table-length))))
+
+
+(declaim
+ (inline dsig-version dsig-num-signatures dsig-flags dsig-signature-records
+  dsig-signature-records-count dsig-version-raw dsig-num-signatures-raw
+  dsig-flags-raw))
 
 
 (defun dsig-version (table)
   "Version number of the DSIG table (0x00000001)"
   (declare (type dsig table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline dsig-version-raw))
 
 
 (defun dsig-version-raw (font-data offset)
@@ -81,9 +91,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline dsig-num-signatures-raw))
-
-
 (defun dsig-num-signatures-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
 
@@ -95,9 +102,6 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline dsig-flags-raw))
-
-
 (defun dsig-flags-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 6)))
 
@@ -105,11 +109,6 @@
 (defun dsig-signature-records-count (table)
   "Array of signature records"
   (dsig-num-signatures table))
-
-
-(declaim
- (inline dsig-version dsig-num-signatures dsig-flags dsig-signature-records
-  dsig-signature-records-count))
 
 
 (defun dsig-signature-records-ref (table index)
@@ -153,13 +152,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline signature-block-format1--reserved1 signature-block-format1--reserved2
+  signature-block-format1-signature-length signature-block-format1-signature
+  signature-block-format1-signature-count
+  signature-block-format1--reserved1-raw signature-block-format1--reserved2-raw
+  signature-block-format1-signature-length-raw))
+
+
 (defun signature-block-format1--reserved1 (table)
   "Reserved for future use; set to zero."
   (declare (type signature-block-format1 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline signature-block-format1--reserved1-raw))
 
 
 (defun signature-block-format1--reserved1-raw (font-data offset)
@@ -173,9 +177,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline signature-block-format1--reserved2-raw))
-
-
 (defun signature-block-format1--reserved2-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -185,9 +186,6 @@
   (declare (type signature-block-format1 table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline signature-block-format1-signature-length-raw))
 
 
 (defun signature-block-format1-signature-length-raw (font-data offset)
@@ -209,12 +207,6 @@
       (error 'font-out-of-bounds-error :pos pos :size 1 :length
              (table-ref-length table)))
     (font-data-read-u8 (table-ref-font-data table) pos)))
-
-
-(declaim
- (inline signature-block-format1--reserved1 signature-block-format1--reserved2
-  signature-block-format1-signature-length signature-block-format1-signature
-  signature-block-format1-signature-count))
 
 
 (defun signature-block-format1-signature-bytes (table)

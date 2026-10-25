@@ -21,6 +21,11 @@
      (:constructor %make-vmtx (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline vmtx-v-metrics vmtx-v-metrics-count vmtx-top-side-bearings
+  vmtx-top-side-bearings-count))
+
+
 (defun vmtx-v-metrics-count (table &optional number-of-long-ver-metrics)
   "Paired advance height and top side bearing values for each glyph. Records are indexed by glyph ID."
   (or number-of-long-ver-metrics
@@ -46,11 +51,6 @@
         (- (table-ref-length table)
            (+ (table-ref-offset table) (* (vmtx-v-metrics-count table) 4)))
         2)))
-
-
-(declaim
- (inline vmtx-v-metrics vmtx-v-metrics-count vmtx-top-side-bearings
-  vmtx-top-side-bearings-count))
 
 
 (defun vmtx-top-side-bearings-ref (table index)
@@ -90,6 +90,11 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline vmtx-extended-v-metrics vmtx-extended-v-metrics-count
+  vmtx-extended-top-side-bearings vmtx-extended-top-side-bearings-count))
+
+
 (defun vmtx-extended-v-metrics-count
        (table &optional number-of-long-ver-metrics)
   (or number-of-long-ver-metrics
@@ -114,11 +119,6 @@
            (+ (table-ref-offset table)
               (* (vmtx-extended-v-metrics-count table) 4)))
         2)))
-
-
-(declaim
- (inline vmtx-extended-v-metrics vmtx-extended-v-metrics-count
-  vmtx-extended-top-side-bearings vmtx-extended-top-side-bearings-count))
 
 
 (defun vmtx-extended-top-side-bearings-ref (table index)

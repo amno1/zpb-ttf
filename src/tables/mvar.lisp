@@ -20,6 +20,14 @@
      (:constructor %make-value-record (%record-font-data %record-offset))))
 
 
+(define-constant +value-record-size+ 8)
+
+
+(declaim
+ (inline value-record-value-tag value-record-delta-set-outer-index
+  value-record-delta-set-inner-index))
+
+
 (defun value-record-value-tag (rec)
   "Four-byte tag identifying a font-wide measure."
   (declare (type value-record rec))
@@ -39,26 +47,23 @@
   (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 6)))
 
 
-(declaim
- (inline value-record-value-tag value-record-delta-set-outer-index
-  value-record-delta-set-inner-index))
-
-
-(define-constant +value-record-size+ 8)
-
-
 (defstruct
     (mvar (:include table-ref)
      (:constructor %make-mvar (%table-font-data %table-offset %table-length))))
+
+
+(declaim
+ (inline mvar-version mvar--reserved mvar-value-record-size
+  mvar-value-record-count mvar-item-variation-store-offset
+  mvar-item-variation-store-offset-offset mvar-value-records
+  mvar-value-records-count mvar-version-raw mvar--reserved-raw
+  mvar-value-record-size-raw mvar-value-record-count-raw))
 
 
 (defun mvar-version (table)
   "Major version number of the horizontal metrics variations table — set to 1. Minor version number of the horizontal metrics variations table — set to 0."
   (declare (type mvar table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline mvar-version-raw))
 
 
 (defun mvar-version-raw (font-data offset)
@@ -72,9 +77,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline mvar--reserved-raw))
-
-
 (defun mvar--reserved-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
 
@@ -86,9 +88,6 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline mvar-value-record-size-raw))
-
-
 (defun mvar-value-record-size-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 6)))
 
@@ -98,9 +97,6 @@
   (declare (type mvar table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline mvar-value-record-count-raw))
 
 
 (defun mvar-value-record-count-raw (font-data offset)
@@ -126,13 +122,6 @@
 (defun mvar-value-records-count (table)
   "Array of value records that identify target items and the associated delta-set index for each. The valueTag records must be in binary order of their valueTag field."
   (mvar-value-record-count table))
-
-
-(declaim
- (inline mvar-version mvar--reserved mvar-value-record-size
-  mvar-value-record-count mvar-item-variation-store-offset
-  mvar-item-variation-store-offset-offset mvar-value-records
-  mvar-value-records-count))
 
 
 (defun mvar-value-records-ref (table index)

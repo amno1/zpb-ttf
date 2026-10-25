@@ -52,6 +52,14 @@
      (:constructor %make-lookup-segment4 (%record-font-data %record-offset))))
 
 
+(define-constant +lookup-segment4-size+ 6)
+
+
+(declaim
+ (inline lookup-segment4-last-glyph lookup-segment4-first-glyph
+  lookup-segment4-value-offset))
+
+
 (defun lookup-segment4-last-glyph (rec)
   "Last glyph index in this segment."
   (declare (type lookup-segment4 rec))
@@ -68,14 +76,6 @@
   "A 16-bit offset from the start of the table to the data."
   (declare (type lookup-segment4 rec))
   (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 4)))
-
-
-(declaim
- (inline lookup-segment4-last-glyph lookup-segment4-first-glyph
-  lookup-segment4-value-offset))
-
-
-(define-constant +lookup-segment4-size+ 6)
 
 
 (defun read-aat-lookup
@@ -100,13 +100,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline lookup0-format-table lookup0-values-data lookup0-values-data-count
+  lookup0-format-table-raw))
+
+
 (defun lookup0-format-table (table)
   "Format number is set to 0."
   (declare (type lookup0 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline lookup0-format-table-raw))
 
 
 (defun lookup0-format-table-raw (font-data offset)
@@ -128,10 +130,6 @@
       (error 'font-out-of-bounds-error :pos pos :size 1 :length
              (table-ref-length table)))
     (font-data-read-u8 (table-ref-font-data table) pos)))
-
-
-(declaim
- (inline lookup0-format-table lookup0-values-data lookup0-values-data-count))
 
 
 (defun lookup0-values-data-bytes (table)
@@ -163,13 +161,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline lookup2-format-table lookup2-unit-size lookup2-n-units
+  lookup2-search-range lookup2-entry-selector lookup2-range-shift
+  lookup2-segments-data lookup2-segments-data-count lookup2-format-table-raw
+  lookup2-unit-size-raw lookup2-n-units-raw lookup2-search-range-raw
+  lookup2-entry-selector-raw lookup2-range-shift-raw))
+
+
 (defun lookup2-format-table (table)
   "Format number is set to 2."
   (declare (type lookup2 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline lookup2-format-table-raw))
 
 
 (defun lookup2-format-table-raw (font-data offset)
@@ -183,9 +186,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline lookup2-unit-size-raw))
-
-
 (defun lookup2-unit-size-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -195,9 +195,6 @@
   (declare (type lookup2 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline lookup2-n-units-raw))
 
 
 (defun lookup2-n-units-raw (font-data offset)
@@ -211,9 +208,6 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline lookup2-search-range-raw))
-
-
 (defun lookup2-search-range-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 6)))
 
@@ -223,9 +217,6 @@
   (declare (type lookup2 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline lookup2-entry-selector-raw))
 
 
 (defun lookup2-entry-selector-raw (font-data offset)
@@ -239,19 +230,13 @@
                       (+ (table-ref-offset table) 10)))
 
 
-(declaim (inline lookup2-range-shift-raw))
-
-
 (defun lookup2-range-shift-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 10)))
 
 
-(defun lookup2-segments-data-count (table &optional count)
+(defun lookup2-segments-data-count (table)
   "Segments."
-  (or count
-      (max 0
-           (floor (- (table-ref-length table) (+ (table-ref-offset table) 12))
-                  1))))
+  (* (+ (lookup2-unit-size table) 0) (lookup2-n-units table)))
 
 
 (defun lookup2-segments-data-ref (table index)
@@ -264,12 +249,6 @@
       (error 'font-out-of-bounds-error :pos pos :size 1 :length
              (table-ref-length table)))
     (font-data-read-u8 (table-ref-font-data table) pos)))
-
-
-(declaim
- (inline lookup2-format-table lookup2-unit-size lookup2-n-units
-  lookup2-search-range lookup2-entry-selector lookup2-range-shift
-  lookup2-segments-data lookup2-segments-data-count))
 
 
 (defun lookup2-segments-data-bytes (table)
@@ -301,13 +280,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline lookup4-format-table lookup4-unit-size lookup4-n-units
+  lookup4-search-range lookup4-entry-selector lookup4-range-shift
+  lookup4-segments lookup4-segments-count lookup4-format-table-raw
+  lookup4-unit-size-raw lookup4-n-units-raw lookup4-search-range-raw
+  lookup4-entry-selector-raw lookup4-range-shift-raw))
+
+
 (defun lookup4-format-table (table)
   "Format number is set to 4."
   (declare (type lookup4 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline lookup4-format-table-raw))
 
 
 (defun lookup4-format-table-raw (font-data offset)
@@ -321,9 +305,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline lookup4-unit-size-raw))
-
-
 (defun lookup4-unit-size-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -333,9 +314,6 @@
   (declare (type lookup4 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline lookup4-n-units-raw))
 
 
 (defun lookup4-n-units-raw (font-data offset)
@@ -349,9 +327,6 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline lookup4-search-range-raw))
-
-
 (defun lookup4-search-range-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 6)))
 
@@ -361,9 +336,6 @@
   (declare (type lookup4 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline lookup4-entry-selector-raw))
 
 
 (defun lookup4-entry-selector-raw (font-data offset)
@@ -377,20 +349,11 @@
                       (+ (table-ref-offset table) 10)))
 
 
-(declaim (inline lookup4-range-shift-raw))
-
-
 (defun lookup4-range-shift-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 10)))
 
 
 (defun lookup4-segments-count (table) "Segments." (lookup4-n-units table))
-
-
-(declaim
- (inline lookup4-format-table lookup4-unit-size lookup4-n-units
-  lookup4-search-range lookup4-entry-selector lookup4-range-shift
-  lookup4-segments lookup4-segments-count))
 
 
 (defun lookup4-segments-ref (table index)
@@ -434,13 +397,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline lookup6-format-table lookup6-unit-size lookup6-n-units
+  lookup6-search-range lookup6-entry-selector lookup6-range-shift
+  lookup6-entries-data lookup6-entries-data-count lookup6-format-table-raw
+  lookup6-unit-size-raw lookup6-n-units-raw lookup6-search-range-raw
+  lookup6-entry-selector-raw lookup6-range-shift-raw))
+
+
 (defun lookup6-format-table (table)
   "Format number is set to 6."
   (declare (type lookup6 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline lookup6-format-table-raw))
 
 
 (defun lookup6-format-table-raw (font-data offset)
@@ -454,9 +422,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline lookup6-unit-size-raw))
-
-
 (defun lookup6-unit-size-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -466,9 +431,6 @@
   (declare (type lookup6 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline lookup6-n-units-raw))
 
 
 (defun lookup6-n-units-raw (font-data offset)
@@ -482,9 +444,6 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline lookup6-search-range-raw))
-
-
 (defun lookup6-search-range-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 6)))
 
@@ -494,9 +453,6 @@
   (declare (type lookup6 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline lookup6-entry-selector-raw))
 
 
 (defun lookup6-entry-selector-raw (font-data offset)
@@ -510,19 +466,13 @@
                       (+ (table-ref-offset table) 10)))
 
 
-(declaim (inline lookup6-range-shift-raw))
-
-
 (defun lookup6-range-shift-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 10)))
 
 
-(defun lookup6-entries-data-count (table &optional count)
+(defun lookup6-entries-data-count (table)
   "Values, indexed by glyph index."
-  (or count
-      (max 0
-           (floor (- (table-ref-length table) (+ (table-ref-offset table) 12))
-                  1))))
+  (* (+ (lookup6-unit-size table) 0) (lookup6-n-units table)))
 
 
 (defun lookup6-entries-data-ref (table index)
@@ -535,12 +485,6 @@
       (error 'font-out-of-bounds-error :pos pos :size 1 :length
              (table-ref-length table)))
     (font-data-read-u8 (table-ref-font-data table) pos)))
-
-
-(declaim
- (inline lookup6-format-table lookup6-unit-size lookup6-n-units
-  lookup6-search-range lookup6-entry-selector lookup6-range-shift
-  lookup6-entries-data lookup6-entries-data-count))
 
 
 (defun lookup6-entries-data-bytes (table)
@@ -572,13 +516,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline lookup8-format-table lookup8-first-glyph lookup8-glyph-count
+  lookup8-value-array lookup8-value-array-count lookup8-format-table-raw
+  lookup8-first-glyph-raw lookup8-glyph-count-raw))
+
+
 (defun lookup8-format-table (table)
   "Format number is set to 8."
   (declare (type lookup8 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline lookup8-format-table-raw))
 
 
 (defun lookup8-format-table-raw (font-data offset)
@@ -592,9 +539,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline lookup8-first-glyph-raw))
-
-
 (defun lookup8-first-glyph-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -606,9 +550,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline lookup8-glyph-count-raw))
-
-
 (defun lookup8-glyph-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
 
@@ -616,11 +557,6 @@
 (defun lookup8-value-array-count (table)
   "The lookup values (indexed by the glyph index minus the value of firstGlyph). Entries in the value array must be two bytes."
   (lookup8-glyph-count table))
-
-
-(declaim
- (inline lookup8-format-table lookup8-first-glyph lookup8-glyph-count
-  lookup8-value-array lookup8-value-array-count))
 
 
 (defun lookup8-value-array-ref (table index)
@@ -664,13 +600,17 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline lookup10-format-table lookup10-unit-size lookup10-first-glyph
+  lookup10-glyph-count lookup10-values-data lookup10-values-data-count
+  lookup10-format-table-raw lookup10-unit-size-raw lookup10-first-glyph-raw
+  lookup10-glyph-count-raw))
+
+
 (defun lookup10-format-table (table)
   "Format number is set to 10."
   (declare (type lookup10 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline lookup10-format-table-raw))
 
 
 (defun lookup10-format-table-raw (font-data offset)
@@ -684,9 +624,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline lookup10-unit-size-raw))
-
-
 (defun lookup10-unit-size-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -696,9 +633,6 @@
   (declare (type lookup10 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline lookup10-first-glyph-raw))
 
 
 (defun lookup10-first-glyph-raw (font-data offset)
@@ -712,19 +646,13 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline lookup10-glyph-count-raw))
-
-
 (defun lookup10-glyph-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 6)))
 
 
-(defun lookup10-values-data-count (table &optional count)
+(defun lookup10-values-data-count (table)
   "The lookup values (indexed by the glyph index minus the value of firstGlyph)."
-  (or count
-      (max 0
-           (floor (- (table-ref-length table) (+ (table-ref-offset table) 8))
-                  1))))
+  (* (+ (lookup10-glyph-count table) 0) (lookup10-unit-size table)))
 
 
 (defun lookup10-values-data-ref (table index)
@@ -737,11 +665,6 @@
       (error 'font-out-of-bounds-error :pos pos :size 1 :length
              (table-ref-length table)))
     (font-data-read-u8 (table-ref-font-data table) pos)))
-
-
-(declaim
- (inline lookup10-format-table lookup10-unit-size lookup10-first-glyph
-  lookup10-glyph-count lookup10-values-data lookup10-values-data-count))
 
 
 (defun lookup10-values-data-bytes (table)
@@ -773,13 +696,17 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline state-header-state-size state-header-class-table-offset
+  state-header-class-table-offset-offset state-header-state-array-offset
+  state-header-state-array-offset-offset state-header-entry-table-offset
+  state-header-entry-table-offset-offset state-header-state-size-raw))
+
+
 (defun state-header-state-size (table)
   "Size of a state, in bytes. The size is limited to 8 bits, although the field is 16 bits for alignment."
   (declare (type state-header table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline state-header-state-size-raw))
 
 
 (defun state-header-state-size-raw (font-data offset)
@@ -825,13 +752,6 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim
- (inline state-header-state-size state-header-class-table-offset
-  state-header-class-table-offset-offset state-header-state-array-offset
-  state-header-state-array-offset-offset state-header-entry-table-offset
-  state-header-entry-table-offset-offset))
-
-
 (defun state-header-entry-table-offset (table)
   "Byte offset from the beginning of the state table to the entry subtable."
   (declare (type state-header table))
@@ -864,13 +784,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline class-subtable-first-glyph class-subtable-n-glyphs
+  class-subtable-class-array class-subtable-class-array-count
+  class-subtable-first-glyph-raw class-subtable-n-glyphs-raw))
+
+
 (defun class-subtable-first-glyph (table)
   "Glyph index of the first glyph in the class table."
   (declare (type class-subtable table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline class-subtable-first-glyph-raw))
 
 
 (defun class-subtable-first-glyph-raw (font-data offset)
@@ -882,9 +805,6 @@
   (declare (type class-subtable table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 2)))
-
-
-(declaim (inline class-subtable-n-glyphs-raw))
 
 
 (defun class-subtable-n-glyphs-raw (font-data offset)
@@ -906,11 +826,6 @@
       (error 'font-out-of-bounds-error :pos pos :size 1 :length
              (table-ref-length table)))
     (font-data-read-u8 (table-ref-font-data table) pos)))
-
-
-(declaim
- (inline class-subtable-first-glyph class-subtable-n-glyphs
-  class-subtable-class-array class-subtable-class-array-count))
 
 
 (defun class-subtable-class-array-bytes (table)
@@ -948,6 +863,9 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim (inline raw-bytes-data raw-bytes-data-count))
+
+
 (defun raw-bytes-data-count (table)
   (max 0 (floor (- (table-ref-length table) (table-ref-offset table)) 1)))
 
@@ -961,9 +879,6 @@
       (error 'font-out-of-bounds-error :pos pos :size 1 :length
              (table-ref-length table)))
     (font-data-read-u8 (table-ref-font-data table) pos)))
-
-
-(declaim (inline raw-bytes-data raw-bytes-data-count))
 
 
 (defun raw-bytes-data-bytes (table)
@@ -994,13 +909,17 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline stx-header-n-classes stx-header-class-table-offset
+  stx-header-class-table-offset-offset stx-header-state-array-offset
+  stx-header-state-array-offset-offset stx-header-entry-table-offset
+  stx-header-entry-table-offset-offset stx-header-n-classes-raw))
+
+
 (defun stx-header-n-classes (table)
   "Number of classes, which is the number of 16-bit entry indices in a single line in the state array."
   (declare (type stx-header table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline stx-header-n-classes-raw))
 
 
 (defun stx-header-n-classes-raw (font-data offset)
@@ -1046,13 +965,6 @@
                       (+ (table-ref-offset table) 12)))
 
 
-(declaim
- (inline stx-header-n-classes stx-header-class-table-offset
-  stx-header-class-table-offset-offset stx-header-state-array-offset
-  stx-header-state-array-offset-offset stx-header-entry-table-offset
-  stx-header-entry-table-offset-offset))
-
-
 (defun stx-header-entry-table-offset (table)
   "Byte offset from the beginning of the state table to the entry subtable."
   (declare (type stx-header table))
@@ -1085,11 +997,11 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim (inline raw-words-data raw-words-data-count))
+
+
 (defun raw-words-data-count (table)
   (max 0 (floor (- (table-ref-length table) (table-ref-offset table)) 2)))
-
-
-(declaim (inline raw-words-data raw-words-data-count))
 
 
 (defun raw-words-data-ref (table index)

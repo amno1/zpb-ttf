@@ -52,6 +52,12 @@
      (:constructor %make-fd-select-range3 (%record-font-data %record-offset))))
 
 
+(define-constant +fd-select-range3-size+ 3)
+
+
+(declaim (inline fd-select-range3-first fd-select-range3-fd))
+
+
 (defun fd-select-range3-first (rec)
   "First glyph index in range."
   (declare (type fd-select-range3 rec))
@@ -64,15 +70,15 @@
   (font-data-read-u8 (record-ref-font-data rec) (+ (record-ref-offset rec) 2)))
 
 
-(declaim (inline fd-select-range3-first fd-select-range3-fd))
-
-
-(define-constant +fd-select-range3-size+ 3)
-
-
 (defstruct
     (fd-select-range4 (:include record-ref)
      (:constructor %make-fd-select-range4 (%record-font-data %record-offset))))
+
+
+(define-constant +fd-select-range4-size+ 6)
+
+
+(declaim (inline fd-select-range4-first fd-select-range4-fd))
 
 
 (defun fd-select-range4-first (rec)
@@ -87,15 +93,15 @@
   (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 4)))
 
 
-(declaim (inline fd-select-range4-first fd-select-range4-fd))
-
-
-(define-constant +fd-select-range4-size+ 6)
-
-
 (defstruct
     (charset-range1 (:include record-ref)
      (:constructor %make-charset-range1 (%record-font-data %record-offset))))
+
+
+(define-constant +charset-range1-size+ 3)
+
+
+(declaim (inline charset-range1-first charset-range1-n-left))
 
 
 (defun charset-range1-first (rec)
@@ -110,15 +116,15 @@
   (font-data-read-u8 (record-ref-font-data rec) (+ (record-ref-offset rec) 2)))
 
 
-(declaim (inline charset-range1-first charset-range1-n-left))
-
-
-(define-constant +charset-range1-size+ 3)
-
-
 (defstruct
     (charset-range2 (:include record-ref)
      (:constructor %make-charset-range2 (%record-font-data %record-offset))))
+
+
+(define-constant +charset-range2-size+ 4)
+
+
+(declaim (inline charset-range2-first charset-range2-n-left))
 
 
 (defun charset-range2-first (rec)
@@ -133,15 +139,15 @@
   (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 2)))
 
 
-(declaim (inline charset-range2-first charset-range2-n-left))
-
-
-(define-constant +charset-range2-size+ 4)
-
-
 (defstruct
     (encoding-range1 (:include record-ref)
      (:constructor %make-encoding-range1 (%record-font-data %record-offset))))
+
+
+(define-constant +encoding-range1-size+ 2)
+
+
+(declaim (inline encoding-range1-first encoding-range1-n-left))
 
 
 (defun encoding-range1-first (rec)
@@ -156,16 +162,16 @@
   (font-data-read-u8 (record-ref-font-data rec) (+ (record-ref-offset rec) 1)))
 
 
-(declaim (inline encoding-range1-first encoding-range1-n-left))
-
-
-(define-constant +encoding-range1-size+ 2)
-
-
 (defstruct
     (encoding-supplement (:include record-ref)
      (:constructor %make-encoding-supplement
       (%record-font-data %record-offset))))
+
+
+(define-constant +encoding-supplement-size+ 3)
+
+
+(declaim (inline encoding-supplement-code encoding-supplement-glyph))
 
 
 (defun encoding-supplement-code (rec)
@@ -180,25 +186,23 @@
   (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 1)))
 
 
-(declaim (inline encoding-supplement-code encoding-supplement-glyph))
-
-
-(define-constant +encoding-supplement-size+ 3)
-
-
 (defstruct
     (cff-header (:include table-ref)
      (:constructor %make-cff-header
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline cff-header-major cff-header-minor cff-header-hdr-size
+  cff-header-off-size cff-header--padding cff-header--padding-count
+  cff-header-trailing-data cff-header-trailing-data-count cff-header-major-raw
+  cff-header-minor-raw cff-header-hdr-size-raw cff-header-off-size-raw))
+
+
 (defun cff-header-major (table)
   "Format major version (starting at 1)."
   (declare (type cff-header table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline cff-header-major-raw))
 
 
 (defun cff-header-major-raw (font-data offset)
@@ -212,9 +216,6 @@
                      (+ (table-ref-offset table) 1)))
 
 
-(declaim (inline cff-header-minor-raw))
-
-
 (defun cff-header-minor-raw (font-data offset)
   (font-data-read-u8 font-data (+ offset 1)))
 
@@ -226,9 +227,6 @@
                      (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline cff-header-hdr-size-raw))
-
-
 (defun cff-header-hdr-size-raw (font-data offset)
   (font-data-read-u8 font-data (+ offset 2)))
 
@@ -238,9 +236,6 @@
   (declare (type cff-header table))
   (font-data-read-u8 (table-ref-font-data table)
                      (+ (table-ref-offset table) 3)))
-
-
-(declaim (inline cff-header-off-size-raw))
 
 
 (defun cff-header-off-size-raw (font-data offset)
@@ -296,12 +291,6 @@
     (font-data-read-u8 (table-ref-font-data table) pos)))
 
 
-(declaim
- (inline cff-header-major cff-header-minor cff-header-hdr-size
-  cff-header-off-size cff-header--padding cff-header--padding-count
-  cff-header-trailing-data cff-header-trailing-data-count))
-
-
 (defun cff-header-trailing-data-bytes (table)
   "Remaining table data."
   (font-data-slice (table-ref-font-data table)
@@ -333,13 +322,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline cff-index-count cff-index-off-size cff-index-offsets
+  cff-index-offsets-count cff-index-data cff-index-data-count
+  cff-index-count-raw cff-index-off-size-raw))
+
+
 (defun cff-index-count (table)
   "Number of objects stored in INDEX."
   (declare (type cff-index table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline cff-index-count-raw))
 
 
 (defun cff-index-count-raw (font-data offset)
@@ -353,19 +345,13 @@
                      (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline cff-index-off-size-raw))
-
-
 (defun cff-index-off-size-raw (font-data offset)
   (font-data-read-u8 font-data (+ offset 2)))
 
 
-(defun cff-index-offsets-count (table &optional count)
+(defun cff-index-offsets-count (table)
   "Bytes containing `count + 1` offsets each of `off_size`."
-  (or count
-      (max 0
-           (floor (- (table-ref-length table) (+ (table-ref-offset table) 3))
-                  1))))
+  (* (+ (cff-index-count table) 1) (cff-index-off-size table)))
 
 
 (defun cff-index-offsets-ref (table index)
@@ -409,11 +395,6 @@
       (error 'font-out-of-bounds-error :pos pos :size 1 :length
              (table-ref-length table)))
     (font-data-read-u8 (table-ref-font-data table) pos)))
-
-
-(declaim
- (inline cff-index-count cff-index-off-size cff-index-offsets
-  cff-index-offsets-count cff-index-data cff-index-data-count))
 
 
 (defun cff-index-data-bytes (table)
@@ -460,13 +441,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline fd-select-format0-format-table fd-select-format0-fds
+  fd-select-format0-fds-count fd-select-format0-format-table-raw))
+
+
 (defun fd-select-format0-format-table (table)
   "Format = 0."
   (declare (type fd-select-format0 table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline fd-select-format0-format-table-raw))
 
 
 (defun fd-select-format0-format-table-raw (font-data offset)
@@ -488,11 +471,6 @@
       (error 'font-out-of-bounds-error :pos pos :size 1 :length
              (table-ref-length table)))
     (font-data-read-u8 (table-ref-font-data table) pos)))
-
-
-(declaim
- (inline fd-select-format0-format-table fd-select-format0-fds
-  fd-select-format0-fds-count))
 
 
 (defun fd-select-format0-fds-bytes (table)
@@ -524,13 +502,17 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline fd-select-format3-format-table fd-select-format3-n-ranges
+  fd-select-format3-ranges fd-select-format3-ranges-count
+  fd-select-format3-sentinel fd-select-format3-format-table-raw
+  fd-select-format3-n-ranges-raw))
+
+
 (defun fd-select-format3-format-table (table)
   "Format = 3."
   (declare (type fd-select-format3 table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline fd-select-format3-format-table-raw))
 
 
 (defun fd-select-format3-format-table-raw (font-data offset)
@@ -542,9 +524,6 @@
   (declare (type fd-select-format3 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 1)))
-
-
-(declaim (inline fd-select-format3-n-ranges-raw))
 
 
 (defun fd-select-format3-n-ranges-raw (font-data offset)
@@ -566,12 +545,6 @@
       (error 'font-out-of-bounds-error :pos pos :size 3 :length
              (table-ref-length table)))
     (%make-fd-select-range3 (table-ref-font-data table) pos)))
-
-
-(declaim
- (inline fd-select-format3-format-table fd-select-format3-n-ranges
-  fd-select-format3-ranges fd-select-format3-ranges-count
-  fd-select-format3-sentinel))
 
 
 (defun fd-select-format3-sentinel (table)
@@ -611,13 +584,17 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline fd-select-format4-format-table fd-select-format4-n-ranges
+  fd-select-format4-ranges fd-select-format4-ranges-count
+  fd-select-format4-sentinel fd-select-format4-format-table-raw
+  fd-select-format4-n-ranges-raw))
+
+
 (defun fd-select-format4-format-table (table)
   "Format = 4."
   (declare (type fd-select-format4 table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline fd-select-format4-format-table-raw))
 
 
 (defun fd-select-format4-format-table-raw (font-data offset)
@@ -629,9 +606,6 @@
   (declare (type fd-select-format4 table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 1)))
-
-
-(declaim (inline fd-select-format4-n-ranges-raw))
 
 
 (defun fd-select-format4-n-ranges-raw (font-data offset)
@@ -653,12 +627,6 @@
       (error 'font-out-of-bounds-error :pos pos :size 6 :length
              (table-ref-length table)))
     (%make-fd-select-range4 (table-ref-font-data table) pos)))
-
-
-(declaim
- (inline fd-select-format4-format-table fd-select-format4-n-ranges
-  fd-select-format4-ranges fd-select-format4-ranges-count
-  fd-select-format4-sentinel))
 
 
 (defun fd-select-format4-sentinel (table)
@@ -711,13 +679,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline charset-format0-format-table charset-format0-glyph
+  charset-format0-glyph-count charset-format0-format-table-raw))
+
+
 (defun charset-format0-format-table (table)
   "Format; =0"
   (declare (type charset-format0 table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline charset-format0-format-table-raw))
 
 
 (defun charset-format0-format-table-raw (font-data offset)
@@ -727,11 +697,6 @@
 (defun charset-format0-glyph-count (table)
   "Glyph name array."
   (max 0 (floor (- (table-ref-length table) (+ (table-ref-offset table) 1)) 2)))
-
-
-(declaim
- (inline charset-format0-format-table charset-format0-glyph
-  charset-format0-glyph-count))
 
 
 (defun charset-format0-glyph-ref (table index)
@@ -769,13 +734,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline charset-format1-format-table charset-format1-ranges
+  charset-format1-ranges-count charset-format1-format-table-raw))
+
+
 (defun charset-format1-format-table (table)
   "Format; =1"
   (declare (type charset-format1 table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline charset-format1-format-table-raw))
 
 
 (defun charset-format1-format-table-raw (font-data offset)
@@ -785,11 +752,6 @@
 (defun charset-format1-ranges-count (table)
   "Range1 array."
   (max 0 (floor (- (table-ref-length table) (+ (table-ref-offset table) 1)) 3)))
-
-
-(declaim
- (inline charset-format1-format-table charset-format1-ranges
-  charset-format1-ranges-count))
 
 
 (defun charset-format1-ranges-ref (table index)
@@ -827,13 +789,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline charset-format2-format-table charset-format2-ranges
+  charset-format2-ranges-count charset-format2-format-table-raw))
+
+
 (defun charset-format2-format-table (table)
   "Format; =2"
   (declare (type charset-format2 table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline charset-format2-format-table-raw))
 
 
 (defun charset-format2-format-table-raw (font-data offset)
@@ -843,11 +807,6 @@
 (defun charset-format2-ranges-count (table)
   "Range2 array."
   (max 0 (floor (- (table-ref-length table) (+ (table-ref-offset table) 1)) 4)))
-
-
-(declaim
- (inline charset-format2-format-table charset-format2-ranges
-  charset-format2-ranges-count))
 
 
 (defun charset-format2-ranges-ref (table index)

@@ -15,13 +15,15 @@
      (:constructor %make-ebdt (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline ebdt-major-version ebdt-minor-version ebdt-major-version-raw
+  ebdt-minor-version-raw))
+
+
 (defun ebdt-major-version (table)
   "Major version of the EBDT table, = 2."
   (declare (type ebdt table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline ebdt-major-version-raw))
 
 
 (defun ebdt-major-version-raw (font-data offset)
@@ -33,12 +35,6 @@
   (declare (type ebdt table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 2)))
-
-
-(declaim (inline ebdt-minor-version-raw))
-
-
-(declaim (inline ebdt-major-version ebdt-minor-version))
 
 
 (defun ebdt-minor-version-raw (font-data offset)

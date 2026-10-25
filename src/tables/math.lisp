@@ -120,7 +120,7 @@
    math-variants-vert-glyph-construction-offsets-ref
    math-variants-vert-glyph-count math-variants-vert-glyph-coverage-offset
    math-variants-vert-glyph-coverage-offset-offset math-version
-   read-glyph-assembly read-math read-math-constants
+   part-flags-extender-flag-p read-glyph-assembly read-math read-math-constants
    read-math-glyph-construction read-math-glyph-info
    read-math-italics-correction-info read-math-kern read-math-kern-info
    read-math-top-accent-attachment read-math-variants sanitize-glyph-assembly
@@ -133,9 +133,22 @@
 (define-constant +part-flags-extender-flag+ 1)
 
 
+(declaim (inline part-flags-extender-flag-p))
+
+
+(defun part-flags-extender-flag-p (flags)
+  (logtest flags +part-flags-extender-flag+))
+
+
 (defstruct
     (math-value-record (:include record-ref)
      (:constructor %make-math-value-record (%record-font-data %record-offset))))
+
+
+(define-constant +math-value-record-size+ 4)
+
+
+(declaim (inline math-value-record-value math-value-record-device-offset))
 
 
 (defun math-value-record-value (rec)
@@ -150,16 +163,20 @@
   (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 2)))
 
 
-(declaim (inline math-value-record-value math-value-record-device-offset))
-
-
-(define-constant +math-value-record-size+ 4)
-
-
 (defstruct
     (math-kern-info-record (:include record-ref)
      (:constructor %make-math-kern-info-record
       (%record-font-data %record-offset))))
+
+
+(define-constant +math-kern-info-record-size+ 8)
+
+
+(declaim
+ (inline math-kern-info-record-top-right-math-kern-offset
+  math-kern-info-record-top-left-math-kern-offset
+  math-kern-info-record-bottom-right-math-kern-offset
+  math-kern-info-record-bottom-left-math-kern-offset))
 
 
 (defun math-kern-info-record-top-right-math-kern-offset (rec)
@@ -186,20 +203,18 @@
   (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 6)))
 
 
-(declaim
- (inline math-kern-info-record-top-right-math-kern-offset
-  math-kern-info-record-top-left-math-kern-offset
-  math-kern-info-record-bottom-right-math-kern-offset
-  math-kern-info-record-bottom-left-math-kern-offset))
-
-
-(define-constant +math-kern-info-record-size+ 8)
-
-
 (defstruct
     (math-glyph-variant-record (:include record-ref)
      (:constructor %make-math-glyph-variant-record
       (%record-font-data %record-offset))))
+
+
+(define-constant +math-glyph-variant-record-size+ 4)
+
+
+(declaim
+ (inline math-glyph-variant-record-variant-glyph
+  math-glyph-variant-record-advance-measurement))
 
 
 (defun math-glyph-variant-record-variant-glyph (rec)
@@ -215,17 +230,18 @@
                          (+ (record-ref-offset rec) 2)))
 
 
-(declaim
- (inline math-glyph-variant-record-variant-glyph
-  math-glyph-variant-record-advance-measurement))
-
-
-(define-constant +math-glyph-variant-record-size+ 4)
-
-
 (defstruct
     (glyph-part-record (:include record-ref)
      (:constructor %make-glyph-part-record (%record-font-data %record-offset))))
+
+
+(define-constant +glyph-part-record-size+ 10)
+
+
+(declaim
+ (inline glyph-part-record-glyph-id glyph-part-record-start-connector-length
+  glyph-part-record-end-connector-length glyph-part-record-full-advance
+  glyph-part-record-part-flags))
 
 
 (defun glyph-part-record-glyph-id (rec)
@@ -261,27 +277,22 @@
   (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 8)))
 
 
-(declaim
- (inline glyph-part-record-glyph-id glyph-part-record-start-connector-length
-  glyph-part-record-end-connector-length glyph-part-record-full-advance
-  glyph-part-record-part-flags))
-
-
-(define-constant +glyph-part-record-size+ 10)
-
-
 (defstruct
     (math (:include table-ref)
      (:constructor %make-math (%table-font-data %table-offset %table-length))))
+
+
+(declaim
+ (inline math-version math-math-constants-offset
+  math-math-constants-offset-offset math-math-glyph-info-offset
+  math-math-glyph-info-offset-offset math-math-variants-offset
+  math-math-variants-offset-offset math-version-raw))
 
 
 (defun math-version (table)
   "(major, minor) Version for the MATH table (1,0)"
   (declare (type math table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline math-version-raw))
 
 
 (defun math-version-raw (font-data offset)
@@ -327,13 +338,6 @@
                       (+ (table-ref-offset table) 8)))
 
 
-(declaim
- (inline math-version math-math-constants-offset
-  math-math-constants-offset-offset math-math-glyph-info-offset
-  math-math-glyph-info-offset-offset math-math-variants-offset
-  math-math-variants-offset-offset))
-
-
 (defun math-math-variants-offset (table)
   "Offset to MathVariants table, from beginning of MATH table."
   (declare (type math table))
@@ -364,71 +368,6 @@
     (math-constants (:include table-ref)
      (:constructor %make-math-constants
       (%table-font-data %table-offset %table-length))))
-
-
-(defun math-constants-script-percent-scale-down (table)
-  "Percentage of scaling down for level 1 superscripts and subscripts."
-  (declare (type math-constants table))
-  (font-data-read-i16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline math-constants-script-percent-scale-down-raw))
-
-
-(defun math-constants-script-percent-scale-down-raw (font-data offset)
-  (font-data-read-i16 font-data offset))
-
-
-(defun math-constants-script-script-percent-scale-down (table)
-  "Percentage of scaling down for level 2 (scriptScript) superscripts and subscripts."
-  (declare (type math-constants table))
-  (font-data-read-i16 (table-ref-font-data table)
-                      (+ (table-ref-offset table) 2)))
-
-
-(declaim (inline math-constants-script-script-percent-scale-down-raw))
-
-
-(defun math-constants-script-script-percent-scale-down-raw (font-data offset)
-  (font-data-read-i16 font-data (+ offset 2)))
-
-
-(defun math-constants-delimited-sub-formula-min-height (table)
-  "Minimum height required for a delimited expression (contained within parentheses, etc.) to be treated as a sub-formula."
-  (declare (type math-constants table))
-  (font-data-read-ufword (table-ref-font-data table)
-                         (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline math-constants-delimited-sub-formula-min-height-raw))
-
-
-(defun math-constants-delimited-sub-formula-min-height-raw (font-data offset)
-  (font-data-read-ufword font-data (+ offset 4)))
-
-
-(defun math-constants-display-operator-min-height (table)
-  "Minimum height of n-ary operators (such as integral and summation) for formulas in display mode (that is, appearing as standalone page elements, not embedded inline within text)."
-  (declare (type math-constants table))
-  (font-data-read-ufword (table-ref-font-data table)
-                         (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline math-constants-display-operator-min-height-raw))
-
-
-(defun math-constants-display-operator-min-height-raw (font-data offset)
-  (font-data-read-ufword font-data (+ offset 6)))
-
-
-(defun math-constants-radical-degree-bottom-raise-percent (table)
-  "Height of the bottom of the radical degree, if such is present, in proportion to the ascender of the radical sign."
-  (declare (type math-constants table))
-  (font-data-read-i16 (table-ref-font-data table)
-                      (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline math-constants-radical-degree-bottom-raise-percent-raw))
 
 
 (declaim
@@ -478,20 +417,432 @@
   math-constants-radical-rule-thickness math-constants-radical-extra-ascender
   math-constants-radical-kern-before-degree
   math-constants-radical-kern-after-degree
-  math-constants-radical-degree-bottom-raise-percent))
+  math-constants-radical-degree-bottom-raise-percent
+  math-constants-script-percent-scale-down-raw
+  math-constants-script-script-percent-scale-down-raw
+  math-constants-delimited-sub-formula-min-height-raw
+  math-constants-display-operator-min-height-raw
+  math-constants-radical-degree-bottom-raise-percent-raw))
+
+
+(defun math-constants-script-percent-scale-down (table)
+  "Percentage of scaling down for level 1 superscripts and subscripts."
+  (declare (type math-constants table))
+  (font-data-read-i16 (table-ref-font-data table) (table-ref-offset table)))
+
+
+(defun math-constants-script-percent-scale-down-raw (font-data offset)
+  (font-data-read-i16 font-data offset))
+
+
+(defun math-constants-script-script-percent-scale-down (table)
+  "Percentage of scaling down for level 2 (scriptScript) superscripts and subscripts."
+  (declare (type math-constants table))
+  (font-data-read-i16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 2)))
+
+
+(defun math-constants-script-script-percent-scale-down-raw (font-data offset)
+  (font-data-read-i16 font-data (+ offset 2)))
+
+
+(defun math-constants-delimited-sub-formula-min-height (table)
+  "Minimum height required for a delimited expression (contained within parentheses, etc.) to be treated as a sub-formula."
+  (declare (type math-constants table))
+  (font-data-read-ufword (table-ref-font-data table)
+                         (+ (table-ref-offset table) 4)))
+
+
+(defun math-constants-delimited-sub-formula-min-height-raw (font-data offset)
+  (font-data-read-ufword font-data (+ offset 4)))
+
+
+(defun math-constants-display-operator-min-height (table)
+  "Minimum height of n-ary operators (such as integral and summation) for formulas in display mode (that is, appearing as standalone page elements, not embedded inline within text)."
+  (declare (type math-constants table))
+  (font-data-read-ufword (table-ref-font-data table)
+                         (+ (table-ref-offset table) 6)))
+
+
+(defun math-constants-display-operator-min-height-raw (font-data offset)
+  (font-data-read-ufword font-data (+ offset 6)))
+
+
+(defun math-constants-math-leading (table)
+  "White space to be left between math formulas to ensure proper line spacing."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 8)))
+
+
+(defun math-constants-axis-height (table)
+  "Axis height of the font."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 12)))
+
+
+(defun math-constants-accent-base-height (table)
+  "Maximum (ink) height of accent base that does not require raising the accents."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 16)))
+
+
+(defun math-constants-flattened-accent-base-height (table)
+  "Maximum (ink) height of accent base that does not require flattening the accents."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 20)))
+
+
+(defun math-constants-subscript-shift-down (table)
+  "The standard shift down applied to subscript elements."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 24)))
+
+
+(defun math-constants-subscript-top-max (table)
+  "Maximum allowed height of the (ink) top of subscripts that does not require moving subscripts further down."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 28)))
+
+
+(defun math-constants-subscript-baseline-drop-min (table)
+  "Minimum allowed drop of the baseline of subscripts relative to the (ink) bottom of the base."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 32)))
+
+
+(defun math-constants-superscript-shift-up (table)
+  "Standard shift up applied to superscript elements."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 36)))
+
+
+(defun math-constants-superscript-shift-up-cramped (table)
+  "Standard shift of superscripts relative to the base, in cramped style."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 40)))
+
+
+(defun math-constants-superscript-bottom-min (table)
+  "Minimum allowed height of the (ink) bottom of superscripts that does not require moving subscripts further up."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 44)))
+
+
+(defun math-constants-superscript-baseline-drop-max (table)
+  "Maximum allowed drop of the baseline of superscripts relative to the (ink) top of the base."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 48)))
+
+
+(defun math-constants-sub-superscript-gap-min (table)
+  "Minimum gap between the superscript and subscript ink."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 52)))
+
+
+(defun math-constants-superscript-bottom-max-with-subscript (table)
+  "The maximum level to which the (ink) bottom of superscript can be pushed to increase the gap between superscript and subscript, before subscript starts being moved down."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 56)))
+
+
+(defun math-constants-space-after-script (table)
+  "Extra white space to be added after each subscript and superscript."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 60)))
+
+
+(defun math-constants-upper-limit-gap-min (table)
+  "Minimum gap between the (ink) bottom of the upper limit, and the (ink) top of the base operator."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 64)))
+
+
+(defun math-constants-upper-limit-baseline-rise-min (table)
+  "Minimum distance between baseline of upper limit and (ink) top of the base operator."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 68)))
+
+
+(defun math-constants-lower-limit-gap-min (table)
+  "Minimum gap between (ink) top of the lower limit, and (ink) bottom of the base operator."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 72)))
+
+
+(defun math-constants-lower-limit-baseline-drop-min (table)
+  "Minimum distance between baseline of the lower limit and (ink) bottom of the base operator."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 76)))
+
+
+(defun math-constants-stack-top-shift-up (table)
+  "Standard shift up applied to the top element of a stack."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 80)))
+
+
+(defun math-constants-stack-top-display-style-shift-up (table)
+  "Standard shift up applied to the top element of a stack in display style."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 84)))
+
+
+(defun math-constants-stack-bottom-shift-down (table)
+  "Standard shift down applied to the bottom element of a stack."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 88)))
+
+
+(defun math-constants-stack-bottom-display-style-shift-down (table)
+  "Standard shift down applied to the bottom element of a stack in display style."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 92)))
+
+
+(defun math-constants-stack-gap-min (table)
+  "Minimum gap between (ink) bottom of the top element of a stack, and the (ink) top of the bottom element."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 96)))
+
+
+(defun math-constants-stack-display-style-gap-min (table)
+  "Minimum gap between (ink) bottom of the top element of a stack, and the (ink) top of the bottom element in display style."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 100)))
+
+
+(defun math-constants-stretch-stack-top-shift-up (table)
+  "Standard shift up applied to the top element of the stretch stack."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 104)))
+
+
+(defun math-constants-stretch-stack-bottom-shift-down (table)
+  "Standard shift down applied to the bottom element of the stretch stack."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 108)))
+
+
+(defun math-constants-stretch-stack-gap-above-min (table)
+  "Minimum gap between the ink of the stretched element, and the (ink) bottom of the element above."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 112)))
+
+
+(defun math-constants-stretch-stack-gap-below-min (table)
+  "Minimum gap between the ink of the stretched element, and the (ink) top of the element below."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 116)))
+
+
+(defun math-constants-fraction-numerator-shift-up (table)
+  "Standard shift up applied to the numerator."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 120)))
+
+
+(defun math-constants-fraction-numerator-display-style-shift-up (table)
+  "Standard shift up applied to the numerator in display style."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 124)))
+
+
+(defun math-constants-fraction-denominator-shift-down (table)
+  "Standard shift down applied to the denominator."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 128)))
+
+
+(defun math-constants-fraction-denominator-display-style-shift-down (table)
+  "Standard shift down applied to the denominator in display style."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 132)))
+
+
+(defun math-constants-fraction-numerator-gap-min (table)
+  "Minimum tolerated gap between the (ink) bottom of the numerator and the ink of the fraction bar."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 136)))
+
+
+(defun math-constants-fraction-num-display-style-gap-min (table)
+  "Minimum tolerated gap between the (ink) bottom of the numerator and the ink of the fraction bar in display style."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 140)))
+
+
+(defun math-constants-fraction-rule-thickness (table)
+  "Thickness of the fraction bar."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 144)))
+
+
+(defun math-constants-fraction-denominator-gap-min (table)
+  "Minimum tolerated gap between the ink of the fraction bar and the (ink) top of the denominator."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 148)))
+
+
+(defun math-constants-fraction-denom-display-style-gap-min (table)
+  "Minimum tolerated gap between the ink of the fraction bar and the (ink) top of the denominator in display style."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 152)))
+
+
+(defun math-constants-skewed-fraction-horizontal-gap (table)
+  "Horizontal distance between the top and bottom elements of a skewed fraction."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 156)))
+
+
+(defun math-constants-skewed-fraction-vertical-gap (table)
+  "Vertical distance between the ink of the top and bottom elements of a skewed fraction."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 160)))
+
+
+(defun math-constants-overbar-vertical-gap (table)
+  "Distance between the overbar and the (ink) top of he base."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 164)))
+
+
+(defun math-constants-overbar-rule-thickness (table)
+  "Thickness of overbar."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 168)))
+
+
+(defun math-constants-overbar-extra-ascender (table)
+  "Extra white space reserved above the overbar."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 172)))
+
+
+(defun math-constants-underbar-vertical-gap (table)
+  "Distance between underbar and (ink) bottom of the base."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 176)))
+
+
+(defun math-constants-underbar-rule-thickness (table)
+  "Thickness of underbar."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 180)))
+
+
+(defun math-constants-underbar-extra-descender (table)
+  "Extra white space reserved below the underbar."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 184)))
+
+
+(defun math-constants-radical-vertical-gap (table)
+  "Space between the (ink) top of the expression and the bar over it."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 188)))
+
+
+(defun math-constants-radical-display-style-vertical-gap (table)
+  "Space between the (ink) top of the expression and the bar over it in display style."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 192)))
+
+
+(defun math-constants-radical-rule-thickness (table)
+  "Thickness of the radical rule."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 196)))
+
+
+(defun math-constants-radical-extra-ascender (table)
+  "Extra white space reserved above the radical."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 200)))
+
+
+(defun math-constants-radical-kern-before-degree (table)
+  "Extra horizontal kern before the degree of a radical, if such is present."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 204)))
+
+
+(defun math-constants-radical-kern-after-degree (table)
+  "Negative kern after the degree of a radical, if such is present."
+  (declare (type math-constants table))
+  (%make-math-value-record (table-ref-font-data table)
+   (+ (table-ref-offset table) 208)))
+
+
+(defun math-constants-radical-degree-bottom-raise-percent (table)
+  "Height of the bottom of the radical degree, if such is present, in proportion to the ascender of the radical sign."
+  (declare (type math-constants table))
+  (font-data-read-i16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 212)))
 
 
 (defun math-constants-radical-degree-bottom-raise-percent-raw
        (font-data offset)
-  (font-data-read-i16 font-data (+ offset 8)))
+  (font-data-read-i16 font-data (+ offset 212)))
 
 
 (defun sanitize-math-constants (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 10 length) (font-data-valid-range-p font-data offset 10))
-    (error 'font-out-of-bounds-error :pos offset :size 10 :length
+  (unless (and (<= 214 length) (font-data-valid-range-p font-data offset 214))
+    (error 'font-out-of-bounds-error :pos offset :size 214 :length
            (font-data-length font-data)))
   t)
 
@@ -507,6 +858,17 @@
     (math-glyph-info (:include table-ref)
      (:constructor %make-math-glyph-info
       (%table-font-data %table-offset %table-length))))
+
+
+(declaim
+ (inline math-glyph-info-math-italics-correction-info-offset
+  math-glyph-info-math-italics-correction-info-offset-offset
+  math-glyph-info-math-top-accent-attachment-offset
+  math-glyph-info-math-top-accent-attachment-offset-offset
+  math-glyph-info-extended-shape-coverage-offset
+  math-glyph-info-extended-shape-coverage-offset-offset
+  math-glyph-info-math-kern-info-offset
+  math-glyph-info-math-kern-info-offset-offset))
 
 
 (defun math-glyph-info-math-italics-correction-info-offset-offset (table)
@@ -564,17 +926,6 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim
- (inline math-glyph-info-math-italics-correction-info-offset
-  math-glyph-info-math-italics-correction-info-offset-offset
-  math-glyph-info-math-top-accent-attachment-offset
-  math-glyph-info-math-top-accent-attachment-offset-offset
-  math-glyph-info-extended-shape-coverage-offset
-  math-glyph-info-extended-shape-coverage-offset-offset
-  math-glyph-info-math-kern-info-offset
-  math-glyph-info-math-kern-info-offset-offset))
-
-
 (defun math-glyph-info-math-kern-info-offset (table)
   "Offset to the MathKernInfo table, from the beginning of the MathGlyphInfo table. May be NULL."
   (declare (type math-glyph-info table))
@@ -607,6 +958,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline math-italics-correction-info-coverage-offset
+  math-italics-correction-info-coverage-offset-offset
+  math-italics-correction-info-italics-correction-count
+  math-italics-correction-info-italics-correction
+  math-italics-correction-info-italics-correction-array-count
+  math-italics-correction-info-italics-correction-count-raw))
+
+
 (defun math-italics-correction-info-coverage-offset-offset (table)
   "Offset to the Coverage table, from the beginning of the MathItalicsCorrectionInfo table."
   (declare (type math-italics-correction-info table))
@@ -629,20 +989,9 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline math-italics-correction-info-italics-correction-count-raw))
-
-
 (defun math-italics-correction-info-italics-correction-count-raw
        (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
-
-
-(declaim
- (inline math-italics-correction-info-coverage-offset
-  math-italics-correction-info-coverage-offset-offset
-  math-italics-correction-info-italics-correction-count
-  math-italics-correction-info-italics-correction
-  math-italics-correction-info-italics-correction-array-count))
 
 
 (defun math-italics-correction-info-italics-correction-ref (table index)
@@ -688,6 +1037,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline math-top-accent-attachment-top-accent-coverage-offset
+  math-top-accent-attachment-top-accent-coverage-offset-offset
+  math-top-accent-attachment-top-accent-attachment-count
+  math-top-accent-attachment-top-accent-attachment
+  math-top-accent-attachment-top-accent-attachment-array-count
+  math-top-accent-attachment-top-accent-attachment-count-raw))
+
+
 (defun math-top-accent-attachment-top-accent-coverage-offset-offset (table)
   "Offset to the Coverage table, from the beginning of the MathTopAccentAttachment table."
   (declare (type math-top-accent-attachment table))
@@ -711,20 +1069,9 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline math-top-accent-attachment-top-accent-attachment-count-raw))
-
-
 (defun math-top-accent-attachment-top-accent-attachment-count-raw
        (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
-
-
-(declaim
- (inline math-top-accent-attachment-top-accent-coverage-offset
-  math-top-accent-attachment-top-accent-coverage-offset-offset
-  math-top-accent-attachment-top-accent-attachment-count
-  math-top-accent-attachment-top-accent-attachment
-  math-top-accent-attachment-top-accent-attachment-array-count))
 
 
 (defun math-top-accent-attachment-top-accent-attachment-ref (table index)
@@ -770,6 +1117,14 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline math-kern-info-math-kern-coverage-offset
+  math-kern-info-math-kern-coverage-offset-offset
+  math-kern-info-math-kern-count math-kern-info-math-kern-info-records
+  math-kern-info-math-kern-info-records-count
+  math-kern-info-math-kern-count-raw))
+
+
 (defun math-kern-info-math-kern-coverage-offset-offset (table)
   "Offset to the Coverage table, from the beginning of the MathKernInfo table."
   (declare (type math-kern-info table))
@@ -792,9 +1147,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline math-kern-info-math-kern-count-raw))
-
-
 (defun math-kern-info-math-kern-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -802,13 +1154,6 @@
 (defun math-kern-info-math-kern-info-records-count (table)
   "Array of MathKernInfoRecords, one for each covered glyph."
   (math-kern-info-math-kern-count table))
-
-
-(declaim
- (inline math-kern-info-math-kern-coverage-offset
-  math-kern-info-math-kern-coverage-offset-offset
-  math-kern-info-math-kern-count math-kern-info-math-kern-info-records
-  math-kern-info-math-kern-info-records-count))
 
 
 (defun math-kern-info-math-kern-info-records-ref (table index)
@@ -852,13 +1197,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline math-kern-height-count math-kern-correction-height
+  math-kern-correction-height-count math-kern-kern-values
+  math-kern-kern-values-count math-kern-height-count-raw))
+
+
 (defun math-kern-height-count (table)
   "Number of heights at which the kern value changes."
   (declare (type math-kern table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline math-kern-height-count-raw))
 
 
 (defun math-kern-height-count-raw (font-data offset)
@@ -885,12 +1233,6 @@
 (defun math-kern-kern-values-count (table)
   "Array of kerning values for different height ranges, in design units.  There is one more of these than there are correction heights: the first applies below the first correction height, and the last above the last."
   (+ (math-kern-height-count table) 1))
-
-
-(declaim
- (inline math-kern-height-count math-kern-correction-height
-  math-kern-correction-height-count math-kern-kern-values
-  math-kern-kern-values-count))
 
 
 (defun math-kern-kern-values-ref (table index)
@@ -938,13 +1280,25 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline math-variants-min-connector-overlap
+  math-variants-vert-glyph-coverage-offset
+  math-variants-vert-glyph-coverage-offset-offset
+  math-variants-horiz-glyph-coverage-offset
+  math-variants-horiz-glyph-coverage-offset-offset
+  math-variants-vert-glyph-count math-variants-horiz-glyph-count
+  math-variants-vert-glyph-construction-offsets
+  math-variants-vert-glyph-construction-offsets-count
+  math-variants-horiz-glyph-construction-offsets
+  math-variants-horiz-glyph-construction-offsets-count
+  math-variants-min-connector-overlap-raw math-variants-vert-glyph-count-raw
+  math-variants-horiz-glyph-count-raw))
+
+
 (defun math-variants-min-connector-overlap (table)
   "Minimum overlap of connecting glyphs during glyph construction, in design units."
   (declare (type math-variants table))
   (font-data-read-ufword (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline math-variants-min-connector-overlap-raw))
 
 
 (defun math-variants-min-connector-overlap-raw (font-data offset)
@@ -990,9 +1344,6 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline math-variants-vert-glyph-count-raw))
-
-
 (defun math-variants-vert-glyph-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 6)))
 
@@ -1002,9 +1353,6 @@
   (declare (type math-variants table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline math-variants-horiz-glyph-count-raw))
 
 
 (defun math-variants-horiz-glyph-count-raw (font-data offset)
@@ -1034,19 +1382,6 @@
 (defun math-variants-horiz-glyph-construction-offsets-count (table)
   "Array of offsets to MathGlyphConstruction tables, from the beginning of the MathVariants table, for shapes growing in the horizontal direction."
   (math-variants-horiz-glyph-count table))
-
-
-(declaim
- (inline math-variants-min-connector-overlap
-  math-variants-vert-glyph-coverage-offset
-  math-variants-vert-glyph-coverage-offset-offset
-  math-variants-horiz-glyph-coverage-offset
-  math-variants-horiz-glyph-coverage-offset-offset
-  math-variants-vert-glyph-count math-variants-horiz-glyph-count
-  math-variants-vert-glyph-construction-offsets
-  math-variants-vert-glyph-construction-offsets-count
-  math-variants-horiz-glyph-construction-offsets
-  math-variants-horiz-glyph-construction-offsets-count))
 
 
 (defun math-variants-horiz-glyph-construction-offsets-ref (table index)
@@ -1098,6 +1433,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline math-glyph-construction-glyph-assembly-offset
+  math-glyph-construction-glyph-assembly-offset-offset
+  math-glyph-construction-variant-count
+  math-glyph-construction-math-glyph-variant-records
+  math-glyph-construction-math-glyph-variant-records-count
+  math-glyph-construction-variant-count-raw))
+
+
 (defun math-glyph-construction-glyph-assembly-offset-offset (table)
   "Offset to the GlyphAssembly table for this shape, from the beginning of the MathGlyphConstruction table. May be NULL."
   (declare (type math-glyph-construction table))
@@ -1120,9 +1464,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline math-glyph-construction-variant-count-raw))
-
-
 (defun math-glyph-construction-variant-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -1130,14 +1471,6 @@
 (defun math-glyph-construction-math-glyph-variant-records-count (table)
   "MathGlyphVariantRecords for alternative variants of the base glyph."
   (math-glyph-construction-variant-count table))
-
-
-(declaim
- (inline math-glyph-construction-glyph-assembly-offset
-  math-glyph-construction-glyph-assembly-offset-offset
-  math-glyph-construction-variant-count
-  math-glyph-construction-math-glyph-variant-records
-  math-glyph-construction-math-glyph-variant-records-count))
 
 
 (defun math-glyph-construction-math-glyph-variant-records-ref (table index)
@@ -1181,17 +1514,28 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline glyph-assembly-italics-correction glyph-assembly-part-count
+  glyph-assembly-part-records glyph-assembly-part-records-count
+  glyph-assembly-part-count-raw))
+
+
+(defun glyph-assembly-italics-correction (table)
+  "Italics correction of this GlyphAssembly. Should not depend on the assembly size."
+  (declare (type glyph-assembly table))
+  (%make-math-value-record (table-ref-font-data table)
+   (table-ref-offset table)))
+
+
 (defun glyph-assembly-part-count (table)
   "Number of parts in this assembly."
   (declare (type glyph-assembly table))
-  (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline glyph-assembly-part-count-raw))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 4)))
 
 
 (defun glyph-assembly-part-count-raw (font-data offset)
-  (font-data-read-u16 font-data offset))
+  (font-data-read-u16 font-data (+ offset 4)))
 
 
 (defun glyph-assembly-part-records-count (table)
@@ -1199,16 +1543,11 @@
   (glyph-assembly-part-count table))
 
 
-(declaim
- (inline glyph-assembly-italics-correction glyph-assembly-part-count
-  glyph-assembly-part-records glyph-assembly-part-records-count))
-
-
 (defun glyph-assembly-part-records-ref (table index)
   "Array of part records, from left to right (for assemblies that extend horizontally) or bottom to top (for assemblies that extend vertically)."
   (declare (type glyph-assembly table)
            (type (unsigned-byte 32) index))
-  (let ((pos (+ (+ (table-ref-offset table) 2) (* index 10))))
+  (let ((pos (+ (+ (table-ref-offset table) 6) (* index 10))))
     (unless
         (<= (+ pos 10) (+ (table-ref-offset table) (table-ref-length table)))
       (error 'font-out-of-bounds-error :pos pos :size 10 :length
@@ -1220,14 +1559,14 @@
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 2 length) (font-data-valid-range-p font-data offset 2))
-    (error 'font-out-of-bounds-error :pos offset :size 2 :length
+  (unless (and (<= 6 length) (font-data-valid-range-p font-data offset 6))
+    (error 'font-out-of-bounds-error :pos offset :size 6 :length
            (font-data-length font-data)))
   (let ((cnt (glyph-assembly-part-count-raw font-data offset)))
     (unless
-        (and (<= (+ 2 (* cnt 10)) length)
-             (font-data-valid-range-p font-data offset (+ 2 (* cnt 10))))
-      (error 'font-out-of-bounds-error :pos offset :size (+ 2 (* cnt 10))
+        (and (<= (+ 6 (* cnt 10)) length)
+             (font-data-valid-range-p font-data offset (+ 6 (* cnt 10))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 6 (* cnt 10))
              :length (font-data-length font-data))))
   t)
 

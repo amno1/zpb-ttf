@@ -7,6 +7,7 @@
   :author "Arthur Miller and contributors"
   :description "Runtime structures, buffer reading, and base condition classes for zpb-otf"
   :license "MIT"
+  :depends-on (#:alexandria)
   :serial t
   :components ((:module "src"
                 :serial t

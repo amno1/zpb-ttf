@@ -99,6 +99,14 @@
      (:constructor %make-encoding-record (%record-font-data %record-offset))))
 
 
+(define-constant +encoding-record-size+ 8)
+
+
+(declaim
+ (inline encoding-record-platform-id encoding-record-encoding-id
+  encoding-record-subtable-offset))
+
+
 (defun encoding-record-platform-id (rec)
   "Platform ID."
   (declare (type encoding-record rec))
@@ -117,17 +125,17 @@
   (font-data-read-u32 (record-ref-font-data rec) (+ (record-ref-offset rec) 4)))
 
 
-(declaim
- (inline encoding-record-platform-id encoding-record-encoding-id
-  encoding-record-subtable-offset))
-
-
-(define-constant +encoding-record-size+ 8)
-
-
 (defstruct
     (sub-header (:include record-ref)
      (:constructor %make-sub-header (%record-font-data %record-offset))))
+
+
+(define-constant +sub-header-size+ 8)
+
+
+(declaim
+ (inline sub-header-first-code sub-header-entry-count sub-header-id-delta
+  sub-header-id-range-offset))
 
 
 (defun sub-header-first-code (rec)
@@ -154,18 +162,18 @@
   (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 6)))
 
 
-(declaim
- (inline sub-header-first-code sub-header-entry-count sub-header-id-delta
-  sub-header-id-range-offset))
-
-
-(define-constant +sub-header-size+ 8)
-
-
 (defstruct
     (sequential-map-group (:include record-ref)
      (:constructor %make-sequential-map-group
       (%record-font-data %record-offset))))
+
+
+(define-constant +sequential-map-group-size+ 12)
+
+
+(declaim
+ (inline sequential-map-group-start-char-code
+  sequential-map-group-end-char-code sequential-map-group-start-glyph-id))
 
 
 (defun sequential-map-group-start-char-code (rec)
@@ -186,18 +194,18 @@
   (font-data-read-u32 (record-ref-font-data rec) (+ (record-ref-offset rec) 8)))
 
 
-(declaim
- (inline sequential-map-group-start-char-code
-  sequential-map-group-end-char-code sequential-map-group-start-glyph-id))
-
-
-(define-constant +sequential-map-group-size+ 12)
-
-
 (defstruct
     (constant-map-group (:include record-ref)
      (:constructor %make-constant-map-group
       (%record-font-data %record-offset))))
+
+
+(define-constant +constant-map-group-size+ 12)
+
+
+(declaim
+ (inline constant-map-group-start-char-code constant-map-group-end-char-code
+  constant-map-group-glyph-id))
 
 
 (defun constant-map-group-start-char-code (rec)
@@ -218,18 +226,19 @@
   (font-data-read-u32 (record-ref-font-data rec) (+ (record-ref-offset rec) 8)))
 
 
-(declaim
- (inline constant-map-group-start-char-code constant-map-group-end-char-code
-  constant-map-group-glyph-id))
-
-
-(define-constant +constant-map-group-size+ 12)
-
-
 (defstruct
     (variation-selector15 (:include record-ref)
      (:constructor %make-variation-selector15
       (%record-font-data %record-offset))))
+
+
+(define-constant +variation-selector15-size+ 8)
+
+
+(declaim
+ (inline variation-selector15-var-selector
+  variation-selector15-default-uvs-offset
+  variation-selector15-non-default-uvs-offset))
 
 
 (defun variation-selector15-default-uvs-offset (rec)
@@ -242,19 +251,18 @@
   (font-data-read-u32 (record-ref-font-data rec) (+ (record-ref-offset rec) 4)))
 
 
-(declaim
- (inline variation-selector15-var-selector
-  variation-selector15-default-uvs-offset
-  variation-selector15-non-default-uvs-offset))
-
-
-(define-constant +variation-selector15-size+ 8)
-
-
 (defstruct
     (variation-selector (:include record-ref)
      (:constructor %make-variation-selector
       (%record-font-data %record-offset))))
+
+
+(define-constant +variation-selector-size+ 8)
+
+
+(declaim
+ (inline variation-selector-var-selector variation-selector-default-uvs-offset
+  variation-selector-non-default-uvs-offset))
 
 
 (defun variation-selector-default-uvs-offset (rec)
@@ -269,28 +277,26 @@
   (font-data-read-u32 (record-ref-font-data rec) (+ (record-ref-offset rec) 4)))
 
 
-(declaim
- (inline variation-selector-var-selector variation-selector-default-uvs-offset
-  variation-selector-non-default-uvs-offset))
-
-
-(define-constant +variation-selector-size+ 8)
-
-
 (defstruct
     (uvs-mapping24 (:include record-ref)
      (:constructor %make-uvs-mapping24 (%record-font-data %record-offset))))
 
 
-(declaim (inline uvs-mapping24-unicode-value uvs-mapping24-glyph-id))
-
-
 (define-constant +uvs-mapping24-size+ 0)
+
+
+(declaim (inline uvs-mapping24-unicode-value uvs-mapping24-glyph-id))
 
 
 (defstruct
     (uvs-mapping (:include record-ref)
      (:constructor %make-uvs-mapping (%record-font-data %record-offset))))
+
+
+(define-constant +uvs-mapping-size+ 2)
+
+
+(declaim (inline uvs-mapping-unicode-value uvs-mapping-glyph-id))
 
 
 (defun uvs-mapping-glyph-id (rec)
@@ -299,15 +305,16 @@
   (font-data-read-u16 (record-ref-font-data rec) (record-ref-offset rec)))
 
 
-(declaim (inline uvs-mapping-unicode-value uvs-mapping-glyph-id))
-
-
-(define-constant +uvs-mapping-size+ 2)
-
-
 (defstruct
     (unicode-range (:include record-ref)
      (:constructor %make-unicode-range (%record-font-data %record-offset))))
+
+
+(define-constant +unicode-range-size+ 1)
+
+
+(declaim
+ (inline unicode-range-start-unicode-value unicode-range-additional-count))
 
 
 (defun unicode-range-additional-count (rec)
@@ -316,25 +323,20 @@
   (font-data-read-u8 (record-ref-font-data rec) (record-ref-offset rec)))
 
 
-(declaim
- (inline unicode-range-start-unicode-value unicode-range-additional-count))
-
-
-(define-constant +unicode-range-size+ 1)
-
-
 (defstruct
     (cmap (:include table-ref)
      (:constructor %make-cmap (%table-font-data %table-offset %table-length))))
+
+
+(declaim
+ (inline cmap-version cmap-num-tables cmap-encoding-records
+  cmap-encoding-records-count cmap-version-raw cmap-num-tables-raw))
 
 
 (defun cmap-version (table)
   "Table version number (0)."
   (declare (type cmap table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline cmap-version-raw))
 
 
 (defun cmap-version-raw (font-data offset)
@@ -348,19 +350,11 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline cmap-num-tables-raw))
-
-
 (defun cmap-num-tables-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
 
 (defun cmap-encoding-records-count (table) (cmap-num-tables table))
-
-
-(declaim
- (inline cmap-version cmap-num-tables cmap-encoding-records
-  cmap-encoding-records-count))
 
 
 (defun cmap-encoding-records-ref (table index)
@@ -402,13 +396,15 @@
      (:constructor %make-dmap (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline dmap-version dmap-num-tables dmap-encoding-records
+  dmap-encoding-records-count dmap-version-raw dmap-num-tables-raw))
+
+
 (defun dmap-version (table)
   "Table version number (0)."
   (declare (type dmap table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline dmap-version-raw))
 
 
 (defun dmap-version-raw (font-data offset)
@@ -422,19 +418,11 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline dmap-num-tables-raw))
-
-
 (defun dmap-num-tables-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
 
 (defun dmap-encoding-records-count (table) (dmap-num-tables table))
-
-
-(declaim
- (inline dmap-version dmap-num-tables dmap-encoding-records
-  dmap-encoding-records-count))
 
 
 (defun dmap-encoding-records-ref (table index)
@@ -496,13 +484,16 @@
      (:constructor %make-cmap0 (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline cmap0-format-table cmap0-length cmap0-language cmap0-glyph-id-array
+  cmap0-glyph-id-array-count cmap0-format-table-raw cmap0-length-raw
+  cmap0-language-raw))
+
+
 (defun cmap0-format-table (table)
   "Format number is set to 0."
   (declare (type cmap0 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline cmap0-format-table-raw))
 
 
 (defun cmap0-format-table-raw (font-data offset)
@@ -516,9 +507,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline cmap0-length-raw))
-
-
 (defun cmap0-length-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -528,9 +516,6 @@
   (declare (type cmap0 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline cmap0-language-raw))
 
 
 (defun cmap0-language-raw (font-data offset)
@@ -553,11 +538,6 @@
       (error 'font-out-of-bounds-error :pos pos :size 1 :length
              (table-ref-length table)))
     (font-data-read-u8 (table-ref-font-data table) pos)))
-
-
-(declaim
- (inline cmap0-format-table cmap0-length cmap0-language cmap0-glyph-id-array
-  cmap0-glyph-id-array-count))
 
 
 (defun cmap0-glyph-id-array-bytes (table)
@@ -588,13 +568,16 @@
      (:constructor %make-cmap2 (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline cmap2-format-table cmap2-length cmap2-language cmap2-sub-header-keys
+  cmap2-sub-header-keys-count cmap2-format-table-raw cmap2-length-raw
+  cmap2-language-raw))
+
+
 (defun cmap2-format-table (table)
   "Format number is set to 2."
   (declare (type cmap2 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline cmap2-format-table-raw))
 
 
 (defun cmap2-format-table-raw (font-data offset)
@@ -608,9 +591,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline cmap2-length-raw))
-
-
 (defun cmap2-length-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -622,9 +602,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline cmap2-language-raw))
-
-
 (defun cmap2-language-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
 
@@ -633,11 +610,6 @@
   "Array that maps high bytes to subHeaders: value is subHeader index × 8."
   (declare (ignore table))
   256)
-
-
-(declaim
- (inline cmap2-format-table cmap2-length cmap2-language cmap2-sub-header-keys
-  cmap2-sub-header-keys-count))
 
 
 (defun cmap2-sub-header-keys-ref (table index)
@@ -674,13 +646,21 @@
      (:constructor %make-cmap4 (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline cmap4-format-table cmap4-length cmap4-language cmap4-seg-count-x2
+  cmap4-search-range cmap4-entry-selector cmap4-range-shift cmap4-end-code
+  cmap4-end-code-count cmap4-reserved-pad cmap4-start-code
+  cmap4-start-code-count cmap4-id-delta cmap4-id-delta-count
+  cmap4-id-range-offsets cmap4-id-range-offsets-count cmap4-glyph-id-array
+  cmap4-glyph-id-array-count cmap4-format-table-raw cmap4-length-raw
+  cmap4-language-raw cmap4-seg-count-x2-raw cmap4-search-range-raw
+  cmap4-entry-selector-raw cmap4-range-shift-raw))
+
+
 (defun cmap4-format-table (table)
   "Format number is set to 4."
   (declare (type cmap4 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline cmap4-format-table-raw))
 
 
 (defun cmap4-format-table-raw (font-data offset)
@@ -694,9 +674,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline cmap4-length-raw))
-
-
 (defun cmap4-length-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -706,9 +683,6 @@
   (declare (type cmap4 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline cmap4-language-raw))
 
 
 (defun cmap4-language-raw (font-data offset)
@@ -722,9 +696,6 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline cmap4-seg-count-x2-raw))
-
-
 (defun cmap4-seg-count-x2-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 6)))
 
@@ -734,9 +705,6 @@
   (declare (type cmap4 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline cmap4-search-range-raw))
 
 
 (defun cmap4-search-range-raw (font-data offset)
@@ -750,9 +718,6 @@
                       (+ (table-ref-offset table) 10)))
 
 
-(declaim (inline cmap4-entry-selector-raw))
-
-
 (defun cmap4-entry-selector-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 10)))
 
@@ -762,9 +727,6 @@
   (declare (type cmap4 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 12)))
-
-
-(declaim (inline cmap4-range-shift-raw))
 
 
 (defun cmap4-range-shift-raw (font-data offset)
@@ -871,15 +833,6 @@
         2)))
 
 
-(declaim
- (inline cmap4-format-table cmap4-length cmap4-language cmap4-seg-count-x2
-  cmap4-search-range cmap4-entry-selector cmap4-range-shift cmap4-end-code
-  cmap4-end-code-count cmap4-reserved-pad cmap4-start-code
-  cmap4-start-code-count cmap4-id-delta cmap4-id-delta-count
-  cmap4-id-range-offsets cmap4-id-range-offsets-count cmap4-glyph-id-array
-  cmap4-glyph-id-array-count))
-
-
 (defun cmap4-glyph-id-array-ref (table index)
   "Glyph index array (arbitrary length)"
   (declare (type cmap4 table)
@@ -921,13 +874,17 @@
      (:constructor %make-cmap6 (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline cmap6-format-table cmap6-length cmap6-language cmap6-first-code
+  cmap6-entry-count cmap6-glyph-id-array cmap6-glyph-id-array-count
+  cmap6-format-table-raw cmap6-length-raw cmap6-language-raw
+  cmap6-first-code-raw cmap6-entry-count-raw))
+
+
 (defun cmap6-format-table (table)
   "Format number is set to 6."
   (declare (type cmap6 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline cmap6-format-table-raw))
 
 
 (defun cmap6-format-table-raw (font-data offset)
@@ -941,9 +898,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline cmap6-length-raw))
-
-
 (defun cmap6-length-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -953,9 +907,6 @@
   (declare (type cmap6 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline cmap6-language-raw))
 
 
 (defun cmap6-language-raw (font-data offset)
@@ -969,9 +920,6 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline cmap6-first-code-raw))
-
-
 (defun cmap6-first-code-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 6)))
 
@@ -983,9 +931,6 @@
                       (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline cmap6-entry-count-raw))
-
-
 (defun cmap6-entry-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 8)))
 
@@ -993,11 +938,6 @@
 (defun cmap6-glyph-id-array-count (table)
   "Array of glyph index values for character codes in the range."
   (cmap6-entry-count table))
-
-
-(declaim
- (inline cmap6-format-table cmap6-length cmap6-language cmap6-first-code
-  cmap6-entry-count cmap6-glyph-id-array cmap6-glyph-id-array-count))
 
 
 (defun cmap6-glyph-id-array-ref (table index)
@@ -1040,13 +980,17 @@
      (:constructor %make-cmap8 (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline cmap8-format-table cmap8-reserved cmap8-length cmap8-language
+  cmap8-is32 cmap8-is32-count cmap8-num-groups cmap8-groups cmap8-groups-count
+  cmap8-format-table-raw cmap8-reserved-raw cmap8-length-raw cmap8-language-raw
+  cmap8-num-groups-raw))
+
+
 (defun cmap8-format-table (table)
   "Subtable format; set to 8."
   (declare (type cmap8 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline cmap8-format-table-raw))
 
 
 (defun cmap8-format-table-raw (font-data offset)
@@ -1060,9 +1004,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline cmap8-reserved-raw))
-
-
 (defun cmap8-reserved-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -1074,9 +1015,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline cmap8-length-raw))
-
-
 (defun cmap8-length-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 4)))
 
@@ -1086,9 +1024,6 @@
   (declare (type cmap8 table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline cmap8-language-raw))
 
 
 (defun cmap8-language-raw (font-data offset)
@@ -1126,9 +1061,6 @@
                       (+ (table-ref-offset table) 8204)))
 
 
-(declaim (inline cmap8-num-groups-raw))
-
-
 (defun cmap8-num-groups-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 8204)))
 
@@ -1136,11 +1068,6 @@
 (defun cmap8-groups-count (table)
   "Array of SequentialMapGroup records."
   (cmap8-num-groups table))
-
-
-(declaim
- (inline cmap8-format-table cmap8-reserved cmap8-length cmap8-language
-  cmap8-is32 cmap8-is32-count cmap8-num-groups cmap8-groups cmap8-groups-count))
 
 
 (defun cmap8-groups-ref (table index)
@@ -1185,13 +1112,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline cmap10-format-table cmap10-reserved cmap10-length cmap10-language
+  cmap10-start-char-code cmap10-num-chars cmap10-glyph-id-array
+  cmap10-glyph-id-array-count cmap10-format-table-raw cmap10-reserved-raw
+  cmap10-length-raw cmap10-language-raw cmap10-start-char-code-raw
+  cmap10-num-chars-raw))
+
+
 (defun cmap10-format-table (table)
   "Subtable format; set to 10."
   (declare (type cmap10 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline cmap10-format-table-raw))
 
 
 (defun cmap10-format-table-raw (font-data offset)
@@ -1205,9 +1137,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline cmap10-reserved-raw))
-
-
 (defun cmap10-reserved-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -1217,9 +1146,6 @@
   (declare (type cmap10 table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline cmap10-length-raw))
 
 
 (defun cmap10-length-raw (font-data offset)
@@ -1233,9 +1159,6 @@
                       (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline cmap10-language-raw))
-
-
 (defun cmap10-language-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 8)))
 
@@ -1245,9 +1168,6 @@
   (declare (type cmap10 table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 12)))
-
-
-(declaim (inline cmap10-start-char-code-raw))
 
 
 (defun cmap10-start-char-code-raw (font-data offset)
@@ -1261,9 +1181,6 @@
                       (+ (table-ref-offset table) 16)))
 
 
-(declaim (inline cmap10-num-chars-raw))
-
-
 (defun cmap10-num-chars-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 16)))
 
@@ -1271,12 +1188,6 @@
 (defun cmap10-glyph-id-array-count (table)
   "Array of glyph indices for the character codes covered"
   (cmap10-num-chars table))
-
-
-(declaim
- (inline cmap10-format-table cmap10-reserved cmap10-length cmap10-language
-  cmap10-start-char-code cmap10-num-chars cmap10-glyph-id-array
-  cmap10-glyph-id-array-count))
 
 
 (defun cmap10-glyph-id-array-ref (table index)
@@ -1320,13 +1231,17 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline cmap12-format-table cmap12-reserved cmap12-length cmap12-language
+  cmap12-num-groups cmap12-groups cmap12-groups-count cmap12-format-table-raw
+  cmap12-reserved-raw cmap12-length-raw cmap12-language-raw
+  cmap12-num-groups-raw))
+
+
 (defun cmap12-format-table (table)
   "Subtable format; set to 12."
   (declare (type cmap12 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline cmap12-format-table-raw))
 
 
 (defun cmap12-format-table-raw (font-data offset)
@@ -1340,9 +1255,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline cmap12-reserved-raw))
-
-
 (defun cmap12-reserved-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -1352,9 +1264,6 @@
   (declare (type cmap12 table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline cmap12-length-raw))
 
 
 (defun cmap12-length-raw (font-data offset)
@@ -1368,9 +1277,6 @@
                       (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline cmap12-language-raw))
-
-
 (defun cmap12-language-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 8)))
 
@@ -1382,9 +1288,6 @@
                       (+ (table-ref-offset table) 12)))
 
 
-(declaim (inline cmap12-num-groups-raw))
-
-
 (defun cmap12-num-groups-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 12)))
 
@@ -1392,11 +1295,6 @@
 (defun cmap12-groups-count (table)
   "Array of SequentialMapGroup records."
   (cmap12-num-groups table))
-
-
-(declaim
- (inline cmap12-format-table cmap12-reserved cmap12-length cmap12-language
-  cmap12-num-groups cmap12-groups cmap12-groups-count))
 
 
 (defun cmap12-groups-ref (table index)
@@ -1440,13 +1338,17 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline cmap13-format-table cmap13-reserved cmap13-length cmap13-language
+  cmap13-num-groups cmap13-groups cmap13-groups-count cmap13-format-table-raw
+  cmap13-reserved-raw cmap13-length-raw cmap13-language-raw
+  cmap13-num-groups-raw))
+
+
 (defun cmap13-format-table (table)
   "Subtable format; set to 13."
   (declare (type cmap13 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline cmap13-format-table-raw))
 
 
 (defun cmap13-format-table-raw (font-data offset)
@@ -1460,9 +1362,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline cmap13-reserved-raw))
-
-
 (defun cmap13-reserved-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -1472,9 +1371,6 @@
   (declare (type cmap13 table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline cmap13-length-raw))
 
 
 (defun cmap13-length-raw (font-data offset)
@@ -1488,9 +1384,6 @@
                       (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline cmap13-language-raw))
-
-
 (defun cmap13-language-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 8)))
 
@@ -1502,9 +1395,6 @@
                       (+ (table-ref-offset table) 12)))
 
 
-(declaim (inline cmap13-num-groups-raw))
-
-
 (defun cmap13-num-groups-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 12)))
 
@@ -1512,11 +1402,6 @@
 (defun cmap13-groups-count (table)
   "Array of ConstantMapGroup records."
   (cmap13-num-groups table))
-
-
-(declaim
- (inline cmap13-format-table cmap13-reserved cmap13-length cmap13-language
-  cmap13-num-groups cmap13-groups cmap13-groups-count))
 
 
 (defun cmap13-groups-ref (table index)
@@ -1560,13 +1445,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline cmap14-format-table cmap14-length cmap14-num-var-selector-records
+  cmap14-var-selector cmap14-var-selector-count cmap14-format-table-raw
+  cmap14-length-raw cmap14-num-var-selector-records-raw))
+
+
 (defun cmap14-format-table (table)
   "Subtable format. Set to 14."
   (declare (type cmap14 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline cmap14-format-table-raw))
 
 
 (defun cmap14-format-table-raw (font-data offset)
@@ -1580,9 +1468,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline cmap14-length-raw))
-
-
 (defun cmap14-length-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 2)))
 
@@ -1594,16 +1479,8 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline cmap14-num-var-selector-records-raw))
-
-
 (defun cmap14-num-var-selector-records-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 6)))
-
-
-(declaim
- (inline cmap14-format-table cmap14-length cmap14-num-var-selector-records
-  cmap14-var-selector cmap14-var-selector-count))
 
 
 (defun cmap14-var-selector-count (table)
@@ -1634,13 +1511,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline cmap15-format-table cmap15-length cmap15-num-var-selector-records
+  cmap15-var-selector cmap15-var-selector-count cmap15-format-table-raw
+  cmap15-length-raw cmap15-num-var-selector-records-raw))
+
+
 (defun cmap15-format-table (table)
   "Subtable format. Set to 15."
   (declare (type cmap15 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline cmap15-format-table-raw))
 
 
 (defun cmap15-format-table-raw (font-data offset)
@@ -1654,9 +1534,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline cmap15-length-raw))
-
-
 (defun cmap15-length-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 2)))
 
@@ -1668,16 +1545,8 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline cmap15-num-var-selector-records-raw))
-
-
 (defun cmap15-num-var-selector-records-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 6)))
-
-
-(declaim
- (inline cmap15-format-table cmap15-length cmap15-num-var-selector-records
-  cmap15-var-selector cmap15-var-selector-count))
 
 
 (defun cmap15-var-selector-count (table)
@@ -1707,22 +1576,19 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline default-uvs-num-unicode-value-ranges default-uvs-ranges
+  default-uvs-ranges-count default-uvs-num-unicode-value-ranges-raw))
+
+
 (defun default-uvs-num-unicode-value-ranges (table)
   "Number of Unicode character ranges."
   (declare (type default-uvs table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
 
 
-(declaim (inline default-uvs-num-unicode-value-ranges-raw))
-
-
 (defun default-uvs-num-unicode-value-ranges-raw (font-data offset)
   (font-data-read-u32 font-data offset))
-
-
-(declaim
- (inline default-uvs-num-unicode-value-ranges default-uvs-ranges
-  default-uvs-ranges-count))
 
 
 (defun default-uvs-ranges-count (table)
@@ -1753,21 +1619,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline non-default-uvs-num-uvs-mappings non-default-uvs-uvs-mapping
+  non-default-uvs-uvs-mapping-count non-default-uvs-num-uvs-mappings-raw))
+
+
 (defun non-default-uvs-num-uvs-mappings (table)
   (declare (type non-default-uvs table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
 
 
-(declaim (inline non-default-uvs-num-uvs-mappings-raw))
-
-
 (defun non-default-uvs-num-uvs-mappings-raw (font-data offset)
   (font-data-read-u32 font-data offset))
-
-
-(declaim
- (inline non-default-uvs-num-uvs-mappings non-default-uvs-uvs-mapping
-  non-default-uvs-uvs-mapping-count))
 
 
 (defun non-default-uvs-uvs-mapping-count (table)
@@ -1797,21 +1660,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline non-default-uvs24-num-uvs-mappings non-default-uvs24-uvs-mapping
+  non-default-uvs24-uvs-mapping-count non-default-uvs24-num-uvs-mappings-raw))
+
+
 (defun non-default-uvs24-num-uvs-mappings (table)
   (declare (type non-default-uvs24 table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
 
 
-(declaim (inline non-default-uvs24-num-uvs-mappings-raw))
-
-
 (defun non-default-uvs24-num-uvs-mappings-raw (font-data offset)
   (font-data-read-u32 font-data offset))
-
-
-(declaim
- (inline non-default-uvs24-num-uvs-mappings non-default-uvs24-uvs-mapping
-  non-default-uvs24-uvs-mapping-count))
 
 
 (defun non-default-uvs24-uvs-mapping-count (table)

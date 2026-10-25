@@ -15,13 +15,15 @@
      (:constructor %make-cbdt (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline cbdt-major-version cbdt-minor-version cbdt-major-version-raw
+  cbdt-minor-version-raw))
+
+
 (defun cbdt-major-version (table)
   "Major version of the CBDT table, = 3."
   (declare (type cbdt table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline cbdt-major-version-raw))
 
 
 (defun cbdt-major-version-raw (font-data offset)
@@ -33,12 +35,6 @@
   (declare (type cbdt table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 2)))
-
-
-(declaim (inline cbdt-minor-version-raw))
-
-
-(declaim (inline cbdt-major-version cbdt-minor-version))
 
 
 (defun cbdt-minor-version-raw (font-data offset)

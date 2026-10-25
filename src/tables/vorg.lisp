@@ -21,6 +21,13 @@
       (%record-font-data %record-offset))))
 
 
+(define-constant +vert-origin-y-metrics-size+ 4)
+
+
+(declaim
+ (inline vert-origin-y-metrics-glyph-index vert-origin-y-metrics-vert-origin-y))
+
+
 (defun vert-origin-y-metrics-glyph-index (rec)
   "Glyph index."
   (declare (type vert-origin-y-metrics rec))
@@ -33,25 +40,21 @@
   (font-data-read-i16 (record-ref-font-data rec) (+ (record-ref-offset rec) 2)))
 
 
-(declaim
- (inline vert-origin-y-metrics-glyph-index vert-origin-y-metrics-vert-origin-y))
-
-
-(define-constant +vert-origin-y-metrics-size+ 4)
-
-
 (defstruct
     (vorg (:include table-ref)
      (:constructor %make-vorg (%table-font-data %table-offset %table-length))))
+
+
+(declaim
+ (inline vorg-version vorg-default-vert-origin-y vorg-num-vert-origin-y-metrics
+  vorg-vert-origin-y-metrics vorg-vert-origin-y-metrics-count vorg-version-raw
+  vorg-default-vert-origin-y-raw vorg-num-vert-origin-y-metrics-raw))
 
 
 (defun vorg-version (table)
   "Major/minor version number. Set to 1.0."
   (declare (type vorg table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline vorg-version-raw))
 
 
 (defun vorg-version-raw (font-data offset)
@@ -65,9 +68,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline vorg-default-vert-origin-y-raw))
-
-
 (defun vorg-default-vert-origin-y-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 4)))
 
@@ -79,9 +79,6 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline vorg-num-vert-origin-y-metrics-raw))
-
-
 (defun vorg-num-vert-origin-y-metrics-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 6)))
 
@@ -89,11 +86,6 @@
 (defun vorg-vert-origin-y-metrics-count (table)
   "Array of VertOriginYMetrics records, sorted by glyph ID."
   (vorg-num-vert-origin-y-metrics table))
-
-
-(declaim
- (inline vorg-version vorg-default-vert-origin-y vorg-num-vert-origin-y-metrics
-  vorg-vert-origin-y-metrics vorg-vert-origin-y-metrics-count))
 
 
 (defun vorg-vert-origin-y-metrics-ref (table index)

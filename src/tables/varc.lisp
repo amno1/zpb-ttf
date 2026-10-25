@@ -52,57 +52,176 @@
    sparse-variation-region-region-axis-count varc varc-axis-indices-list-offset
    varc-axis-indices-list-offset-offset varc-condition-list-offset
    varc-condition-list-offset-offset varc-coverage-offset
-   varc-coverage-offset-offset varc-multi-var-store-offset
-   varc-multi-var-store-offset-offset varc-p varc-var-composite-glyphs-offset
-   varc-var-composite-glyphs-offset-offset varc-version))
+   varc-coverage-offset-offset varc-flags-axis-values-have-variation-p
+   varc-flags-gid-is-24-bit-p varc-flags-have-axes-p
+   varc-flags-have-condition-p varc-flags-have-rotation-p
+   varc-flags-have-scale-x-p varc-flags-have-scale-y-p varc-flags-have-skew-x-p
+   varc-flags-have-skew-y-p varc-flags-have-tcenter-x-p
+   varc-flags-have-tcenter-y-p varc-flags-have-translate-x-p
+   varc-flags-have-translate-y-p varc-flags-reserved-mask-p
+   varc-flags-reset-unspecified-axes-p varc-flags-transform-has-variation-p
+   varc-multi-var-store-offset varc-multi-var-store-offset-offset varc-p
+   varc-var-composite-glyphs-offset varc-var-composite-glyphs-offset-offset
+   varc-version))
 
 
 (define-constant +varc-flags-reset-unspecified-axes+ 1)
 
 
+(declaim (inline varc-flags-reset-unspecified-axes-p))
+
+
+(defun varc-flags-reset-unspecified-axes-p (flags)
+  (logtest flags +varc-flags-reset-unspecified-axes+))
+
+
 (define-constant +varc-flags-have-axes+ 2)
+
+
+(declaim (inline varc-flags-have-axes-p))
+
+
+(defun varc-flags-have-axes-p (flags) (logtest flags +varc-flags-have-axes+))
 
 
 (define-constant +varc-flags-axis-values-have-variation+ 4)
 
 
+(declaim (inline varc-flags-axis-values-have-variation-p))
+
+
+(defun varc-flags-axis-values-have-variation-p (flags)
+  (logtest flags +varc-flags-axis-values-have-variation+))
+
+
 (define-constant +varc-flags-transform-has-variation+ 8)
+
+
+(declaim (inline varc-flags-transform-has-variation-p))
+
+
+(defun varc-flags-transform-has-variation-p (flags)
+  (logtest flags +varc-flags-transform-has-variation+))
 
 
 (define-constant +varc-flags-have-translate-x+ 16)
 
 
+(declaim (inline varc-flags-have-translate-x-p))
+
+
+(defun varc-flags-have-translate-x-p (flags)
+  (logtest flags +varc-flags-have-translate-x+))
+
+
 (define-constant +varc-flags-have-translate-y+ 32)
+
+
+(declaim (inline varc-flags-have-translate-y-p))
+
+
+(defun varc-flags-have-translate-y-p (flags)
+  (logtest flags +varc-flags-have-translate-y+))
 
 
 (define-constant +varc-flags-have-rotation+ 64)
 
 
+(declaim (inline varc-flags-have-rotation-p))
+
+
+(defun varc-flags-have-rotation-p (flags)
+  (logtest flags +varc-flags-have-rotation+))
+
+
 (define-constant +varc-flags-have-condition+ 128)
+
+
+(declaim (inline varc-flags-have-condition-p))
+
+
+(defun varc-flags-have-condition-p (flags)
+  (logtest flags +varc-flags-have-condition+))
 
 
 (define-constant +varc-flags-have-scale-x+ 256)
 
 
+(declaim (inline varc-flags-have-scale-x-p))
+
+
+(defun varc-flags-have-scale-x-p (flags)
+  (logtest flags +varc-flags-have-scale-x+))
+
+
 (define-constant +varc-flags-have-scale-y+ 512)
+
+
+(declaim (inline varc-flags-have-scale-y-p))
+
+
+(defun varc-flags-have-scale-y-p (flags)
+  (logtest flags +varc-flags-have-scale-y+))
 
 
 (define-constant +varc-flags-have-tcenter-x+ 1024)
 
 
+(declaim (inline varc-flags-have-tcenter-x-p))
+
+
+(defun varc-flags-have-tcenter-x-p (flags)
+  (logtest flags +varc-flags-have-tcenter-x+))
+
+
 (define-constant +varc-flags-have-tcenter-y+ 2048)
+
+
+(declaim (inline varc-flags-have-tcenter-y-p))
+
+
+(defun varc-flags-have-tcenter-y-p (flags)
+  (logtest flags +varc-flags-have-tcenter-y+))
 
 
 (define-constant +varc-flags-gid-is-24-bit+ 4096)
 
 
+(declaim (inline varc-flags-gid-is-24-bit-p))
+
+
+(defun varc-flags-gid-is-24-bit-p (flags)
+  (logtest flags +varc-flags-gid-is-24-bit+))
+
+
 (define-constant +varc-flags-have-skew-x+ 8192)
+
+
+(declaim (inline varc-flags-have-skew-x-p))
+
+
+(defun varc-flags-have-skew-x-p (flags)
+  (logtest flags +varc-flags-have-skew-x+))
 
 
 (define-constant +varc-flags-have-skew-y+ 16384)
 
 
+(declaim (inline varc-flags-have-skew-y-p))
+
+
+(defun varc-flags-have-skew-y-p (flags)
+  (logtest flags +varc-flags-have-skew-y+))
+
+
 (define-constant +varc-flags-reserved-mask+ 4294934528)
+
+
+(declaim (inline varc-flags-reserved-mask-p))
+
+
+(defun varc-flags-reserved-mask-p (flags)
+  (logtest flags +varc-flags-reserved-mask+))
 
 
 (defstruct
@@ -110,13 +229,19 @@
      (:constructor %make-varc (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline varc-version varc-coverage-offset varc-coverage-offset-offset
+  varc-multi-var-store-offset varc-multi-var-store-offset-offset
+  varc-condition-list-offset varc-condition-list-offset-offset
+  varc-axis-indices-list-offset varc-axis-indices-list-offset-offset
+  varc-var-composite-glyphs-offset varc-var-composite-glyphs-offset-offset
+  varc-version-raw))
+
+
 (defun varc-version (table)
   "Major/minor version number. Set to 1.0."
   (declare (type varc table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline varc-version-raw))
 
 
 (defun varc-version-raw (font-data offset)
@@ -185,14 +310,6 @@
                       (+ (table-ref-offset table) 20)))
 
 
-(declaim
- (inline varc-version varc-coverage-offset varc-coverage-offset-offset
-  varc-multi-var-store-offset varc-multi-var-store-offset-offset
-  varc-condition-list-offset varc-condition-list-offset-offset
-  varc-axis-indices-list-offset varc-axis-indices-list-offset-offset
-  varc-var-composite-glyphs-offset varc-var-composite-glyphs-offset-offset))
-
-
 (defun varc-var-composite-glyphs-offset (table)
   (declare (type varc table))
   (let ((off (varc-var-composite-glyphs-offset-offset table)))
@@ -224,12 +341,20 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline multi-item-variation-store-format-table
+  multi-item-variation-store-region-list-offset
+  multi-item-variation-store-region-list-offset-offset
+  multi-item-variation-store-variation-data-count
+  multi-item-variation-store-variation-data-offsets
+  multi-item-variation-store-variation-data-offsets-count
+  multi-item-variation-store-format-table-raw
+  multi-item-variation-store-variation-data-count-raw))
+
+
 (defun multi-item-variation-store-format-table (table)
   (declare (type multi-item-variation-store table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline multi-item-variation-store-format-table-raw))
 
 
 (defun multi-item-variation-store-format-table-raw (font-data offset)
@@ -256,24 +381,12 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline multi-item-variation-store-variation-data-count-raw))
-
-
 (defun multi-item-variation-store-variation-data-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 6)))
 
 
 (defun multi-item-variation-store-variation-data-offsets-count (table)
   (multi-item-variation-store-variation-data-count table))
-
-
-(declaim
- (inline multi-item-variation-store-format-table
-  multi-item-variation-store-region-list-offset
-  multi-item-variation-store-region-list-offset-offset
-  multi-item-variation-store-variation-data-count
-  multi-item-variation-store-variation-data-offsets
-  multi-item-variation-store-variation-data-offsets-count))
 
 
 (defun multi-item-variation-store-variation-data-offsets-ref (table index)
@@ -321,12 +434,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline sparse-variation-region-list-region-count
+  sparse-variation-region-list-region-offsets
+  sparse-variation-region-list-region-offsets-count
+  sparse-variation-region-list-region-count-raw))
+
+
 (defun sparse-variation-region-list-region-count (table)
   (declare (type sparse-variation-region-list table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline sparse-variation-region-list-region-count-raw))
 
 
 (defun sparse-variation-region-list-region-count-raw (font-data offset)
@@ -335,12 +452,6 @@
 
 (defun sparse-variation-region-list-region-offsets-count (table)
   (sparse-variation-region-list-region-count table))
-
-
-(declaim
- (inline sparse-variation-region-list-region-count
-  sparse-variation-region-list-region-offsets
-  sparse-variation-region-list-region-offsets-count))
 
 
 (defun sparse-variation-region-list-region-offsets-ref (table index)
@@ -386,12 +497,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline sparse-variation-region-region-axis-count
+  sparse-variation-region-axis-coordinate-offsets
+  sparse-variation-region-axis-coordinate-offsets-count
+  sparse-variation-region-region-axis-count-raw))
+
+
 (defun sparse-variation-region-region-axis-count (table)
   (declare (type sparse-variation-region table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline sparse-variation-region-region-axis-count-raw))
 
 
 (defun sparse-variation-region-region-axis-count-raw (font-data offset)
@@ -400,12 +515,6 @@
 
 (defun sparse-variation-region-axis-coordinate-offsets-count (table)
   (sparse-variation-region-region-axis-count table))
-
-
-(declaim
- (inline sparse-variation-region-region-axis-count
-  sparse-variation-region-axis-coordinate-offsets
-  sparse-variation-region-axis-coordinate-offsets-count))
 
 
 (defun sparse-variation-region-axis-coordinate-offsets-ref (table index)
@@ -451,12 +560,19 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline sparse-region-axis-coordinates-axis-index
+  sparse-region-axis-coordinates-start sparse-region-axis-coordinates-peak
+  sparse-region-axis-coordinates-end
+  sparse-region-axis-coordinates-axis-index-raw
+  sparse-region-axis-coordinates-start-raw
+  sparse-region-axis-coordinates-peak-raw
+  sparse-region-axis-coordinates-end-raw))
+
+
 (defun sparse-region-axis-coordinates-axis-index (table)
   (declare (type sparse-region-axis-coordinates table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline sparse-region-axis-coordinates-axis-index-raw))
 
 
 (defun sparse-region-axis-coordinates-axis-index-raw (font-data offset)
@@ -469,9 +585,6 @@
                           (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline sparse-region-axis-coordinates-start-raw))
-
-
 (defun sparse-region-axis-coordinates-start-raw (font-data offset)
   (font-data-read-f2dot14 font-data (+ offset 2)))
 
@@ -482,9 +595,6 @@
                           (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline sparse-region-axis-coordinates-peak-raw))
-
-
 (defun sparse-region-axis-coordinates-peak-raw (font-data offset)
   (font-data-read-f2dot14 font-data (+ offset 4)))
 
@@ -493,15 +603,6 @@
   (declare (type sparse-region-axis-coordinates table))
   (font-data-read-f2dot14 (table-ref-font-data table)
                           (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline sparse-region-axis-coordinates-end-raw))
-
-
-(declaim
- (inline sparse-region-axis-coordinates-axis-index
-  sparse-region-axis-coordinates-start sparse-region-axis-coordinates-peak
-  sparse-region-axis-coordinates-end))
 
 
 (defun sparse-region-axis-coordinates-end-raw (font-data offset)
@@ -531,12 +632,20 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline multi-item-variation-data-format-table
+  multi-item-variation-data-region-index-count
+  multi-item-variation-data-region-indices
+  multi-item-variation-data-region-indices-count
+  multi-item-variation-data-delta-sets-offset
+  multi-item-variation-data-delta-sets-offset-offset
+  multi-item-variation-data-format-table-raw
+  multi-item-variation-data-region-index-count-raw))
+
+
 (defun multi-item-variation-data-format-table (table)
   (declare (type multi-item-variation-data table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline multi-item-variation-data-format-table-raw))
 
 
 (defun multi-item-variation-data-format-table-raw (font-data offset)
@@ -547,9 +656,6 @@
   (declare (type multi-item-variation-data table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 1)))
-
-
-(declaim (inline multi-item-variation-data-region-index-count-raw))
 
 
 (defun multi-item-variation-data-region-index-count-raw (font-data offset)
@@ -579,15 +685,6 @@
                           (multi-item-variation-data-region-indices-count
                            table)
                           2))))
-
-
-(declaim
- (inline multi-item-variation-data-format-table
-  multi-item-variation-data-region-index-count
-  multi-item-variation-data-region-indices
-  multi-item-variation-data-region-indices-count
-  multi-item-variation-data-delta-sets-offset
-  multi-item-variation-data-delta-sets-offset-offset))
 
 
 (defun multi-item-variation-data-delta-sets-offset (table)
@@ -628,12 +725,14 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline condition-list-condition-count condition-list-condition-offsets
+  condition-list-condition-offsets-count condition-list-condition-count-raw))
+
+
 (defun condition-list-condition-count (table)
   (declare (type condition-list table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline condition-list-condition-count-raw))
 
 
 (defun condition-list-condition-count-raw (font-data offset)
@@ -642,11 +741,6 @@
 
 (defun condition-list-condition-offsets-count (table)
   (condition-list-condition-count table))
-
-
-(declaim
- (inline condition-list-condition-count condition-list-condition-offsets
-  condition-list-condition-offsets-count))
 
 
 (defun condition-list-condition-offsets-ref (table index)

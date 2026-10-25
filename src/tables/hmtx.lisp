@@ -22,6 +22,12 @@
      (:constructor %make-long-metric (%record-font-data %record-offset))))
 
 
+(define-constant +long-metric-size+ 4)
+
+
+(declaim (inline long-metric-advance long-metric-side-bearing))
+
+
 (defun long-metric-advance (rec)
   "Advance width/height, in font design units."
   (declare (type long-metric rec))
@@ -34,15 +40,14 @@
   (font-data-read-i16 (record-ref-font-data rec) (+ (record-ref-offset rec) 2)))
 
 
-(declaim (inline long-metric-advance long-metric-side-bearing))
-
-
-(define-constant +long-metric-size+ 4)
-
-
 (defstruct
     (hmtx (:include table-ref)
      (:constructor %make-hmtx (%table-font-data %table-offset %table-length))))
+
+
+(declaim
+ (inline hmtx-h-metrics hmtx-h-metrics-count hmtx-left-side-bearings
+  hmtx-left-side-bearings-count))
 
 
 (defun hmtx-h-metrics-count (table &optional number-of-h-metrics)
@@ -70,11 +75,6 @@
         (- (table-ref-length table)
            (+ (table-ref-offset table) (* (hmtx-h-metrics-count table) 4)))
         2)))
-
-
-(declaim
- (inline hmtx-h-metrics hmtx-h-metrics-count hmtx-left-side-bearings
-  hmtx-left-side-bearings-count))
 
 
 (defun hmtx-left-side-bearings-ref (table index)
@@ -114,6 +114,11 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline hmtx-extended-h-metrics hmtx-extended-h-metrics-count
+  hmtx-extended-left-side-bearings hmtx-extended-left-side-bearings-count))
+
+
 (defun hmtx-extended-h-metrics-count (table &optional number-of-h-metrics)
   (or number-of-h-metrics
       (max 0 (floor (- (table-ref-length table) (table-ref-offset table)) 4))))
@@ -137,11 +142,6 @@
            (+ (table-ref-offset table)
               (* (hmtx-extended-h-metrics-count table) 4)))
         2)))
-
-
-(declaim
- (inline hmtx-extended-h-metrics hmtx-extended-h-metrics-count
-  hmtx-extended-left-side-bearings hmtx-extended-left-side-bearings-count))
 
 
 (defun hmtx-extended-left-side-bearings-ref (table index)

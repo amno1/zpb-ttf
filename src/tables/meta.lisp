@@ -18,6 +18,14 @@
      (:constructor %make-data-map-record (%record-font-data %record-offset))))
 
 
+(define-constant +data-map-record-size+ 12)
+
+
+(declaim
+ (inline data-map-record-tag data-map-record-data-offset
+  data-map-record-data-length))
+
+
 (defun data-map-record-tag (rec)
   "A tag indicating the type of metadata."
   (declare (type data-map-record rec))
@@ -37,26 +45,21 @@
   (font-data-read-u32 (record-ref-font-data rec) (+ (record-ref-offset rec) 8)))
 
 
-(declaim
- (inline data-map-record-tag data-map-record-data-offset
-  data-map-record-data-length))
-
-
-(define-constant +data-map-record-size+ 12)
-
-
 (defstruct
     (meta (:include table-ref)
      (:constructor %make-meta (%table-font-data %table-offset %table-length))))
+
+
+(declaim
+ (inline meta-version meta-flags meta-reserved meta-data-maps-count
+  meta-data-maps meta-data-maps-array-count meta-version-raw meta-flags-raw
+  meta-reserved-raw meta-data-maps-count-raw))
 
 
 (defun meta-version (table)
   "Version number of the metadata table — set to 1."
   (declare (type meta table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline meta-version-raw))
 
 
 (defun meta-version-raw (font-data offset)
@@ -70,9 +73,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline meta-flags-raw))
-
-
 (defun meta-flags-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 4)))
 
@@ -82,9 +82,6 @@
   (declare (type meta table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 8)))
-
-
-(declaim (inline meta-reserved-raw))
 
 
 (defun meta-reserved-raw (font-data offset)
@@ -98,16 +95,8 @@
                       (+ (table-ref-offset table) 12)))
 
 
-(declaim (inline meta-data-maps-count-raw))
-
-
 (defun meta-data-maps-count-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 12)))
-
-
-(declaim
- (inline meta-version meta-flags meta-reserved meta-data-maps-count
-  meta-data-maps meta-data-maps-array-count))
 
 
 (defun meta-data-maps-ref (table index)

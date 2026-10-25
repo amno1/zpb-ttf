@@ -16,13 +16,14 @@
    big-glyph-metrics-hori-advance big-glyph-metrics-hori-bearing-x
    big-glyph-metrics-hori-bearing-y big-glyph-metrics-p
    big-glyph-metrics-vert-advance big-glyph-metrics-vert-bearing-x
-   big-glyph-metrics-vert-bearing-y big-glyph-metrics-width bitmap-size
-   bitmap-size-bit-depth bitmap-size-color-ref bitmap-size-end-glyph-index
-   bitmap-size-flags bitmap-size-hori bitmap-size-index-subtable-list-offset
-   bitmap-size-index-subtable-list-size bitmap-size-number-of-index-subtables
-   bitmap-size-p bitmap-size-ppem-x bitmap-size-ppem-y
-   bitmap-size-start-glyph-index bitmap-size-vert glyph-id-offset-pair
-   glyph-id-offset-pair-glyph-id glyph-id-offset-pair-p
+   big-glyph-metrics-vert-bearing-y big-glyph-metrics-width
+   bitmap-flags-horizontal-metrics-p bitmap-flags-vertical-metrics-p
+   bitmap-size bitmap-size-bit-depth bitmap-size-color-ref
+   bitmap-size-end-glyph-index bitmap-size-flags bitmap-size-hori
+   bitmap-size-index-subtable-list-offset bitmap-size-index-subtable-list-size
+   bitmap-size-number-of-index-subtables bitmap-size-p bitmap-size-ppem-x
+   bitmap-size-ppem-y bitmap-size-start-glyph-index bitmap-size-vert
+   glyph-id-offset-pair glyph-id-offset-pair-glyph-id glyph-id-offset-pair-p
    glyph-id-offset-pair-sbit-offset index-subtable-list
    index-subtable-list-index-subtable-records
    index-subtable-list-index-subtable-records-count
@@ -66,12 +67,37 @@
 (define-constant +bitmap-flags-horizontal-metrics+ 1)
 
 
+(declaim (inline bitmap-flags-horizontal-metrics-p))
+
+
+(defun bitmap-flags-horizontal-metrics-p (flags)
+  (logtest flags +bitmap-flags-horizontal-metrics+))
+
+
 (define-constant +bitmap-flags-vertical-metrics+ 2)
+
+
+(declaim (inline bitmap-flags-vertical-metrics-p))
+
+
+(defun bitmap-flags-vertical-metrics-p (flags)
+  (logtest flags +bitmap-flags-vertical-metrics+))
 
 
 (defstruct
     (bitmap-size (:include record-ref)
      (:constructor %make-bitmap-size (%record-font-data %record-offset))))
+
+
+(define-constant +bitmap-size-size+ 48)
+
+
+(declaim
+ (inline bitmap-size-index-subtable-list-offset
+  bitmap-size-index-subtable-list-size bitmap-size-number-of-index-subtables
+  bitmap-size-color-ref bitmap-size-hori bitmap-size-vert
+  bitmap-size-start-glyph-index bitmap-size-end-glyph-index bitmap-size-ppem-x
+  bitmap-size-ppem-y bitmap-size-bit-depth bitmap-size-flags))
 
 
 (defun bitmap-size-index-subtable-list-offset (rec)
@@ -151,20 +177,21 @@
   (font-data-read-u8 (record-ref-font-data rec) (+ (record-ref-offset rec) 47)))
 
 
-(declaim
- (inline bitmap-size-index-subtable-list-offset
-  bitmap-size-index-subtable-list-size bitmap-size-number-of-index-subtables
-  bitmap-size-color-ref bitmap-size-hori bitmap-size-vert
-  bitmap-size-start-glyph-index bitmap-size-end-glyph-index bitmap-size-ppem-x
-  bitmap-size-ppem-y bitmap-size-bit-depth bitmap-size-flags))
-
-
-(define-constant +bitmap-size-size+ 48)
-
-
 (defstruct
     (sbit-line-metrics (:include record-ref)
      (:constructor %make-sbit-line-metrics (%record-font-data %record-offset))))
+
+
+(define-constant +sbit-line-metrics-size+ 12)
+
+
+(declaim
+ (inline sbit-line-metrics-ascender sbit-line-metrics-descender
+  sbit-line-metrics-width-max sbit-line-metrics-caret-slope-numerator
+  sbit-line-metrics-caret-slope-denominator sbit-line-metrics-caret-offset
+  sbit-line-metrics-min-origin-sb sbit-line-metrics-min-advance-sb
+  sbit-line-metrics-max-before-bl sbit-line-metrics-min-after-bl
+  sbit-line-metrics-pad1 sbit-line-metrics-pad2))
 
 
 (defun sbit-line-metrics-ascender (rec)
@@ -227,21 +254,19 @@
   (font-data-read-i8 (record-ref-font-data rec) (+ (record-ref-offset rec) 11)))
 
 
-(declaim
- (inline sbit-line-metrics-ascender sbit-line-metrics-descender
-  sbit-line-metrics-width-max sbit-line-metrics-caret-slope-numerator
-  sbit-line-metrics-caret-slope-denominator sbit-line-metrics-caret-offset
-  sbit-line-metrics-min-origin-sb sbit-line-metrics-min-advance-sb
-  sbit-line-metrics-max-before-bl sbit-line-metrics-min-after-bl
-  sbit-line-metrics-pad1 sbit-line-metrics-pad2))
-
-
-(define-constant +sbit-line-metrics-size+ 12)
-
-
 (defstruct
     (big-glyph-metrics (:include record-ref)
      (:constructor %make-big-glyph-metrics (%record-font-data %record-offset))))
+
+
+(define-constant +big-glyph-metrics-size+ 8)
+
+
+(declaim
+ (inline big-glyph-metrics-height big-glyph-metrics-width
+  big-glyph-metrics-hori-bearing-x big-glyph-metrics-hori-bearing-y
+  big-glyph-metrics-hori-advance big-glyph-metrics-vert-bearing-x
+  big-glyph-metrics-vert-bearing-y big-glyph-metrics-vert-advance))
 
 
 (defun big-glyph-metrics-height (rec)
@@ -292,20 +317,19 @@
   (font-data-read-u8 (record-ref-font-data rec) (+ (record-ref-offset rec) 7)))
 
 
-(declaim
- (inline big-glyph-metrics-height big-glyph-metrics-width
-  big-glyph-metrics-hori-bearing-x big-glyph-metrics-hori-bearing-y
-  big-glyph-metrics-hori-advance big-glyph-metrics-vert-bearing-x
-  big-glyph-metrics-vert-bearing-y big-glyph-metrics-vert-advance))
-
-
-(define-constant +big-glyph-metrics-size+ 8)
-
-
 (defstruct
     (small-glyph-metrics (:include record-ref)
      (:constructor %make-small-glyph-metrics
       (%record-font-data %record-offset))))
+
+
+(define-constant +small-glyph-metrics-size+ 5)
+
+
+(declaim
+ (inline small-glyph-metrics-height small-glyph-metrics-width
+  small-glyph-metrics-bearing-x small-glyph-metrics-bearing-y
+  small-glyph-metrics-advance))
 
 
 (defun small-glyph-metrics-height (rec)
@@ -338,19 +362,19 @@
   (font-data-read-u8 (record-ref-font-data rec) (+ (record-ref-offset rec) 4)))
 
 
-(declaim
- (inline small-glyph-metrics-height small-glyph-metrics-width
-  small-glyph-metrics-bearing-x small-glyph-metrics-bearing-y
-  small-glyph-metrics-advance))
-
-
-(define-constant +small-glyph-metrics-size+ 5)
-
-
 (defstruct
     (index-subtable-record (:include record-ref)
      (:constructor %make-index-subtable-record
       (%record-font-data %record-offset))))
+
+
+(define-constant +index-subtable-record-size+ 8)
+
+
+(declaim
+ (inline index-subtable-record-first-glyph-index
+  index-subtable-record-last-glyph-index
+  index-subtable-record-index-subtable-offset))
 
 
 (defun index-subtable-record-first-glyph-index (rec)
@@ -371,19 +395,17 @@
   (font-data-read-u32 (record-ref-font-data rec) (+ (record-ref-offset rec) 4)))
 
 
-(declaim
- (inline index-subtable-record-first-glyph-index
-  index-subtable-record-last-glyph-index
-  index-subtable-record-index-subtable-offset))
-
-
-(define-constant +index-subtable-record-size+ 8)
-
-
 (defstruct
     (glyph-id-offset-pair (:include record-ref)
      (:constructor %make-glyph-id-offset-pair
       (%record-font-data %record-offset))))
+
+
+(define-constant +glyph-id-offset-pair-size+ 4)
+
+
+(declaim
+ (inline glyph-id-offset-pair-glyph-id glyph-id-offset-pair-sbit-offset))
 
 
 (defun glyph-id-offset-pair-glyph-id (rec)
@@ -398,16 +420,16 @@
   (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 2)))
 
 
-(declaim
- (inline glyph-id-offset-pair-glyph-id glyph-id-offset-pair-sbit-offset))
-
-
-(define-constant +glyph-id-offset-pair-size+ 4)
-
-
 (defstruct
     (bdt-component (:include record-ref)
      (:constructor %make-bdt-component (%record-font-data %record-offset))))
+
+
+(define-constant +bdt-component-size+ 4)
+
+
+(declaim
+ (inline bdt-component-glyph-id bdt-component-x-offset bdt-component-y-offset))
 
 
 (defun bdt-component-glyph-id (rec)
@@ -428,17 +450,15 @@
   (font-data-read-i8 (record-ref-font-data rec) (+ (record-ref-offset rec) 3)))
 
 
-(declaim
- (inline bdt-component-glyph-id bdt-component-x-offset bdt-component-y-offset))
-
-
-(define-constant +bdt-component-size+ 4)
-
-
 (defstruct
     (index-subtable-list (:include table-ref)
      (:constructor %make-index-subtable-list
       (%table-font-data %table-offset %table-length))))
+
+
+(declaim
+ (inline index-subtable-list-index-subtable-records
+  index-subtable-list-index-subtable-records-count))
 
 
 (defun index-subtable-list-index-subtable-records-count
@@ -446,11 +466,6 @@
   "Array of IndexSubtableRecords."
   (or number-of-index-subtables
       (max 0 (floor (- (table-ref-length table) (table-ref-offset table)) 8))))
-
-
-(declaim
- (inline index-subtable-list-index-subtable-records
-  index-subtable-list-index-subtable-records-count))
 
 
 (defun index-subtable-list-index-subtable-records-ref (table index)
@@ -488,13 +503,17 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline index-subtable1-index-format index-subtable1-image-format
+  index-subtable1-image-data-offset index-subtable1-sbit-offsets
+  index-subtable1-sbit-offsets-count index-subtable1-index-format-raw
+  index-subtable1-image-format-raw index-subtable1-image-data-offset-raw))
+
+
 (defun index-subtable1-index-format (table)
   "Format of this IndexSubTable."
   (declare (type index-subtable1 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline index-subtable1-index-format-raw))
 
 
 (defun index-subtable1-index-format-raw (font-data offset)
@@ -508,9 +527,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline index-subtable1-image-format-raw))
-
-
 (defun index-subtable1-image-format-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -522,9 +538,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline index-subtable1-image-data-offset-raw))
-
-
 (defun index-subtable1-image-data-offset-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 4)))
 
@@ -534,12 +547,6 @@
       (max 0
            (floor (- (table-ref-length table) (+ (table-ref-offset table) 8))
                   4))))
-
-
-(declaim
- (inline index-subtable1-index-format index-subtable1-image-format
-  index-subtable1-image-data-offset index-subtable1-sbit-offsets
-  index-subtable1-sbit-offsets-count))
 
 
 (defun index-subtable1-sbit-offsets-ref (table index)
@@ -576,13 +583,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline index-subtable2-index-format index-subtable2-image-format
+  index-subtable2-image-data-offset index-subtable2-image-size
+  index-subtable2-big-metrics index-subtable2-index-format-raw
+  index-subtable2-image-format-raw index-subtable2-image-data-offset-raw
+  index-subtable2-image-size-raw))
+
+
 (defun index-subtable2-index-format (table)
   "Format of this IndexSubTable."
   (declare (type index-subtable2 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline index-subtable2-index-format-raw))
 
 
 (defun index-subtable2-index-format-raw (font-data offset)
@@ -596,9 +608,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline index-subtable2-image-format-raw))
-
-
 (defun index-subtable2-image-format-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -608,9 +617,6 @@
   (declare (type index-subtable2 table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline index-subtable2-image-data-offset-raw))
 
 
 (defun index-subtable2-image-data-offset-raw (font-data offset)
@@ -624,25 +630,23 @@
                       (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline index-subtable2-image-size-raw))
-
-
-(declaim
- (inline index-subtable2-index-format index-subtable2-image-format
-  index-subtable2-image-data-offset index-subtable2-image-size
-  index-subtable2-big-metrics))
-
-
 (defun index-subtable2-image-size-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 8)))
+
+
+(defun index-subtable2-big-metrics (table)
+  "All glyphs have the same metrics; glyph data may be compressed, byte-aligned, or bit-aligned."
+  (declare (type index-subtable2 table))
+  (%make-big-glyph-metrics (table-ref-font-data table)
+   (+ (table-ref-offset table) 12)))
 
 
 (defun sanitize-index-subtable2 (font-data offset length)
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 12 length) (font-data-valid-range-p font-data offset 12))
-    (error 'font-out-of-bounds-error :pos offset :size 12 :length
+  (unless (and (<= 20 length) (font-data-valid-range-p font-data offset 20))
+    (error 'font-out-of-bounds-error :pos offset :size 20 :length
            (font-data-length font-data)))
   t)
 
@@ -660,13 +664,17 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline index-subtable3-index-format index-subtable3-image-format
+  index-subtable3-image-data-offset index-subtable3-sbit-offsets
+  index-subtable3-sbit-offsets-count index-subtable3-index-format-raw
+  index-subtable3-image-format-raw index-subtable3-image-data-offset-raw))
+
+
 (defun index-subtable3-index-format (table)
   "Format of this IndexSubTable."
   (declare (type index-subtable3 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline index-subtable3-index-format-raw))
 
 
 (defun index-subtable3-index-format-raw (font-data offset)
@@ -680,9 +688,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline index-subtable3-image-format-raw))
-
-
 (defun index-subtable3-image-format-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -694,9 +699,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline index-subtable3-image-data-offset-raw))
-
-
 (defun index-subtable3-image-data-offset-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 4)))
 
@@ -706,12 +708,6 @@
       (max 0
            (floor (- (table-ref-length table) (+ (table-ref-offset table) 8))
                   2))))
-
-
-(declaim
- (inline index-subtable3-index-format index-subtable3-image-format
-  index-subtable3-image-data-offset index-subtable3-sbit-offsets
-  index-subtable3-sbit-offsets-count))
 
 
 (defun index-subtable3-sbit-offsets-ref (table index)
@@ -748,13 +744,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline index-subtable4-index-format index-subtable4-image-format
+  index-subtable4-image-data-offset index-subtable4-num-glyphs
+  index-subtable4-glyph-array index-subtable4-glyph-array-count
+  index-subtable4-index-format-raw index-subtable4-image-format-raw
+  index-subtable4-image-data-offset-raw index-subtable4-num-glyphs-raw))
+
+
 (defun index-subtable4-index-format (table)
   "Format of this IndexSubTable."
   (declare (type index-subtable4 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline index-subtable4-index-format-raw))
 
 
 (defun index-subtable4-index-format-raw (font-data offset)
@@ -768,9 +769,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline index-subtable4-image-format-raw))
-
-
 (defun index-subtable4-image-format-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -780,9 +778,6 @@
   (declare (type index-subtable4 table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline index-subtable4-image-data-offset-raw))
 
 
 (defun index-subtable4-image-data-offset-raw (font-data offset)
@@ -796,9 +791,6 @@
                       (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline index-subtable4-num-glyphs-raw))
-
-
 (defun index-subtable4-num-glyphs-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 8)))
 
@@ -806,12 +798,6 @@
 (defun index-subtable4-glyph-array-count (table)
   "One per glyph."
   (+ (index-subtable4-num-glyphs table) 1))
-
-
-(declaim
- (inline index-subtable4-index-format index-subtable4-image-format
-  index-subtable4-image-data-offset index-subtable4-num-glyphs
-  index-subtable4-glyph-array index-subtable4-glyph-array-count))
 
 
 (defun index-subtable4-glyph-array-ref (table index)
@@ -849,13 +835,20 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline index-subtable5-index-format index-subtable5-image-format
+  index-subtable5-image-data-offset index-subtable5-image-size
+  index-subtable5-big-metrics index-subtable5-num-glyphs
+  index-subtable5-glyph-array index-subtable5-glyph-array-count
+  index-subtable5-index-format-raw index-subtable5-image-format-raw
+  index-subtable5-image-data-offset-raw index-subtable5-image-size-raw
+  index-subtable5-num-glyphs-raw))
+
+
 (defun index-subtable5-index-format (table)
   "Format of this IndexSubTable."
   (declare (type index-subtable5 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline index-subtable5-index-format-raw))
 
 
 (defun index-subtable5-index-format-raw (font-data offset)
@@ -869,9 +862,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline index-subtable5-image-format-raw))
-
-
 (defun index-subtable5-image-format-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -881,9 +871,6 @@
   (declare (type index-subtable5 table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline index-subtable5-image-data-offset-raw))
 
 
 (defun index-subtable5-image-data-offset-raw (font-data offset)
@@ -897,25 +884,26 @@
                       (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline index-subtable5-image-size-raw))
-
-
 (defun index-subtable5-image-size-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 8)))
+
+
+(defun index-subtable5-big-metrics (table)
+  "All glyphs have the same metrics."
+  (declare (type index-subtable5 table))
+  (%make-big-glyph-metrics (table-ref-font-data table)
+   (+ (table-ref-offset table) 12)))
 
 
 (defun index-subtable5-num-glyphs (table)
   "Array length."
   (declare (type index-subtable5 table))
   (font-data-read-u32 (table-ref-font-data table)
-                      (+ (table-ref-offset table) 12)))
-
-
-(declaim (inline index-subtable5-num-glyphs-raw))
+                      (+ (table-ref-offset table) 20)))
 
 
 (defun index-subtable5-num-glyphs-raw (font-data offset)
-  (font-data-read-u32 font-data (+ offset 12)))
+  (font-data-read-u32 font-data (+ offset 20)))
 
 
 (defun index-subtable5-glyph-array-count (table)
@@ -923,18 +911,11 @@
   (index-subtable5-num-glyphs table))
 
 
-(declaim
- (inline index-subtable5-index-format index-subtable5-image-format
-  index-subtable5-image-data-offset index-subtable5-image-size
-  index-subtable5-big-metrics index-subtable5-num-glyphs
-  index-subtable5-glyph-array index-subtable5-glyph-array-count))
-
-
 (defun index-subtable5-glyph-array-ref (table index)
   "One per glyph, sorted by glyhph ID."
   (declare (type index-subtable5 table)
            (type (unsigned-byte 32) index))
-  (let ((pos (+ (+ (table-ref-offset table) 16) (* index 2))))
+  (let ((pos (+ (+ (table-ref-offset table) 24) (* index 2))))
     (unless
         (<= (+ pos 2) (+ (table-ref-offset table) (table-ref-length table)))
       (error 'font-out-of-bounds-error :pos pos :size 2 :length
@@ -946,14 +927,14 @@
   (declare (ignorable length)
            (type font-data font-data)
            (type (unsigned-byte 32) offset length))
-  (unless (and (<= 16 length) (font-data-valid-range-p font-data offset 16))
-    (error 'font-out-of-bounds-error :pos offset :size 16 :length
+  (unless (and (<= 24 length) (font-data-valid-range-p font-data offset 24))
+    (error 'font-out-of-bounds-error :pos offset :size 24 :length
            (font-data-length font-data)))
   (let ((cnt (index-subtable5-num-glyphs-raw font-data offset)))
     (unless
-        (and (<= (+ 16 (* cnt 2)) length)
-             (font-data-valid-range-p font-data offset (+ 16 (* cnt 2))))
-      (error 'font-out-of-bounds-error :pos offset :size (+ 16 (* cnt 2))
+        (and (<= (+ 24 (* cnt 2)) length)
+             (font-data-valid-range-p font-data offset (+ 24 (* cnt 2))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 24 (* cnt 2))
              :length (font-data-length font-data))))
   t)
 

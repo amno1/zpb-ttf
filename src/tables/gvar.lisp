@@ -23,9 +23,10 @@
    gvar-extended-glyph-variation-data-offsets gvar-extended-p
    gvar-extended-shared-tuple-count gvar-extended-shared-tuples-offset
    gvar-extended-shared-tuples-offset-offset gvar-extended-version gvar-flags
-   gvar-glyph-count gvar-glyph-variation-data-array-offset
-   gvar-glyph-variation-data-offsets gvar-p gvar-shared-tuple-count
-   gvar-shared-tuples-offset gvar-shared-tuples-offset-offset gvar-version
+   gvar-flags-long-offsets-p gvar-glyph-count
+   gvar-glyph-variation-data-array-offset gvar-glyph-variation-data-offsets
+   gvar-p gvar-shared-tuple-count gvar-shared-tuples-offset
+   gvar-shared-tuples-offset-offset gvar-version
    read-glyph-variation-data-header read-glyph-variation-data-header-extended
    read-gvar read-gvar-extended read-shared-tuples
    sanitize-glyph-variation-data-header
@@ -37,18 +38,31 @@
 (define-constant +gvar-flags-long-offsets+ 1)
 
 
+(declaim (inline gvar-flags-long-offsets-p))
+
+
+(defun gvar-flags-long-offsets-p (flags)
+  (logtest flags +gvar-flags-long-offsets+))
+
+
 (defstruct
     (gvar (:include table-ref)
      (:constructor %make-gvar (%table-font-data %table-offset %table-length))))
+
+
+(declaim
+ (inline gvar-version gvar-axis-count gvar-shared-tuple-count
+  gvar-shared-tuples-offset gvar-shared-tuples-offset-offset gvar-glyph-count
+  gvar-flags gvar-glyph-variation-data-array-offset
+  gvar-glyph-variation-data-offsets gvar-version-raw gvar-axis-count-raw
+  gvar-shared-tuple-count-raw gvar-glyph-count-raw gvar-flags-raw
+  gvar-glyph-variation-data-array-offset-raw))
 
 
 (defun gvar-version (table)
   "Major/minor version number of the glyph variations table — set to (1,0)."
   (declare (type gvar table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline gvar-version-raw))
 
 
 (defun gvar-version-raw (font-data offset)
@@ -62,9 +76,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline gvar-axis-count-raw))
-
-
 (defun gvar-axis-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
 
@@ -74,9 +85,6 @@
   (declare (type gvar table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline gvar-shared-tuple-count-raw))
 
 
 (defun gvar-shared-tuple-count-raw (font-data offset)
@@ -106,9 +114,6 @@
                       (+ (table-ref-offset table) 12)))
 
 
-(declaim (inline gvar-glyph-count-raw))
-
-
 (defun gvar-glyph-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 12)))
 
@@ -120,9 +125,6 @@
                       (+ (table-ref-offset table) 14)))
 
 
-(declaim (inline gvar-flags-raw))
-
-
 (defun gvar-flags-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 14)))
 
@@ -132,16 +134,6 @@
   (declare (type gvar table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 16)))
-
-
-(declaim (inline gvar-glyph-variation-data-array-offset-raw))
-
-
-(declaim
- (inline gvar-version gvar-axis-count gvar-shared-tuple-count
-  gvar-shared-tuples-offset gvar-shared-tuples-offset-offset gvar-glyph-count
-  gvar-flags gvar-glyph-variation-data-array-offset
-  gvar-glyph-variation-data-offsets))
 
 
 (defun gvar-glyph-variation-data-array-offset-raw (font-data offset)
@@ -171,12 +163,19 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline gvar-extended-version gvar-extended-axis-count
+  gvar-extended-shared-tuple-count gvar-extended-shared-tuples-offset
+  gvar-extended-shared-tuples-offset-offset gvar-extended-glyph-count
+  gvar-extended-flags gvar-extended-glyph-variation-data-array-offset
+  gvar-extended-glyph-variation-data-offsets gvar-extended-version-raw
+  gvar-extended-axis-count-raw gvar-extended-shared-tuple-count-raw
+  gvar-extended-flags-raw gvar-extended-glyph-variation-data-array-offset-raw))
+
+
 (defun gvar-extended-version (table)
   (declare (type gvar-extended table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline gvar-extended-version-raw))
 
 
 (defun gvar-extended-version-raw (font-data offset)
@@ -189,9 +188,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline gvar-extended-axis-count-raw))
-
-
 (defun gvar-extended-axis-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
 
@@ -200,9 +196,6 @@
   (declare (type gvar-extended table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline gvar-extended-shared-tuple-count-raw))
 
 
 (defun gvar-extended-shared-tuple-count-raw (font-data offset)
@@ -229,9 +222,6 @@
                       (+ (table-ref-offset table) 12)))
 
 
-(declaim (inline gvar-extended-flags-raw))
-
-
 (defun gvar-extended-flags-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 12)))
 
@@ -240,17 +230,6 @@
   (declare (type gvar-extended table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 14)))
-
-
-(declaim (inline gvar-extended-glyph-variation-data-array-offset-raw))
-
-
-(declaim
- (inline gvar-extended-version gvar-extended-axis-count
-  gvar-extended-shared-tuple-count gvar-extended-shared-tuples-offset
-  gvar-extended-shared-tuples-offset-offset gvar-extended-glyph-count
-  gvar-extended-flags gvar-extended-glyph-variation-data-array-offset
-  gvar-extended-glyph-variation-data-offsets))
 
 
 (defun gvar-extended-glyph-variation-data-array-offset-raw (font-data offset)
@@ -274,13 +253,13 @@
   (%make-gvar-extended font-data offset length))
 
 
-(declaim (inline shared-tuples-tuples))
-
-
 (defstruct
     (shared-tuples (:include table-ref)
      (:constructor %make-shared-tuples
       (%table-font-data %table-offset %table-length))))
+
+
+(declaim (inline shared-tuples-tuples))
 
 
 (defun sanitize-shared-tuples (font-data offset length)
@@ -306,17 +285,17 @@
       (%table-font-data %table-offset %table-length))))
 
 
-(defun glyph-variation-data-header-serialized-data-offset-offset (table)
-  "Offset from the start of the GlyphVariationData table to the serialized data"
-  (declare (type glyph-variation-data-header table))
-  (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
 (declaim
  (inline glyph-variation-data-header-tuple-variation-count
   glyph-variation-data-header-serialized-data-offset
   glyph-variation-data-header-serialized-data-offset-offset
   glyph-variation-data-header-tuple-variation-headers))
+
+
+(defun glyph-variation-data-header-serialized-data-offset-offset (table)
+  "Offset from the start of the GlyphVariationData table to the serialized data"
+  (declare (type glyph-variation-data-header table))
+  (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
 
 
 (defun glyph-variation-data-header-serialized-data-offset (table)
@@ -351,17 +330,17 @@
       (%table-font-data %table-offset %table-length))))
 
 
-(defun glyph-variation-data-header-extended-serialized-data-offset-offset
-       (table)
-  (declare (type glyph-variation-data-header-extended table))
-  (font-data-read-u24 (table-ref-font-data table) (table-ref-offset table)))
-
-
 (declaim
  (inline glyph-variation-data-header-extended-tuple-variation-count
   glyph-variation-data-header-extended-serialized-data-offset
   glyph-variation-data-header-extended-serialized-data-offset-offset
   glyph-variation-data-header-extended-tuple-variation-headers))
+
+
+(defun glyph-variation-data-header-extended-serialized-data-offset-offset
+       (table)
+  (declare (type glyph-variation-data-header-extended table))
+  (font-data-read-u24 (table-ref-font-data table) (table-ref-offset table)))
 
 
 (defun glyph-variation-data-header-extended-serialized-data-offset (table)

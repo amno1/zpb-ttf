@@ -10,18 +10,33 @@
  '(+header-flags-always-set+ +header-flags-draw-outlines+ glyph-data
    glyph-data-data glyph-data-data-bytes glyph-data-data-count
    glyph-data-data-ref glyph-data-graphic-type glyph-data-origin-offset-x
-   glyph-data-origin-offset-y glyph-data-p read-glyph-data read-sbix
-   read-strike sanitize-glyph-data sanitize-sbix sanitize-strike sbix
-   sbix-flags sbix-num-strikes sbix-p sbix-strike-offsets
-   sbix-strike-offsets-count sbix-strike-offsets-ref sbix-version strike
-   strike-glyph-data-offsets strike-glyph-data-offsets-count
-   strike-glyph-data-offsets-ref strike-p strike-ppem strike-ppi))
+   glyph-data-origin-offset-y glyph-data-p header-flags-always-set-p
+   header-flags-draw-outlines-p read-glyph-data read-sbix read-strike
+   sanitize-glyph-data sanitize-sbix sanitize-strike sbix sbix-flags
+   sbix-num-strikes sbix-p sbix-strike-offsets sbix-strike-offsets-count
+   sbix-strike-offsets-ref sbix-version strike strike-glyph-data-offsets
+   strike-glyph-data-offsets-count strike-glyph-data-offsets-ref strike-p
+   strike-ppem strike-ppi))
 
 
 (define-constant +header-flags-always-set+ 1)
 
 
+(declaim (inline header-flags-always-set-p))
+
+
+(defun header-flags-always-set-p (flags)
+  (logtest flags +header-flags-always-set+))
+
+
 (define-constant +header-flags-draw-outlines+ 2)
+
+
+(declaim (inline header-flags-draw-outlines-p))
+
+
+(defun header-flags-draw-outlines-p (flags)
+  (logtest flags +header-flags-draw-outlines+))
 
 
 (defstruct
@@ -29,13 +44,16 @@
      (:constructor %make-sbix (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline sbix-version sbix-flags sbix-num-strikes sbix-strike-offsets
+  sbix-strike-offsets-count sbix-version-raw sbix-flags-raw
+  sbix-num-strikes-raw))
+
+
 (defun sbix-version (table)
   "Table version number — set to 1."
   (declare (type sbix table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline sbix-version-raw))
 
 
 (defun sbix-version-raw (font-data offset)
@@ -49,9 +67,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline sbix-flags-raw))
-
-
 (defun sbix-flags-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -63,9 +78,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline sbix-num-strikes-raw))
-
-
 (defun sbix-num-strikes-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 4)))
 
@@ -73,11 +85,6 @@
 (defun sbix-strike-offsets-count (table)
   "Offsets from the beginning of the 'sbix' table to data for each individual bitmap strike."
   (sbix-num-strikes table))
-
-
-(declaim
- (inline sbix-version sbix-flags sbix-num-strikes sbix-strike-offsets
-  sbix-strike-offsets-count))
 
 
 (defun sbix-strike-offsets-ref (table index)
@@ -124,13 +131,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline strike-ppem strike-ppi strike-glyph-data-offsets
+  strike-glyph-data-offsets-count strike-ppem-raw strike-ppi-raw))
+
+
 (defun strike-ppem (table)
   "The PPEM size for which this strike was designed."
   (declare (type strike table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline strike-ppem-raw))
 
 
 (defun strike-ppem-raw (font-data offset) (font-data-read-u16 font-data offset))
@@ -143,9 +152,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline strike-ppi-raw))
-
-
 (defun strike-ppi-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -156,11 +162,6 @@
       (max 0
            (floor (- (table-ref-length table) (+ (table-ref-offset table) 4))
                   4))))
-
-
-(declaim
- (inline strike-ppem strike-ppi strike-glyph-data-offsets
-  strike-glyph-data-offsets-count))
 
 
 (defun strike-glyph-data-offsets-ref (table index)
@@ -198,13 +199,17 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline glyph-data-origin-offset-x glyph-data-origin-offset-y
+  glyph-data-graphic-type glyph-data-data glyph-data-data-count
+  glyph-data-origin-offset-x-raw glyph-data-origin-offset-y-raw
+  glyph-data-graphic-type-raw))
+
+
 (defun glyph-data-origin-offset-x (table)
   "The horizontal (x-axis) position of the left edge of the bitmap graphic in relation to the glyph design space origin."
   (declare (type glyph-data table))
   (font-data-read-i16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline glyph-data-origin-offset-x-raw))
 
 
 (defun glyph-data-origin-offset-x-raw (font-data offset)
@@ -218,9 +223,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline glyph-data-origin-offset-y-raw))
-
-
 (defun glyph-data-origin-offset-y-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 2)))
 
@@ -230,9 +232,6 @@
   (declare (type glyph-data table))
   (font-data-read-tag-string (table-ref-font-data table)
                              (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline glyph-data-graphic-type-raw))
 
 
 (defun glyph-data-graphic-type-raw (font-data offset)
@@ -254,11 +253,6 @@
       (error 'font-out-of-bounds-error :pos pos :size 1 :length
              (table-ref-length table)))
     (font-data-read-u8 (table-ref-font-data table) pos)))
-
-
-(declaim
- (inline glyph-data-origin-offset-x glyph-data-origin-offset-y
-  glyph-data-graphic-type glyph-data-data glyph-data-data-count))
 
 
 (defun glyph-data-data-bytes (table)

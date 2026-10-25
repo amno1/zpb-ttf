@@ -17,13 +17,16 @@
      (:constructor %make-cblc (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline cblc-major-version cblc-minor-version cblc-num-sizes cblc-bitmap-sizes
+  cblc-bitmap-sizes-count cblc-major-version-raw cblc-minor-version-raw
+  cblc-num-sizes-raw))
+
+
 (defun cblc-major-version (table)
   "Major version of the CBLC table, = 3."
   (declare (type cblc table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline cblc-major-version-raw))
 
 
 (defun cblc-major-version-raw (font-data offset)
@@ -37,9 +40,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline cblc-minor-version-raw))
-
-
 (defun cblc-minor-version-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -51,9 +51,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline cblc-num-sizes-raw))
-
-
 (defun cblc-num-sizes-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 4)))
 
@@ -61,11 +58,6 @@
 (defun cblc-bitmap-sizes-count (table)
   "BitmapSize records array."
   (cblc-num-sizes table))
-
-
-(declaim
- (inline cblc-major-version cblc-minor-version cblc-num-sizes cblc-bitmap-sizes
-  cblc-bitmap-sizes-count))
 
 
 (defun cblc-bitmap-sizes-ref (table index)

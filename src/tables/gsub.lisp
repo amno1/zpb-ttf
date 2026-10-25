@@ -163,13 +163,20 @@
      (:constructor %make-gsub (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline gsub-version gsub-script-list-offset gsub-script-list-offset-offset
+  gsub-feature-list-offset gsub-feature-list-offset-offset
+  gsub-lookup-list-offset gsub-lookup-list-offset-offset
+  gsub-feature-variations-offset gsub-feature-variations-offset-offset
+  gsub-script-list2-offset gsub-script-list2-offset-offset
+  gsub-feature-list2-offset gsub-feature-list2-offset-offset
+  gsub-lookup-list2-offset gsub-lookup-list2-offset-offset gsub-version-raw))
+
+
 (defun gsub-version (table)
   "The major and minor version of the GSUB table, as a tuple (u16, u16)"
   (declare (type gsub table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline gsub-version-raw))
 
 
 (defun gsub-version-raw (font-data offset)
@@ -283,16 +290,6 @@
                         (+ (table-ref-offset table) 22))))
 
 
-(declaim
- (inline gsub-version gsub-script-list-offset gsub-script-list-offset-offset
-  gsub-feature-list-offset gsub-feature-list-offset-offset
-  gsub-lookup-list-offset gsub-lookup-list-offset-offset
-  gsub-feature-variations-offset gsub-feature-variations-offset-offset
-  gsub-script-list2-offset gsub-script-list2-offset-offset
-  gsub-feature-list2-offset gsub-feature-list2-offset-offset
-  gsub-lookup-list2-offset gsub-lookup-list2-offset-offset))
-
-
 (defun gsub-lookup-list2-offset (table)
   "32-bit offset to LookupList2, taking precedence when nonzero."
   (declare (type gsub table))
@@ -339,13 +336,17 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline single-subst-format1-subst-format single-subst-format1-coverage-offset
+  single-subst-format1-coverage-offset-offset
+  single-subst-format1-delta-glyph-id single-subst-format1-subst-format-raw
+  single-subst-format1-delta-glyph-id-raw))
+
+
 (defun single-subst-format1-subst-format (table)
   "Format identifier: format = 1"
   (declare (type single-subst-format1 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline single-subst-format1-subst-format-raw))
 
 
 (defun single-subst-format1-subst-format-raw (font-data offset)
@@ -375,15 +376,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline single-subst-format1-delta-glyph-id-raw))
-
-
-(declaim
- (inline single-subst-format1-subst-format single-subst-format1-coverage-offset
-  single-subst-format1-coverage-offset-offset
-  single-subst-format1-delta-glyph-id))
-
-
 (defun single-subst-format1-delta-glyph-id-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 4)))
 
@@ -411,13 +403,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline single-subst-format2-subst-format single-subst-format2-coverage-offset
+  single-subst-format2-coverage-offset-offset single-subst-format2-glyph-count
+  single-subst-format2-substitute-glyph-ids
+  single-subst-format2-substitute-glyph-ids-count
+  single-subst-format2-subst-format-raw single-subst-format2-glyph-count-raw))
+
+
 (defun single-subst-format2-subst-format (table)
   "Format identifier: format = 2"
   (declare (type single-subst-format2 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline single-subst-format2-subst-format-raw))
 
 
 (defun single-subst-format2-subst-format-raw (font-data offset)
@@ -447,9 +444,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline single-subst-format2-glyph-count-raw))
-
-
 (defun single-subst-format2-glyph-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
 
@@ -457,13 +451,6 @@
 (defun single-subst-format2-substitute-glyph-ids-count (table)
   "Array of substitute glyph IDs — ordered by Coverage index"
   (single-subst-format2-glyph-count table))
-
-
-(declaim
- (inline single-subst-format2-subst-format single-subst-format2-coverage-offset
-  single-subst-format2-coverage-offset-offset single-subst-format2-glyph-count
-  single-subst-format2-substitute-glyph-ids
-  single-subst-format2-substitute-glyph-ids-count))
 
 
 (defun single-subst-format2-substitute-glyph-ids-ref (table index)
@@ -507,13 +494,20 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline multiple-subst-format1-subst-format
+  multiple-subst-format1-coverage-offset
+  multiple-subst-format1-coverage-offset-offset
+  multiple-subst-format1-sequence-count multiple-subst-format1-sequence-offsets
+  multiple-subst-format1-sequence-offsets-count
+  multiple-subst-format1-subst-format-raw
+  multiple-subst-format1-sequence-count-raw))
+
+
 (defun multiple-subst-format1-subst-format (table)
   "Format identifier: format = 1"
   (declare (type multiple-subst-format1 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline multiple-subst-format1-subst-format-raw))
 
 
 (defun multiple-subst-format1-subst-format-raw (font-data offset)
@@ -543,9 +537,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline multiple-subst-format1-sequence-count-raw))
-
-
 (defun multiple-subst-format1-sequence-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
 
@@ -553,14 +544,6 @@
 (defun multiple-subst-format1-sequence-offsets-count (table)
   "Array of offsets to Sequence tables. Offsets are from beginning of substitution subtable, ordered by Coverage index"
   (multiple-subst-format1-sequence-count table))
-
-
-(declaim
- (inline multiple-subst-format1-subst-format
-  multiple-subst-format1-coverage-offset
-  multiple-subst-format1-coverage-offset-offset
-  multiple-subst-format1-sequence-count multiple-subst-format1-sequence-offsets
-  multiple-subst-format1-sequence-offsets-count))
 
 
 (defun multiple-subst-format1-sequence-offsets-ref (table index)
@@ -607,13 +590,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline sequence-table-glyph-count sequence-table-substitute-glyph-ids
+  sequence-table-substitute-glyph-ids-count sequence-table-glyph-count-raw))
+
+
 (defun sequence-table-glyph-count (table)
   "Number of glyph IDs in the substituteGlyphIDs array. This must always be greater than 0."
   (declare (type sequence-table table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline sequence-table-glyph-count-raw))
 
 
 (defun sequence-table-glyph-count-raw (font-data offset)
@@ -623,11 +608,6 @@
 (defun sequence-table-substitute-glyph-ids-count (table)
   "String of glyph IDs to substitute"
   (sequence-table-glyph-count table))
-
-
-(declaim
- (inline sequence-table-glyph-count sequence-table-substitute-glyph-ids
-  sequence-table-substitute-glyph-ids-count))
 
 
 (defun sequence-table-substitute-glyph-ids-ref (table index)
@@ -671,13 +651,21 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline alternate-subst-format1-subst-format
+  alternate-subst-format1-coverage-offset
+  alternate-subst-format1-coverage-offset-offset
+  alternate-subst-format1-alternate-set-count
+  alternate-subst-format1-alternate-set-offsets
+  alternate-subst-format1-alternate-set-offsets-count
+  alternate-subst-format1-subst-format-raw
+  alternate-subst-format1-alternate-set-count-raw))
+
+
 (defun alternate-subst-format1-subst-format (table)
   "Format identifier: format = 1"
   (declare (type alternate-subst-format1 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline alternate-subst-format1-subst-format-raw))
 
 
 (defun alternate-subst-format1-subst-format-raw (font-data offset)
@@ -707,9 +695,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline alternate-subst-format1-alternate-set-count-raw))
-
-
 (defun alternate-subst-format1-alternate-set-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
 
@@ -717,15 +702,6 @@
 (defun alternate-subst-format1-alternate-set-offsets-count (table)
   "Array of offsets to AlternateSet tables. Offsets are from beginning of substitution subtable, ordered by Coverage index"
   (alternate-subst-format1-alternate-set-count table))
-
-
-(declaim
- (inline alternate-subst-format1-subst-format
-  alternate-subst-format1-coverage-offset
-  alternate-subst-format1-coverage-offset-offset
-  alternate-subst-format1-alternate-set-count
-  alternate-subst-format1-alternate-set-offsets
-  alternate-subst-format1-alternate-set-offsets-count))
 
 
 (defun alternate-subst-format1-alternate-set-offsets-ref (table index)
@@ -773,13 +749,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline alternate-set-glyph-count alternate-set-alternate-glyph-ids
+  alternate-set-alternate-glyph-ids-count alternate-set-glyph-count-raw))
+
+
 (defun alternate-set-glyph-count (table)
   "Number of glyph IDs in the alternateGlyphIDs array"
   (declare (type alternate-set table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline alternate-set-glyph-count-raw))
 
 
 (defun alternate-set-glyph-count-raw (font-data offset)
@@ -789,11 +767,6 @@
 (defun alternate-set-alternate-glyph-ids-count (table)
   "Array of alternate glyph IDs, in arbitrary order"
   (alternate-set-glyph-count table))
-
-
-(declaim
- (inline alternate-set-glyph-count alternate-set-alternate-glyph-ids
-  alternate-set-alternate-glyph-ids-count))
 
 
 (defun alternate-set-alternate-glyph-ids-ref (table index)
@@ -837,13 +810,21 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline ligature-subst-format1-subst-format
+  ligature-subst-format1-coverage-offset
+  ligature-subst-format1-coverage-offset-offset
+  ligature-subst-format1-ligature-set-count
+  ligature-subst-format1-ligature-set-offsets
+  ligature-subst-format1-ligature-set-offsets-count
+  ligature-subst-format1-subst-format-raw
+  ligature-subst-format1-ligature-set-count-raw))
+
+
 (defun ligature-subst-format1-subst-format (table)
   "Format identifier: format = 1"
   (declare (type ligature-subst-format1 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline ligature-subst-format1-subst-format-raw))
 
 
 (defun ligature-subst-format1-subst-format-raw (font-data offset)
@@ -873,9 +854,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline ligature-subst-format1-ligature-set-count-raw))
-
-
 (defun ligature-subst-format1-ligature-set-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
 
@@ -883,15 +861,6 @@
 (defun ligature-subst-format1-ligature-set-offsets-count (table)
   "Array of offsets to LigatureSet tables. Offsets are from beginning of substitution subtable, ordered by Coverage index"
   (ligature-subst-format1-ligature-set-count table))
-
-
-(declaim
- (inline ligature-subst-format1-subst-format
-  ligature-subst-format1-coverage-offset
-  ligature-subst-format1-coverage-offset-offset
-  ligature-subst-format1-ligature-set-count
-  ligature-subst-format1-ligature-set-offsets
-  ligature-subst-format1-ligature-set-offsets-count))
 
 
 (defun ligature-subst-format1-ligature-set-offsets-ref (table index)
@@ -938,13 +907,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline ligature-set-ligature-count ligature-set-ligature-offsets
+  ligature-set-ligature-offsets-count ligature-set-ligature-count-raw))
+
+
 (defun ligature-set-ligature-count (table)
   "Number of Ligature tables"
   (declare (type ligature-set table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline ligature-set-ligature-count-raw))
 
 
 (defun ligature-set-ligature-count-raw (font-data offset)
@@ -954,11 +925,6 @@
 (defun ligature-set-ligature-offsets-count (table)
   "Array of offsets to Ligature tables. Offsets are from beginning of LigatureSet table, ordered by preference."
   (ligature-set-ligature-count table))
-
-
-(declaim
- (inline ligature-set-ligature-count ligature-set-ligature-offsets
-  ligature-set-ligature-offsets-count))
 
 
 (defun ligature-set-ligature-offsets-ref (table index)
@@ -1005,13 +971,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline ligature-ligature-glyph ligature-component-count
+  ligature-component-glyph-ids ligature-component-glyph-ids-count
+  ligature-ligature-glyph-raw ligature-component-count-raw))
+
+
 (defun ligature-ligature-glyph (table)
   "glyph ID of ligature to substitute"
   (declare (type ligature table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline ligature-ligature-glyph-raw))
 
 
 (defun ligature-ligature-glyph-raw (font-data offset)
@@ -1025,9 +994,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline ligature-component-count-raw))
-
-
 (defun ligature-component-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -1035,11 +1001,6 @@
 (defun ligature-component-glyph-ids-count (table)
   "Array of component glyph IDs — start with the second component, ordered in writing direction"
   (max 0 (- (ligature-component-count table) 1)))
-
-
-(declaim
- (inline ligature-ligature-glyph ligature-component-count
-  ligature-component-glyph-ids ligature-component-glyph-ids-count))
 
 
 (defun ligature-component-glyph-ids-ref (table index)
@@ -1077,13 +1038,19 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline extension-subst-format1-subst-format
+  extension-subst-format1-extension-lookup-type
+  extension-subst-format1-extension-offset
+  extension-subst-format1-extension-offset-offset
+  extension-subst-format1-subst-format-raw
+  extension-subst-format1-extension-lookup-type-raw))
+
+
 (defun extension-subst-format1-subst-format (table)
   "Format identifier. Set to 1."
   (declare (type extension-subst-format1 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline extension-subst-format1-subst-format-raw))
 
 
 (defun extension-subst-format1-subst-format-raw (font-data offset)
@@ -1097,9 +1064,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline extension-subst-format1-extension-lookup-type-raw))
-
-
 (defun extension-subst-format1-extension-lookup-type-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -1109,13 +1073,6 @@
   (declare (type extension-subst-format1 table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim
- (inline extension-subst-format1-subst-format
-  extension-subst-format1-extension-lookup-type
-  extension-subst-format1-extension-offset
-  extension-subst-format1-extension-offset-offset))
 
 
 (defun extension-subst-format1-extension-offset (table)
@@ -1150,13 +1107,27 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline reverse-chain-single-subst-format1-subst-format
+  reverse-chain-single-subst-format1-coverage-offset
+  reverse-chain-single-subst-format1-coverage-offset-offset
+  reverse-chain-single-subst-format1-backtrack-glyph-count
+  reverse-chain-single-subst-format1-backtrack-coverage-offsets
+  reverse-chain-single-subst-format1-backtrack-coverage-offsets-count
+  reverse-chain-single-subst-format1-lookahead-glyph-count
+  reverse-chain-single-subst-format1-lookahead-coverage-offsets
+  reverse-chain-single-subst-format1-lookahead-coverage-offsets-count
+  reverse-chain-single-subst-format1-glyph-count
+  reverse-chain-single-subst-format1-substitute-glyph-ids
+  reverse-chain-single-subst-format1-substitute-glyph-ids-count
+  reverse-chain-single-subst-format1-subst-format-raw
+  reverse-chain-single-subst-format1-backtrack-glyph-count-raw))
+
+
 (defun reverse-chain-single-subst-format1-subst-format (table)
   "Format identifier: format = 1"
   (declare (type reverse-chain-single-subst-format1 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline reverse-chain-single-subst-format1-subst-format-raw))
 
 
 (defun reverse-chain-single-subst-format1-subst-format-raw (font-data offset)
@@ -1184,9 +1155,6 @@
   (declare (type reverse-chain-single-subst-format1 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline reverse-chain-single-subst-format1-backtrack-glyph-count-raw))
 
 
 (defun reverse-chain-single-subst-format1-backtrack-glyph-count-raw
@@ -1276,21 +1244,6 @@
   (reverse-chain-single-subst-format1-glyph-count table))
 
 
-(declaim
- (inline reverse-chain-single-subst-format1-subst-format
-  reverse-chain-single-subst-format1-coverage-offset
-  reverse-chain-single-subst-format1-coverage-offset-offset
-  reverse-chain-single-subst-format1-backtrack-glyph-count
-  reverse-chain-single-subst-format1-backtrack-coverage-offsets
-  reverse-chain-single-subst-format1-backtrack-coverage-offsets-count
-  reverse-chain-single-subst-format1-lookahead-glyph-count
-  reverse-chain-single-subst-format1-lookahead-coverage-offsets
-  reverse-chain-single-subst-format1-lookahead-coverage-offsets-count
-  reverse-chain-single-subst-format1-glyph-count
-  reverse-chain-single-subst-format1-substitute-glyph-ids
-  reverse-chain-single-subst-format1-substitute-glyph-ids-count))
-
-
 (defun reverse-chain-single-subst-format1-substitute-glyph-ids-ref
        (table index)
   "Array of substitute glyph IDs — ordered by Coverage index."
@@ -1346,13 +1299,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline single-subst-format3-subst-format single-subst-format3-coverage-offset
+  single-subst-format3-coverage-offset-offset
+  single-subst-format3-delta-glyph-id single-subst-format3-subst-format-raw))
+
+
 (defun single-subst-format3-subst-format (table)
   "Format identifier: format = 3"
   (declare (type single-subst-format3 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline single-subst-format3-subst-format-raw))
 
 
 (defun single-subst-format3-subst-format-raw (font-data offset)
@@ -1364,12 +1320,6 @@
   (declare (type single-subst-format3 table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 2)))
-
-
-(declaim
- (inline single-subst-format3-subst-format single-subst-format3-coverage-offset
-  single-subst-format3-coverage-offset-offset
-  single-subst-format3-delta-glyph-id))
 
 
 (defun single-subst-format3-coverage-offset (table)
@@ -1404,13 +1354,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline single-subst-format4-subst-format single-subst-format4-coverage-offset
+  single-subst-format4-coverage-offset-offset single-subst-format4-glyph-count
+  single-subst-format4-substitute-glyph-ids
+  single-subst-format4-substitute-glyph-ids-count
+  single-subst-format4-subst-format-raw))
+
+
 (defun single-subst-format4-subst-format (table)
   "Format identifier: format = 4"
   (declare (type single-subst-format4 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline single-subst-format4-subst-format-raw))
 
 
 (defun single-subst-format4-subst-format-raw (font-data offset)
@@ -1436,13 +1391,6 @@
 (defun single-subst-format4-substitute-glyph-ids-count (table)
   "Array of substitute glyph IDs — ordered by Coverage index"
   (single-subst-format4-glyph-count table))
-
-
-(declaim
- (inline single-subst-format4-subst-format single-subst-format4-coverage-offset
-  single-subst-format4-coverage-offset-offset single-subst-format4-glyph-count
-  single-subst-format4-substitute-glyph-ids
-  single-subst-format4-substitute-glyph-ids-count))
 
 
 (defun single-subst-format4-substitute-glyph-ids-ref (table index)
@@ -1486,13 +1434,19 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline multiple-subst-format2-subst-format
+  multiple-subst-format2-coverage-offset
+  multiple-subst-format2-coverage-offset-offset
+  multiple-subst-format2-sequence-count multiple-subst-format2-sequence-offsets
+  multiple-subst-format2-sequence-offsets-count
+  multiple-subst-format2-subst-format-raw))
+
+
 (defun multiple-subst-format2-subst-format (table)
   "Format identifier: format = 2"
   (declare (type multiple-subst-format2 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline multiple-subst-format2-subst-format-raw))
 
 
 (defun multiple-subst-format2-subst-format-raw (font-data offset)
@@ -1518,14 +1472,6 @@
 (defun multiple-subst-format2-sequence-offsets-count (table)
   "Array of offsets to Sequence tables. Offsets are from beginning of substitution subtable, ordered by Coverage index"
   (multiple-subst-format2-sequence-count table))
-
-
-(declaim
- (inline multiple-subst-format2-subst-format
-  multiple-subst-format2-coverage-offset
-  multiple-subst-format2-coverage-offset-offset
-  multiple-subst-format2-sequence-count multiple-subst-format2-sequence-offsets
-  multiple-subst-format2-sequence-offsets-count))
 
 
 (defun multiple-subst-format2-sequence-offsets-ref (table index)
@@ -1572,13 +1518,20 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline alternate-subst-format2-subst-format
+  alternate-subst-format2-coverage-offset
+  alternate-subst-format2-coverage-offset-offset
+  alternate-subst-format2-alternate-set-count
+  alternate-subst-format2-alternate-set-offsets
+  alternate-subst-format2-alternate-set-offsets-count
+  alternate-subst-format2-subst-format-raw))
+
+
 (defun alternate-subst-format2-subst-format (table)
   "Format identifier: format = 2"
   (declare (type alternate-subst-format2 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline alternate-subst-format2-subst-format-raw))
 
 
 (defun alternate-subst-format2-subst-format-raw (font-data offset)
@@ -1604,15 +1557,6 @@
 (defun alternate-subst-format2-alternate-set-offsets-count (table)
   "Array of offsets to AlternateSet tables. Offsets are from beginning of substitution subtable, ordered by Coverage index"
   (alternate-subst-format2-alternate-set-count table))
-
-
-(declaim
- (inline alternate-subst-format2-subst-format
-  alternate-subst-format2-coverage-offset
-  alternate-subst-format2-coverage-offset-offset
-  alternate-subst-format2-alternate-set-count
-  alternate-subst-format2-alternate-set-offsets
-  alternate-subst-format2-alternate-set-offsets-count))
 
 
 (defun alternate-subst-format2-alternate-set-offsets-ref (table index)
@@ -1660,13 +1604,20 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline ligature-subst-format2-subst-format
+  ligature-subst-format2-coverage-offset
+  ligature-subst-format2-coverage-offset-offset
+  ligature-subst-format2-ligature-set-count
+  ligature-subst-format2-ligature-set-offsets
+  ligature-subst-format2-ligature-set-offsets-count
+  ligature-subst-format2-subst-format-raw))
+
+
 (defun ligature-subst-format2-subst-format (table)
   "Format identifier: format = 2"
   (declare (type ligature-subst-format2 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline ligature-subst-format2-subst-format-raw))
 
 
 (defun ligature-subst-format2-subst-format-raw (font-data offset)
@@ -1692,15 +1643,6 @@
 (defun ligature-subst-format2-ligature-set-offsets-count (table)
   "Array of offsets to LigatureSet tables. Offsets are from beginning of substitution subtable, ordered by Coverage index"
   (ligature-subst-format2-ligature-set-count table))
-
-
-(declaim
- (inline ligature-subst-format2-subst-format
-  ligature-subst-format2-coverage-offset
-  ligature-subst-format2-coverage-offset-offset
-  ligature-subst-format2-ligature-set-count
-  ligature-subst-format2-ligature-set-offsets
-  ligature-subst-format2-ligature-set-offsets-count))
 
 
 (defun ligature-subst-format2-ligature-set-offsets-ref (table index)
@@ -1747,13 +1689,27 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline reverse-chain-single-subst-format2-subst-format
+  reverse-chain-single-subst-format2-coverage-offset
+  reverse-chain-single-subst-format2-coverage-offset-offset
+  reverse-chain-single-subst-format2-backtrack-glyph-count
+  reverse-chain-single-subst-format2-backtrack-coverage-offsets
+  reverse-chain-single-subst-format2-backtrack-coverage-offsets-count
+  reverse-chain-single-subst-format2-lookahead-glyph-count
+  reverse-chain-single-subst-format2-lookahead-coverage-offsets
+  reverse-chain-single-subst-format2-lookahead-coverage-offsets-count
+  reverse-chain-single-subst-format2-glyph-count
+  reverse-chain-single-subst-format2-substitute-glyph-ids
+  reverse-chain-single-subst-format2-substitute-glyph-ids-count
+  reverse-chain-single-subst-format2-subst-format-raw
+  reverse-chain-single-subst-format2-backtrack-glyph-count-raw))
+
+
 (defun reverse-chain-single-subst-format2-subst-format (table)
   "Format identifier: format = 2"
   (declare (type reverse-chain-single-subst-format2 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline reverse-chain-single-subst-format2-subst-format-raw))
 
 
 (defun reverse-chain-single-subst-format2-subst-format-raw (font-data offset)
@@ -1781,9 +1737,6 @@
   (declare (type reverse-chain-single-subst-format2 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline reverse-chain-single-subst-format2-backtrack-glyph-count-raw))
 
 
 (defun reverse-chain-single-subst-format2-backtrack-glyph-count-raw
@@ -1858,21 +1811,6 @@
   (reverse-chain-single-subst-format2-glyph-count table))
 
 
-(declaim
- (inline reverse-chain-single-subst-format2-subst-format
-  reverse-chain-single-subst-format2-coverage-offset
-  reverse-chain-single-subst-format2-coverage-offset-offset
-  reverse-chain-single-subst-format2-backtrack-glyph-count
-  reverse-chain-single-subst-format2-backtrack-coverage-offsets
-  reverse-chain-single-subst-format2-backtrack-coverage-offsets-count
-  reverse-chain-single-subst-format2-lookahead-glyph-count
-  reverse-chain-single-subst-format2-lookahead-coverage-offsets
-  reverse-chain-single-subst-format2-lookahead-coverage-offsets-count
-  reverse-chain-single-subst-format2-glyph-count
-  reverse-chain-single-subst-format2-substitute-glyph-ids
-  reverse-chain-single-subst-format2-substitute-glyph-ids-count))
-
-
 (defun reverse-chain-single-subst-format2-substitute-glyph-ids-ref
        (table index)
   "Array of substitute glyph IDs — ordered by Coverage index."
@@ -1928,13 +1866,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline sequence2-glyph-count sequence2-substitute-glyph-ids
+  sequence2-substitute-glyph-ids-count sequence2-glyph-count-raw))
+
+
 (defun sequence2-glyph-count (table)
   "Number of glyph IDs in the substituteGlyphIDs array. This must always be greater than 0."
   (declare (type sequence2 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline sequence2-glyph-count-raw))
 
 
 (defun sequence2-glyph-count-raw (font-data offset)
@@ -1944,11 +1884,6 @@
 (defun sequence2-substitute-glyph-ids-count (table)
   "String of glyph IDs to substitute"
   (sequence2-glyph-count table))
-
-
-(declaim
- (inline sequence2-glyph-count sequence2-substitute-glyph-ids
-  sequence2-substitute-glyph-ids-count))
 
 
 (defun sequence2-substitute-glyph-ids-ref (table index)
@@ -1992,13 +1927,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline alternate-set2-glyph-count alternate-set2-alternate-glyph-ids
+  alternate-set2-alternate-glyph-ids-count alternate-set2-glyph-count-raw))
+
+
 (defun alternate-set2-glyph-count (table)
   "Number of glyph IDs in the alternateGlyphIDs array"
   (declare (type alternate-set2 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline alternate-set2-glyph-count-raw))
 
 
 (defun alternate-set2-glyph-count-raw (font-data offset)
@@ -2008,11 +1945,6 @@
 (defun alternate-set2-alternate-glyph-ids-count (table)
   "Array of alternate glyph IDs, in arbitrary order"
   (alternate-set2-glyph-count table))
-
-
-(declaim
- (inline alternate-set2-glyph-count alternate-set2-alternate-glyph-ids
-  alternate-set2-alternate-glyph-ids-count))
 
 
 (defun alternate-set2-alternate-glyph-ids-ref (table index)
@@ -2056,13 +1988,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline ligature-set2-ligature-count ligature-set2-ligature-offsets
+  ligature-set2-ligature-offsets-count ligature-set2-ligature-count-raw))
+
+
 (defun ligature-set2-ligature-count (table)
   "Number of Ligature tables"
   (declare (type ligature-set2 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline ligature-set2-ligature-count-raw))
 
 
 (defun ligature-set2-ligature-count-raw (font-data offset)
@@ -2072,11 +2006,6 @@
 (defun ligature-set2-ligature-offsets-count (table)
   "Array of offsets to Ligature tables. Offsets are from beginning of LigatureSet2 table, ordered by preference."
   (ligature-set2-ligature-count table))
-
-
-(declaim
- (inline ligature-set2-ligature-count ligature-set2-ligature-offsets
-  ligature-set2-ligature-offsets-count))
 
 
 (defun ligature-set2-ligature-offsets-ref (table index)
@@ -2123,13 +2052,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline ligature2-ligature-glyph ligature2-component-count
+  ligature2-component-glyph-ids ligature2-component-glyph-ids-count
+  ligature2-ligature-glyph-raw ligature2-component-count-raw))
+
+
 (defun ligature2-ligature-glyph (table)
   "glyph ID of ligature to substitute"
   (declare (type ligature2 table))
   (font-data-read-u24 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline ligature2-ligature-glyph-raw))
 
 
 (defun ligature2-ligature-glyph-raw (font-data offset)
@@ -2143,9 +2075,6 @@
                       (+ (table-ref-offset table) 3)))
 
 
-(declaim (inline ligature2-component-count-raw))
-
-
 (defun ligature2-component-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 3)))
 
@@ -2153,11 +2082,6 @@
 (defun ligature2-component-glyph-ids-count (table)
   "Array of component glyph IDs — start with the second component, ordered in writing direction"
   (max 0 (- (ligature2-component-count table) 1)))
-
-
-(declaim
- (inline ligature2-ligature-glyph ligature2-component-count
-  ligature2-component-glyph-ids ligature2-component-glyph-ids-count))
 
 
 (defun ligature2-component-glyph-ids-ref (table index)

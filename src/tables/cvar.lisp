@@ -17,13 +17,15 @@
      (:constructor %make-cvar (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline cvar-version cvar-tuple-variation-count cvar-data-offset
+  cvar-data-offset-offset cvar-tuple-variation-headers cvar-version-raw))
+
+
 (defun cvar-version (table)
   "Major/minor version number of the CVT variations table — set to (1,0)."
   (declare (type cvar table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline cvar-version-raw))
 
 
 (defun cvar-version-raw (font-data offset)
@@ -35,11 +37,6 @@
   (declare (type cvar table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim
- (inline cvar-version cvar-tuple-variation-count cvar-data-offset
-  cvar-data-offset-offset cvar-tuple-variation-headers))
 
 
 (defun cvar-data-offset (table)

@@ -17,13 +17,16 @@
      (:constructor %make-eblc (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline eblc-major-version eblc-minor-version eblc-num-sizes eblc-bitmap-sizes
+  eblc-bitmap-sizes-count eblc-major-version-raw eblc-minor-version-raw
+  eblc-num-sizes-raw))
+
+
 (defun eblc-major-version (table)
   "Major version of the EBLC table, = 2."
   (declare (type eblc table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline eblc-major-version-raw))
 
 
 (defun eblc-major-version-raw (font-data offset)
@@ -37,9 +40,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline eblc-minor-version-raw))
-
-
 (defun eblc-minor-version-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -51,9 +51,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline eblc-num-sizes-raw))
-
-
 (defun eblc-num-sizes-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 4)))
 
@@ -61,11 +58,6 @@
 (defun eblc-bitmap-sizes-count (table)
   "BitmapSize records array."
   (eblc-num-sizes table))
-
-
-(declaim
- (inline eblc-major-version eblc-minor-version eblc-num-sizes eblc-bitmap-sizes
-  eblc-bitmap-sizes-count))
 
 
 (defun eblc-bitmap-sizes-ref (table index)

@@ -24,37 +24,110 @@
    os2-y-strikeout-position os2-y-strikeout-size os2-y-subscript-x-offset
    os2-y-subscript-x-size os2-y-subscript-y-offset os2-y-subscript-y-size
    os2-y-superscript-x-offset os2-y-superscript-x-size
-   os2-y-superscript-y-offset os2-y-superscript-y-size read-os2 sanitize-os2))
+   os2-y-superscript-y-offset os2-y-superscript-y-size read-os2 sanitize-os2
+   selection-flags-bold-p selection-flags-italic-p selection-flags-negative-p
+   selection-flags-oblique-p selection-flags-outlined-p
+   selection-flags-regular-p selection-flags-strikeout-p
+   selection-flags-underscore-p selection-flags-use-typo-metrics-p
+   selection-flags-wws-p))
 
 
 (define-constant +selection-flags-italic+ 1)
 
 
+(declaim (inline selection-flags-italic-p))
+
+
+(defun selection-flags-italic-p (flags)
+  (logtest flags +selection-flags-italic+))
+
+
 (define-constant +selection-flags-underscore+ 2)
+
+
+(declaim (inline selection-flags-underscore-p))
+
+
+(defun selection-flags-underscore-p (flags)
+  (logtest flags +selection-flags-underscore+))
 
 
 (define-constant +selection-flags-negative+ 4)
 
 
+(declaim (inline selection-flags-negative-p))
+
+
+(defun selection-flags-negative-p (flags)
+  (logtest flags +selection-flags-negative+))
+
+
 (define-constant +selection-flags-outlined+ 8)
+
+
+(declaim (inline selection-flags-outlined-p))
+
+
+(defun selection-flags-outlined-p (flags)
+  (logtest flags +selection-flags-outlined+))
 
 
 (define-constant +selection-flags-strikeout+ 16)
 
 
+(declaim (inline selection-flags-strikeout-p))
+
+
+(defun selection-flags-strikeout-p (flags)
+  (logtest flags +selection-flags-strikeout+))
+
+
 (define-constant +selection-flags-bold+ 32)
+
+
+(declaim (inline selection-flags-bold-p))
+
+
+(defun selection-flags-bold-p (flags) (logtest flags +selection-flags-bold+))
 
 
 (define-constant +selection-flags-regular+ 64)
 
 
+(declaim (inline selection-flags-regular-p))
+
+
+(defun selection-flags-regular-p (flags)
+  (logtest flags +selection-flags-regular+))
+
+
 (define-constant +selection-flags-use-typo-metrics+ 128)
+
+
+(declaim (inline selection-flags-use-typo-metrics-p))
+
+
+(defun selection-flags-use-typo-metrics-p (flags)
+  (logtest flags +selection-flags-use-typo-metrics+))
 
 
 (define-constant +selection-flags-wws+ 256)
 
 
+(declaim (inline selection-flags-wws-p))
+
+
+(defun selection-flags-wws-p (flags) (logtest flags +selection-flags-wws+))
+
+
 (define-constant +selection-flags-oblique+ 512)
+
+
+(declaim (inline selection-flags-oblique-p))
+
+
+(defun selection-flags-oblique-p (flags)
+  (logtest flags +selection-flags-oblique+))
 
 
 (defstruct
@@ -62,12 +135,40 @@
      (:constructor %make-os2 (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline os2-version os2-x-avg-char-width os2-us-weight-class
+  os2-us-width-class os2-fs-type os2-y-subscript-x-size os2-y-subscript-y-size
+  os2-y-subscript-x-offset os2-y-subscript-y-offset os2-y-superscript-x-size
+  os2-y-superscript-y-size os2-y-superscript-x-offset
+  os2-y-superscript-y-offset os2-y-strikeout-size os2-y-strikeout-position
+  os2-s-family-class os2-panose-10 os2-panose-10-count os2-ul-unicode-range-1
+  os2-ul-unicode-range-2 os2-ul-unicode-range-3 os2-ul-unicode-range-4
+  os2-ach-vend-id os2-fs-selection os2-us-first-char-index
+  os2-us-last-char-index os2-s-typo-ascender os2-s-typo-descender
+  os2-s-typo-line-gap os2-us-win-ascent os2-us-win-descent
+  os2-ul-code-page-range-1 os2-ul-code-page-range-2 os2-sx-height
+  os2-s-cap-height os2-us-default-char os2-us-break-char os2-us-max-context
+  os2-us-lower-optical-point-size os2-us-upper-optical-point-size
+  os2-version-raw os2-x-avg-char-width-raw os2-us-weight-class-raw
+  os2-us-width-class-raw os2-fs-type-raw os2-y-subscript-x-size-raw
+  os2-y-subscript-y-size-raw os2-y-subscript-x-offset-raw
+  os2-y-subscript-y-offset-raw os2-y-superscript-x-size-raw
+  os2-y-superscript-y-size-raw os2-y-superscript-x-offset-raw
+  os2-y-superscript-y-offset-raw os2-y-strikeout-size-raw
+  os2-y-strikeout-position-raw os2-s-family-class-raw
+  os2-ul-unicode-range-1-raw os2-ul-unicode-range-2-raw
+  os2-ul-unicode-range-3-raw os2-ul-unicode-range-4-raw os2-ach-vend-id-raw
+  os2-fs-selection-raw os2-us-first-char-index-raw os2-us-last-char-index-raw
+  os2-s-typo-ascender-raw os2-s-typo-descender-raw os2-s-typo-line-gap-raw
+  os2-us-win-ascent-raw os2-us-win-descent-raw os2-ul-code-page-range-1-raw
+  os2-ul-code-page-range-2-raw os2-sx-height-raw os2-s-cap-height-raw
+  os2-us-default-char-raw os2-us-break-char-raw os2-us-max-context-raw
+  os2-us-lower-optical-point-size-raw os2-us-upper-optical-point-size-raw))
+
+
 (defun os2-version (table)
   (declare (type os2 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline os2-version-raw))
 
 
 (defun os2-version-raw (font-data offset) (font-data-read-u16 font-data offset))
@@ -78,9 +179,6 @@
   (declare (type os2 table))
   (font-data-read-i16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 2)))
-
-
-(declaim (inline os2-x-avg-char-width-raw))
 
 
 (defun os2-x-avg-char-width-raw (font-data offset)
@@ -94,9 +192,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline os2-us-weight-class-raw))
-
-
 (defun os2-us-weight-class-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
 
@@ -106,9 +201,6 @@
   (declare (type os2 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline os2-us-width-class-raw))
 
 
 (defun os2-us-width-class-raw (font-data offset)
@@ -122,9 +214,6 @@
                       (+ (table-ref-offset table) 8)))
 
 
-(declaim (inline os2-fs-type-raw))
-
-
 (defun os2-fs-type-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 8)))
 
@@ -134,9 +223,6 @@
   (declare (type os2 table))
   (font-data-read-i16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 10)))
-
-
-(declaim (inline os2-y-subscript-x-size-raw))
 
 
 (defun os2-y-subscript-x-size-raw (font-data offset)
@@ -150,9 +236,6 @@
                       (+ (table-ref-offset table) 12)))
 
 
-(declaim (inline os2-y-subscript-y-size-raw))
-
-
 (defun os2-y-subscript-y-size-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 12)))
 
@@ -162,9 +245,6 @@
   (declare (type os2 table))
   (font-data-read-i16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 14)))
-
-
-(declaim (inline os2-y-subscript-x-offset-raw))
 
 
 (defun os2-y-subscript-x-offset-raw (font-data offset)
@@ -178,9 +258,6 @@
                       (+ (table-ref-offset table) 16)))
 
 
-(declaim (inline os2-y-subscript-y-offset-raw))
-
-
 (defun os2-y-subscript-y-offset-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 16)))
 
@@ -190,9 +267,6 @@
   (declare (type os2 table))
   (font-data-read-i16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 18)))
-
-
-(declaim (inline os2-y-superscript-x-size-raw))
 
 
 (defun os2-y-superscript-x-size-raw (font-data offset)
@@ -206,9 +280,6 @@
                       (+ (table-ref-offset table) 20)))
 
 
-(declaim (inline os2-y-superscript-y-size-raw))
-
-
 (defun os2-y-superscript-y-size-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 20)))
 
@@ -218,9 +289,6 @@
   (declare (type os2 table))
   (font-data-read-i16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 22)))
-
-
-(declaim (inline os2-y-superscript-x-offset-raw))
 
 
 (defun os2-y-superscript-x-offset-raw (font-data offset)
@@ -234,9 +302,6 @@
                       (+ (table-ref-offset table) 24)))
 
 
-(declaim (inline os2-y-superscript-y-offset-raw))
-
-
 (defun os2-y-superscript-y-offset-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 24)))
 
@@ -246,9 +311,6 @@
   (declare (type os2 table))
   (font-data-read-i16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 26)))
-
-
-(declaim (inline os2-y-strikeout-size-raw))
 
 
 (defun os2-y-strikeout-size-raw (font-data offset)
@@ -262,9 +324,6 @@
                       (+ (table-ref-offset table) 28)))
 
 
-(declaim (inline os2-y-strikeout-position-raw))
-
-
 (defun os2-y-strikeout-position-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 28)))
 
@@ -274,9 +333,6 @@
   (declare (type os2 table))
   (font-data-read-i16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 30)))
-
-
-(declaim (inline os2-s-family-class-raw))
 
 
 (defun os2-s-family-class-raw (font-data offset)
@@ -314,9 +370,6 @@
                       (+ (table-ref-offset table) 42)))
 
 
-(declaim (inline os2-ul-unicode-range-1-raw))
-
-
 (defun os2-ul-unicode-range-1-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 42)))
 
@@ -326,9 +379,6 @@
   (declare (type os2 table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 46)))
-
-
-(declaim (inline os2-ul-unicode-range-2-raw))
 
 
 (defun os2-ul-unicode-range-2-raw (font-data offset)
@@ -342,9 +392,6 @@
                       (+ (table-ref-offset table) 50)))
 
 
-(declaim (inline os2-ul-unicode-range-3-raw))
-
-
 (defun os2-ul-unicode-range-3-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 50)))
 
@@ -354,9 +401,6 @@
   (declare (type os2 table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 54)))
-
-
-(declaim (inline os2-ul-unicode-range-4-raw))
 
 
 (defun os2-ul-unicode-range-4-raw (font-data offset)
@@ -370,9 +414,6 @@
                              (+ (table-ref-offset table) 58)))
 
 
-(declaim (inline os2-ach-vend-id-raw))
-
-
 (defun os2-ach-vend-id-raw (font-data offset)
   (font-data-read-tag-string font-data (+ offset 58)))
 
@@ -382,9 +423,6 @@
   (declare (type os2 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 62)))
-
-
-(declaim (inline os2-fs-selection-raw))
 
 
 (defun os2-fs-selection-raw (font-data offset)
@@ -398,9 +436,6 @@
                       (+ (table-ref-offset table) 64)))
 
 
-(declaim (inline os2-us-first-char-index-raw))
-
-
 (defun os2-us-first-char-index-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 64)))
 
@@ -410,9 +445,6 @@
   (declare (type os2 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 66)))
-
-
-(declaim (inline os2-us-last-char-index-raw))
 
 
 (defun os2-us-last-char-index-raw (font-data offset)
@@ -426,9 +458,6 @@
                       (+ (table-ref-offset table) 68)))
 
 
-(declaim (inline os2-s-typo-ascender-raw))
-
-
 (defun os2-s-typo-ascender-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 68)))
 
@@ -438,9 +467,6 @@
   (declare (type os2 table))
   (font-data-read-i16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 70)))
-
-
-(declaim (inline os2-s-typo-descender-raw))
 
 
 (defun os2-s-typo-descender-raw (font-data offset)
@@ -454,9 +480,6 @@
                       (+ (table-ref-offset table) 72)))
 
 
-(declaim (inline os2-s-typo-line-gap-raw))
-
-
 (defun os2-s-typo-line-gap-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 72)))
 
@@ -468,9 +491,6 @@
                       (+ (table-ref-offset table) 74)))
 
 
-(declaim (inline os2-us-win-ascent-raw))
-
-
 (defun os2-us-win-ascent-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 74)))
 
@@ -480,9 +500,6 @@
   (declare (type os2 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 76)))
-
-
-(declaim (inline os2-us-win-descent-raw))
 
 
 (defun os2-us-win-descent-raw (font-data offset)
@@ -497,9 +514,6 @@
                         (+ (table-ref-offset table) 78))))
 
 
-(declaim (inline os2-ul-code-page-range-1-raw))
-
-
 (defun os2-ul-code-page-range-1-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 78)))
 
@@ -510,9 +524,6 @@
   (when (>= (table-ref-length table) 86)
     (font-data-read-u32 (table-ref-font-data table)
                         (+ (table-ref-offset table) 82))))
-
-
-(declaim (inline os2-ul-code-page-range-2-raw))
 
 
 (defun os2-ul-code-page-range-2-raw (font-data offset)
@@ -527,9 +538,6 @@
                         (+ (table-ref-offset table) 86))))
 
 
-(declaim (inline os2-sx-height-raw))
-
-
 (defun os2-sx-height-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 86)))
 
@@ -540,9 +548,6 @@
   (when (>= (table-ref-length table) 90)
     (font-data-read-i16 (table-ref-font-data table)
                         (+ (table-ref-offset table) 88))))
-
-
-(declaim (inline os2-s-cap-height-raw))
 
 
 (defun os2-s-cap-height-raw (font-data offset)
@@ -557,9 +562,6 @@
                         (+ (table-ref-offset table) 90))))
 
 
-(declaim (inline os2-us-default-char-raw))
-
-
 (defun os2-us-default-char-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 90)))
 
@@ -570,9 +572,6 @@
   (when (>= (table-ref-length table) 94)
     (font-data-read-u16 (table-ref-font-data table)
                         (+ (table-ref-offset table) 92))))
-
-
-(declaim (inline os2-us-break-char-raw))
 
 
 (defun os2-us-break-char-raw (font-data offset)
@@ -587,9 +586,6 @@
                         (+ (table-ref-offset table) 94))))
 
 
-(declaim (inline os2-us-max-context-raw))
-
-
 (defun os2-us-max-context-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 94)))
 
@@ -602,9 +598,6 @@
                         (+ (table-ref-offset table) 96))))
 
 
-(declaim (inline os2-us-lower-optical-point-size-raw))
-
-
 (defun os2-us-lower-optical-point-size-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 96)))
 
@@ -615,25 +608,6 @@
   (when (>= (table-ref-length table) 100)
     (font-data-read-u16 (table-ref-font-data table)
                         (+ (table-ref-offset table) 98))))
-
-
-(declaim (inline os2-us-upper-optical-point-size-raw))
-
-
-(declaim
- (inline os2-version os2-x-avg-char-width os2-us-weight-class
-  os2-us-width-class os2-fs-type os2-y-subscript-x-size os2-y-subscript-y-size
-  os2-y-subscript-x-offset os2-y-subscript-y-offset os2-y-superscript-x-size
-  os2-y-superscript-y-size os2-y-superscript-x-offset
-  os2-y-superscript-y-offset os2-y-strikeout-size os2-y-strikeout-position
-  os2-s-family-class os2-panose-10 os2-panose-10-count os2-ul-unicode-range-1
-  os2-ul-unicode-range-2 os2-ul-unicode-range-3 os2-ul-unicode-range-4
-  os2-ach-vend-id os2-fs-selection os2-us-first-char-index
-  os2-us-last-char-index os2-s-typo-ascender os2-s-typo-descender
-  os2-s-typo-line-gap os2-us-win-ascent os2-us-win-descent
-  os2-ul-code-page-range-1 os2-ul-code-page-range-2 os2-sx-height
-  os2-s-cap-height os2-us-default-char os2-us-break-char os2-us-max-context
-  os2-us-lower-optical-point-size os2-us-upper-optical-point-size))
 
 
 (defun os2-us-upper-optical-point-size-raw (font-data offset)

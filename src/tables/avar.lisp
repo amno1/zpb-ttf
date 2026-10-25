@@ -22,6 +22,9 @@
      (:constructor %make-segment-maps (%record-font-data %record-offset))))
 
 
+(declaim (inline segment-maps-position-map-count segment-maps-axis-value-maps))
+
+
 (defun segment-maps-position-map-count (rec)
   "The number of correspondence pairs for this axis."
   (declare (type segment-maps rec))
@@ -32,9 +35,6 @@
   "The array of axis value map records for this axis."
   (declare (type segment-maps rec))
   (segment-maps-position-map-count rec))
-
-
-(declaim (inline segment-maps-position-map-count segment-maps-axis-value-maps))
 
 
 (defun segment-maps-axis-value-maps-ref (rec index)
@@ -50,6 +50,12 @@
      (:constructor %make-axis-value-map (%record-font-data %record-offset))))
 
 
+(define-constant +axis-value-map-size+ 4)
+
+
+(declaim (inline axis-value-map-from-coordinate axis-value-map-to-coordinate))
+
+
 (defun axis-value-map-from-coordinate (rec)
   "A normalized coordinate value obtained using default normalization."
   (declare (type axis-value-map rec))
@@ -63,24 +69,22 @@
                           (+ (record-ref-offset rec) 2)))
 
 
-(declaim (inline axis-value-map-from-coordinate axis-value-map-to-coordinate))
-
-
-(define-constant +axis-value-map-size+ 4)
-
-
 (defstruct
     (avar (:include table-ref)
      (:constructor %make-avar (%table-font-data %table-offset %table-length))))
+
+
+(declaim
+ (inline avar-version avar--reserved avar-axis-count avar-axis-segment-maps
+  avar-axis-index-map-offset avar-axis-index-map-offset-offset
+  avar-var-store-offset avar-var-store-offset-offset avar-version-raw
+  avar--reserved-raw avar-axis-count-raw))
 
 
 (defun avar-version (table)
   "Major version number of the axis variations table — set to 1 or 2. Minor version number of the axis variations table — set to 0."
   (declare (type avar table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline avar-version-raw))
 
 
 (defun avar-version-raw (font-data offset)
@@ -94,9 +98,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline avar--reserved-raw))
-
-
 (defun avar--reserved-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
 
@@ -106,9 +107,6 @@
   (declare (type avar table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline avar-axis-count-raw))
 
 
 (defun avar-axis-count-raw (font-data offset)
@@ -138,12 +136,6 @@
   (when (>= (table-ref-length table) 16)
     (font-data-read-u32 (table-ref-font-data table)
                         (+ (table-ref-offset table) 12))))
-
-
-(declaim
- (inline avar-version avar--reserved avar-axis-count avar-axis-segment-maps
-  avar-axis-index-map-offset avar-axis-index-map-offset-offset
-  avar-var-store-offset avar-var-store-offset-offset))
 
 
 (defun avar-var-store-offset (table)

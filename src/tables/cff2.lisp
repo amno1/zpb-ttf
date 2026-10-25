@@ -27,13 +27,20 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline cff2-header-major-version cff2-header-minor-version
+  cff2-header-header-size cff2-header-top-dict-length cff2-header--padding
+  cff2-header--padding-count cff2-header-top-dict-data
+  cff2-header-top-dict-data-count cff2-header-trailing-data
+  cff2-header-trailing-data-count cff2-header-major-version-raw
+  cff2-header-minor-version-raw cff2-header-header-size-raw
+  cff2-header-top-dict-length-raw))
+
+
 (defun cff2-header-major-version (table)
   "Format major version (set to 2)."
   (declare (type cff2-header table))
   (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline cff2-header-major-version-raw))
 
 
 (defun cff2-header-major-version-raw (font-data offset)
@@ -47,9 +54,6 @@
                      (+ (table-ref-offset table) 1)))
 
 
-(declaim (inline cff2-header-minor-version-raw))
-
-
 (defun cff2-header-minor-version-raw (font-data offset)
   (font-data-read-u8 font-data (+ offset 1)))
 
@@ -61,9 +65,6 @@
                      (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline cff2-header-header-size-raw))
-
-
 (defun cff2-header-header-size-raw (font-data offset)
   (font-data-read-u8 font-data (+ offset 2)))
 
@@ -73,9 +74,6 @@
   (declare (type cff2-header table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 3)))
-
-
-(declaim (inline cff2-header-top-dict-length-raw))
 
 
 (defun cff2-header-top-dict-length-raw (font-data offset)
@@ -162,14 +160,6 @@
     (font-data-read-u8 (table-ref-font-data table) pos)))
 
 
-(declaim
- (inline cff2-header-major-version cff2-header-minor-version
-  cff2-header-header-size cff2-header-top-dict-length cff2-header--padding
-  cff2-header--padding-count cff2-header-top-dict-data
-  cff2-header-top-dict-data-count cff2-header-trailing-data
-  cff2-header-trailing-data-count))
-
-
 (defun cff2-header-trailing-data-bytes (table)
   "Remaining table data."
   (font-data-slice (table-ref-font-data table)
@@ -202,13 +192,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline cff2-index-count cff2-index-off-size cff2-index-offsets
+  cff2-index-offsets-count cff2-index-data cff2-index-data-count
+  cff2-index-count-raw cff2-index-off-size-raw))
+
+
 (defun cff2-index-count (table)
   "Number of objects stored in INDEX."
   (declare (type cff2-index table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline cff2-index-count-raw))
 
 
 (defun cff2-index-count-raw (font-data offset)
@@ -222,19 +215,13 @@
                      (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline cff2-index-off-size-raw))
-
-
 (defun cff2-index-off-size-raw (font-data offset)
   (font-data-read-u8 font-data (+ offset 4)))
 
 
-(defun cff2-index-offsets-count (table &optional count)
+(defun cff2-index-offsets-count (table)
   "Bytes containing `count + 1` offsets each of `off_size`."
-  (or count
-      (max 0
-           (floor (- (table-ref-length table) (+ (table-ref-offset table) 5))
-                  1))))
+  (* (+ (cff2-index-count table) 1) (cff2-index-off-size table)))
 
 
 (defun cff2-index-offsets-ref (table index)
@@ -278,11 +265,6 @@
       (error 'font-out-of-bounds-error :pos pos :size 1 :length
              (table-ref-length table)))
     (font-data-read-u8 (table-ref-font-data table) pos)))
-
-
-(declaim
- (inline cff2-index-count cff2-index-off-size cff2-index-offsets
-  cff2-index-offsets-count cff2-index-data cff2-index-data-count))
 
 
 (defun cff2-index-data-bytes (table)

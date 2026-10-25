@@ -44,13 +44,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline ot-kern-version ot-kern-n-tables ot-kern-subtable-data
+  ot-kern-subtable-data-count ot-kern-version-raw ot-kern-n-tables-raw))
+
+
 (defun ot-kern-version (table)
   "Table version number—set to 0."
   (declare (type ot-kern table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline ot-kern-version-raw))
 
 
 (defun ot-kern-version-raw (font-data offset)
@@ -62,9 +64,6 @@
   (declare (type ot-kern table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 2)))
-
-
-(declaim (inline ot-kern-n-tables-raw))
 
 
 (defun ot-kern-n-tables-raw (font-data offset)
@@ -86,11 +85,6 @@
       (error 'font-out-of-bounds-error :pos pos :size 1 :length
              (table-ref-length table)))
     (font-data-read-u8 (table-ref-font-data table) pos)))
-
-
-(declaim
- (inline ot-kern-version ot-kern-n-tables ot-kern-subtable-data
-  ot-kern-subtable-data-count))
 
 
 (defun ot-kern-subtable-data-bytes (table)
@@ -122,13 +116,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline aat-kern-version aat-kern-n-tables aat-kern-subtable-data
+  aat-kern-subtable-data-count aat-kern-version-raw aat-kern-n-tables-raw))
+
+
 (defun aat-kern-version (table)
   "The version number of the kerning table (0x00010000 for the current version)."
   (declare (type aat-kern table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline aat-kern-version-raw))
 
 
 (defun aat-kern-version-raw (font-data offset)
@@ -140,9 +136,6 @@
   (declare (type aat-kern table))
   (font-data-read-u32 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline aat-kern-n-tables-raw))
 
 
 (defun aat-kern-n-tables-raw (font-data offset)
@@ -164,11 +157,6 @@
       (error 'font-out-of-bounds-error :pos pos :size 1 :length
              (table-ref-length table)))
     (font-data-read-u8 (table-ref-font-data table) pos)))
-
-
-(declaim
- (inline aat-kern-version aat-kern-n-tables aat-kern-subtable-data
-  aat-kern-subtable-data-count))
 
 
 (defun aat-kern-subtable-data-bytes (table)
@@ -200,13 +188,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline ot-subtable-version ot-subtable-length ot-subtable-coverage
+  ot-subtable-data ot-subtable-data-count ot-subtable-version-raw
+  ot-subtable-length-raw ot-subtable-coverage-raw))
+
+
 (defun ot-subtable-version (table)
   "Kern subtable version number-- set to 0."
   (declare (type ot-subtable table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline ot-subtable-version-raw))
 
 
 (defun ot-subtable-version-raw (font-data offset)
@@ -220,9 +211,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline ot-subtable-length-raw))
-
-
 (defun ot-subtable-length-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -232,9 +220,6 @@
   (declare (type ot-subtable table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline ot-subtable-coverage-raw))
 
 
 (defun ot-subtable-coverage-raw (font-data offset)
@@ -256,11 +241,6 @@
       (error 'font-out-of-bounds-error :pos pos :size 1 :length
              (table-ref-length table)))
     (font-data-read-u8 (table-ref-font-data table) pos)))
-
-
-(declaim
- (inline ot-subtable-version ot-subtable-length ot-subtable-coverage
-  ot-subtable-data ot-subtable-data-count))
 
 
 (defun ot-subtable-data-bytes (table)
@@ -292,13 +272,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline aat-subtable-length aat-subtable-coverage aat-subtable-tuple-index
+  aat-subtable-data aat-subtable-data-count aat-subtable-length-raw
+  aat-subtable-coverage-raw aat-subtable-tuple-index-raw))
+
+
 (defun aat-subtable-length (table)
   "The length of this subtable in bytes, including this header."
   (declare (type aat-subtable table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline aat-subtable-length-raw))
 
 
 (defun aat-subtable-length-raw (font-data offset)
@@ -312,9 +295,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline aat-subtable-coverage-raw))
-
-
 (defun aat-subtable-coverage-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
 
@@ -324,9 +304,6 @@
   (declare (type aat-subtable table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline aat-subtable-tuple-index-raw))
 
 
 (defun aat-subtable-tuple-index-raw (font-data offset)
@@ -348,11 +325,6 @@
       (error 'font-out-of-bounds-error :pos pos :size 1 :length
              (table-ref-length table)))
     (font-data-read-u8 (table-ref-font-data table) pos)))
-
-
-(declaim
- (inline aat-subtable-length aat-subtable-coverage aat-subtable-tuple-index
-  aat-subtable-data aat-subtable-data-count))
 
 
 (defun aat-subtable-data-bytes (table)
@@ -384,13 +356,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline kern-subtable0-n-pairs kern-subtable0-search-range
+  kern-subtable0-entry-selector kern-subtable0-range-shift kern-subtable0-pairs
+  kern-subtable0-pairs-count kern-subtable0-n-pairs-raw
+  kern-subtable0-search-range-raw kern-subtable0-entry-selector-raw
+  kern-subtable0-range-shift-raw))
+
+
 (defun kern-subtable0-n-pairs (table)
   "The number of kerning pairs in this subtable."
   (declare (type kern-subtable0 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline kern-subtable0-n-pairs-raw))
 
 
 (defun kern-subtable0-n-pairs-raw (font-data offset)
@@ -404,9 +381,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline kern-subtable0-search-range-raw))
-
-
 (defun kern-subtable0-search-range-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -416,9 +390,6 @@
   (declare (type kern-subtable0 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline kern-subtable0-entry-selector-raw))
 
 
 (defun kern-subtable0-entry-selector-raw (font-data offset)
@@ -432,9 +403,6 @@
                       (+ (table-ref-offset table) 6)))
 
 
-(declaim (inline kern-subtable0-range-shift-raw))
-
-
 (defun kern-subtable0-range-shift-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 6)))
 
@@ -442,12 +410,6 @@
 (defun kern-subtable0-pairs-count (table)
   "Kerning records."
   (kern-subtable0-n-pairs table))
-
-
-(declaim
- (inline kern-subtable0-n-pairs kern-subtable0-search-range
-  kern-subtable0-entry-selector kern-subtable0-range-shift kern-subtable0-pairs
-  kern-subtable0-pairs-count))
 
 
 (defun kern-subtable0-pairs-ref (table index)
@@ -491,13 +453,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline subtable2-class-table-first-glyph subtable2-class-table-n-glyphs
+  subtable2-class-table-offsets subtable2-class-table-offsets-count
+  subtable2-class-table-first-glyph-raw subtable2-class-table-n-glyphs-raw))
+
+
 (defun subtable2-class-table-first-glyph (table)
   "First glyph in class range."
   (declare (type subtable2-class-table table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline subtable2-class-table-first-glyph-raw))
 
 
 (defun subtable2-class-table-first-glyph-raw (font-data offset)
@@ -511,9 +476,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline subtable2-class-table-n-glyphs-raw))
-
-
 (defun subtable2-class-table-n-glyphs-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -521,11 +483,6 @@
 (defun subtable2-class-table-offsets-count (table)
   "The offsets array for all of the glyphs in the range."
   (subtable2-class-table-n-glyphs table))
-
-
-(declaim
- (inline subtable2-class-table-first-glyph subtable2-class-table-n-glyphs
-  subtable2-class-table-offsets subtable2-class-table-offsets-count))
 
 
 (defun subtable2-class-table-offsets-ref (table index)
@@ -569,13 +526,21 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline subtable3-glyph-count subtable3-kern-value-count
+  subtable3-left-class-count subtable3-right-class-count subtable3-flags
+  subtable3-kern-value subtable3-kern-value-array-count subtable3-left-class
+  subtable3-left-class-array-count subtable3-right-class
+  subtable3-right-class-array-count subtable3-kern-index
+  subtable3-kern-index-count subtable3-glyph-count-raw
+  subtable3-kern-value-count-raw subtable3-left-class-count-raw
+  subtable3-right-class-count-raw subtable3-flags-raw))
+
+
 (defun subtable3-glyph-count (table)
   "The number of glyphs in this font."
   (declare (type subtable3 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline subtable3-glyph-count-raw))
 
 
 (defun subtable3-glyph-count-raw (font-data offset)
@@ -589,9 +554,6 @@
                      (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline subtable3-kern-value-count-raw))
-
-
 (defun subtable3-kern-value-count-raw (font-data offset)
   (font-data-read-u8 font-data (+ offset 2)))
 
@@ -601,9 +563,6 @@
   (declare (type subtable3 table))
   (font-data-read-u8 (table-ref-font-data table)
                      (+ (table-ref-offset table) 3)))
-
-
-(declaim (inline subtable3-left-class-count-raw))
 
 
 (defun subtable3-left-class-count-raw (font-data offset)
@@ -617,9 +576,6 @@
                      (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline subtable3-right-class-count-raw))
-
-
 (defun subtable3-right-class-count-raw (font-data offset)
   (font-data-read-u8 font-data (+ offset 4)))
 
@@ -629,9 +585,6 @@
   (declare (type subtable3 table))
   (font-data-read-u8 (table-ref-font-data table)
                      (+ (table-ref-offset table) 5)))
-
-
-(declaim (inline subtable3-flags-raw))
 
 
 (defun subtable3-flags-raw (font-data offset)
@@ -710,17 +663,10 @@
                    (subtable3-right-class-array-count table)))
 
 
-(defun subtable3-kern-index-count (table &optional count)
+(defun subtable3-kern-index-count (table)
   "The indices into the kernValue array."
-  (or count
-      (max 0
-           (floor
-            (- (table-ref-length table)
-               (+ (table-ref-offset table) 6
-                  (* (subtable3-right-class-array-count table) 1)
-                  (* (subtable3-left-class-array-count table) 1)
-                  (* (subtable3-kern-value-count table) 2)))
-            1))))
+  (* (+ (subtable3-left-class-count table) 0)
+     (subtable3-right-class-count table)))
 
 
 (defun subtable3-kern-index-ref (table index)
@@ -739,15 +685,6 @@
       (error 'font-out-of-bounds-error :pos pos :size 1 :length
              (table-ref-length table)))
     (font-data-read-u8 (table-ref-font-data table) pos)))
-
-
-(declaim
- (inline subtable3-glyph-count subtable3-kern-value-count
-  subtable3-left-class-count subtable3-right-class-count subtable3-flags
-  subtable3-kern-value subtable3-kern-value-array-count subtable3-left-class
-  subtable3-left-class-array-count subtable3-right-class
-  subtable3-right-class-array-count subtable3-kern-index
-  subtable3-kern-index-count))
 
 
 (defun subtable3-kern-index-bytes (table)

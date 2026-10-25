@@ -58,6 +58,14 @@
       (%record-font-data %record-offset))))
 
 
+(define-constant +base-script-record-size+ 6)
+
+
+(declaim
+ (inline base-script-record-base-script-tag
+  base-script-record-base-script-offset))
+
+
 (defun base-script-record-base-script-tag (rec)
   "4-byte script identification tag"
   (declare (type base-script-record rec))
@@ -71,18 +79,18 @@
   (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 4)))
 
 
-(declaim
- (inline base-script-record-base-script-tag
-  base-script-record-base-script-offset))
-
-
-(define-constant +base-script-record-size+ 6)
-
-
 (defstruct
     (base-lang-sys-record (:include record-ref)
      (:constructor %make-base-lang-sys-record
       (%record-font-data %record-offset))))
+
+
+(define-constant +base-lang-sys-record-size+ 6)
+
+
+(declaim
+ (inline base-lang-sys-record-base-lang-sys-tag
+  base-lang-sys-record-min-max-offset))
 
 
 (defun base-lang-sys-record-base-lang-sys-tag (rec)
@@ -98,18 +106,18 @@
   (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 4)))
 
 
-(declaim
- (inline base-lang-sys-record-base-lang-sys-tag
-  base-lang-sys-record-min-max-offset))
-
-
-(define-constant +base-lang-sys-record-size+ 6)
-
-
 (defstruct
     (feat-min-max-record (:include record-ref)
      (:constructor %make-feat-min-max-record
       (%record-font-data %record-offset))))
+
+
+(define-constant +feat-min-max-record-size+ 8)
+
+
+(declaim
+ (inline feat-min-max-record-feature-table-tag
+  feat-min-max-record-min-coord-offset feat-min-max-record-max-coord-offset))
 
 
 (defun feat-min-max-record-feature-table-tag (rec)
@@ -131,26 +139,21 @@
   (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 6)))
 
 
-(declaim
- (inline feat-min-max-record-feature-table-tag
-  feat-min-max-record-min-coord-offset feat-min-max-record-max-coord-offset))
-
-
-(define-constant +feat-min-max-record-size+ 8)
-
-
 (defstruct
     (base (:include table-ref)
      (:constructor %make-base (%table-font-data %table-offset %table-length))))
+
+
+(declaim
+ (inline base-version base-horiz-axis-offset base-horiz-axis-offset-offset
+  base-vert-axis-offset base-vert-axis-offset-offset base-item-var-store-offset
+  base-item-var-store-offset-offset base-version-raw))
 
 
 (defun base-version (table)
   "(major, minor) Version for the BASE table (1,0) or (1,1)"
   (declare (type base table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline base-version-raw))
 
 
 (defun base-version-raw (font-data offset)
@@ -197,12 +200,6 @@
                         (+ (table-ref-offset table) 8))))
 
 
-(declaim
- (inline base-version base-horiz-axis-offset base-horiz-axis-offset-offset
-  base-vert-axis-offset base-vert-axis-offset-offset base-item-var-store-offset
-  base-item-var-store-offset-offset))
-
-
 (defun base-item-var-store-offset (table)
   "Offset to Item Variation Store table, from beginning of BASE table (may be null)"
   (declare (type base table))
@@ -234,6 +231,11 @@
      (:constructor %make-axis (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline axis-base-tag-list-offset axis-base-tag-list-offset-offset
+  axis-base-script-list-offset axis-base-script-list-offset-offset))
+
+
 (defun axis-base-tag-list-offset-offset (table)
   "Offset to BaseTagList table, from beginning of Axis table (may be NULL)"
   (declare (type axis table))
@@ -254,11 +256,6 @@
   (declare (type axis table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 2)))
-
-
-(declaim
- (inline axis-base-tag-list-offset axis-base-tag-list-offset-offset
-  axis-base-script-list-offset axis-base-script-list-offset-offset))
 
 
 (defun axis-base-script-list-offset (table)
@@ -293,13 +290,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline base-tag-list-base-tag-count base-tag-list-baseline-tags
+  base-tag-list-baseline-tags-count base-tag-list-base-tag-count-raw))
+
+
 (defun base-tag-list-base-tag-count (table)
   "Number of baseline identification tags in this text direction — may be zero (0)"
   (declare (type base-tag-list table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline base-tag-list-base-tag-count-raw))
 
 
 (defun base-tag-list-base-tag-count-raw (font-data offset)
@@ -309,11 +308,6 @@
 (defun base-tag-list-baseline-tags-count (table)
   "Array of 4-byte baseline identification tags — must be in alphabetical order"
   (base-tag-list-base-tag-count table))
-
-
-(declaim
- (inline base-tag-list-base-tag-count base-tag-list-baseline-tags
-  base-tag-list-baseline-tags-count))
 
 
 (defun base-tag-list-baseline-tags-ref (table index)
@@ -357,13 +351,17 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline base-script-list-base-script-count
+  base-script-list-base-script-records
+  base-script-list-base-script-records-count
+  base-script-list-base-script-count-raw))
+
+
 (defun base-script-list-base-script-count (table)
   "Number of BaseScriptRecords defined"
   (declare (type base-script-list table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline base-script-list-base-script-count-raw))
 
 
 (defun base-script-list-base-script-count-raw (font-data offset)
@@ -373,12 +371,6 @@
 (defun base-script-list-base-script-records-count (table)
   "Array of BaseScriptRecords, in alphabetical order by baseScriptTag"
   (base-script-list-base-script-count table))
-
-
-(declaim
- (inline base-script-list-base-script-count
-  base-script-list-base-script-records
-  base-script-list-base-script-records-count))
 
 
 (defun base-script-list-base-script-records-ref (table index)
@@ -422,6 +414,13 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline base-script-base-values-offset base-script-base-values-offset-offset
+  base-script-default-min-max-offset base-script-default-min-max-offset-offset
+  base-script-base-lang-sys-count base-script-base-lang-sys-records
+  base-script-base-lang-sys-records-count base-script-base-lang-sys-count-raw))
+
+
 (defun base-script-base-values-offset-offset (table)
   "Offset to BaseValues table, from beginning of BaseScript table (may be NULL)"
   (declare (type base-script table))
@@ -460,9 +459,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline base-script-base-lang-sys-count-raw))
-
-
 (defun base-script-base-lang-sys-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
 
@@ -470,13 +466,6 @@
 (defun base-script-base-lang-sys-records-count (table)
   "Array of BaseLangSysRecords, in alphabetical order by BaseLangSysTag"
   (base-script-base-lang-sys-count table))
-
-
-(declaim
- (inline base-script-base-values-offset base-script-base-values-offset-offset
-  base-script-default-min-max-offset base-script-default-min-max-offset-offset
-  base-script-base-lang-sys-count base-script-base-lang-sys-records
-  base-script-base-lang-sys-records-count))
 
 
 (defun base-script-base-lang-sys-records-ref (table index)
@@ -520,13 +509,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline base-values-default-baseline-index base-values-base-coord-count
+  base-values-base-coord-offsets base-values-base-coord-offsets-count
+  base-values-default-baseline-index-raw base-values-base-coord-count-raw))
+
+
 (defun base-values-default-baseline-index (table)
   "Index number of default baseline for this script — equals index position of baseline tag in baselineTags array of the BaseTagList"
   (declare (type base-values table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline base-values-default-baseline-index-raw))
 
 
 (defun base-values-default-baseline-index-raw (font-data offset)
@@ -540,9 +532,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline base-values-base-coord-count-raw))
-
-
 (defun base-values-base-coord-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -550,11 +539,6 @@
 (defun base-values-base-coord-offsets-count (table)
   "Array of offsets to BaseCoord tables, from beginning of BaseValues table — order matches baselineTags array in the BaseTagList"
   (base-values-base-coord-count table))
-
-
-(declaim
- (inline base-values-default-baseline-index base-values-base-coord-count
-  base-values-base-coord-offsets base-values-base-coord-offsets-count))
 
 
 (defun base-values-base-coord-offsets-ref (table index)
@@ -601,6 +585,13 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline min-max-min-coord-offset min-max-min-coord-offset-offset
+  min-max-max-coord-offset min-max-max-coord-offset-offset
+  min-max-feat-min-max-count min-max-feat-min-max-records
+  min-max-feat-min-max-records-count min-max-feat-min-max-count-raw))
+
+
 (defun min-max-min-coord-offset-offset (table)
   "Offset to BaseCoord table that defines the minimum extent value, from the beginning of MinMax table (may be NULL)"
   (declare (type min-max table))
@@ -639,9 +630,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline min-max-feat-min-max-count-raw))
-
-
 (defun min-max-feat-min-max-count-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
 
@@ -649,13 +637,6 @@
 (defun min-max-feat-min-max-records-count (table)
   "Array of FeatMinMaxRecords, in alphabetical order by featureTableTag"
   (min-max-feat-min-max-count table))
-
-
-(declaim
- (inline min-max-min-coord-offset min-max-min-coord-offset-offset
-  min-max-max-coord-offset min-max-max-coord-offset-offset
-  min-max-feat-min-max-count min-max-feat-min-max-records
-  min-max-feat-min-max-records-count))
 
 
 (defun min-max-feat-min-max-records-ref (table index)
@@ -712,13 +693,15 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline base-coord-format1-base-coord-format base-coord-format1-coordinate
+  base-coord-format1-base-coord-format-raw base-coord-format1-coordinate-raw))
+
+
 (defun base-coord-format1-base-coord-format (table)
   "Format identifier — format = 1"
   (declare (type base-coord-format1 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline base-coord-format1-base-coord-format-raw))
 
 
 (defun base-coord-format1-base-coord-format-raw (font-data offset)
@@ -730,13 +713,6 @@
   (declare (type base-coord-format1 table))
   (font-data-read-i16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 2)))
-
-
-(declaim (inline base-coord-format1-coordinate-raw))
-
-
-(declaim
- (inline base-coord-format1-base-coord-format base-coord-format1-coordinate))
 
 
 (defun base-coord-format1-coordinate-raw (font-data offset)
@@ -766,13 +742,18 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline base-coord-format2-base-coord-format base-coord-format2-coordinate
+  base-coord-format2-reference-glyph base-coord-format2-base-coord-point
+  base-coord-format2-base-coord-format-raw base-coord-format2-coordinate-raw
+  base-coord-format2-reference-glyph-raw
+  base-coord-format2-base-coord-point-raw))
+
+
 (defun base-coord-format2-base-coord-format (table)
   "Format identifier — format = 2"
   (declare (type base-coord-format2 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline base-coord-format2-base-coord-format-raw))
 
 
 (defun base-coord-format2-base-coord-format-raw (font-data offset)
@@ -786,9 +767,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline base-coord-format2-coordinate-raw))
-
-
 (defun base-coord-format2-coordinate-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 2)))
 
@@ -800,9 +778,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline base-coord-format2-reference-glyph-raw))
-
-
 (defun base-coord-format2-reference-glyph-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 4)))
 
@@ -812,14 +787,6 @@
   (declare (type base-coord-format2 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 6)))
-
-
-(declaim (inline base-coord-format2-base-coord-point-raw))
-
-
-(declaim
- (inline base-coord-format2-base-coord-format base-coord-format2-coordinate
-  base-coord-format2-reference-glyph base-coord-format2-base-coord-point))
 
 
 (defun base-coord-format2-base-coord-point-raw (font-data offset)
@@ -849,13 +816,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline base-coord-format3-base-coord-format base-coord-format3-coordinate
+  base-coord-format3-device-offset base-coord-format3-device-offset-offset
+  base-coord-format3-base-coord-format-raw base-coord-format3-coordinate-raw))
+
+
 (defun base-coord-format3-base-coord-format (table)
   "Format identifier — format = 3"
   (declare (type base-coord-format3 table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline base-coord-format3-base-coord-format-raw))
 
 
 (defun base-coord-format3-base-coord-format-raw (font-data offset)
@@ -869,9 +839,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline base-coord-format3-coordinate-raw))
-
-
 (defun base-coord-format3-coordinate-raw (font-data offset)
   (font-data-read-i16 font-data (+ offset 2)))
 
@@ -881,11 +848,6 @@
   (declare (type base-coord-format3 table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim
- (inline base-coord-format3-base-coord-format base-coord-format3-coordinate
-  base-coord-format3-device-offset base-coord-format3-device-offset-offset))
 
 
 (defun base-coord-format3-device-offset (table)

@@ -6,13 +6,23 @@
   (:nicknames #:otf)
   (:use #:cl)
   (:export
-   ;; Conditions
+   ;; Constants & Macros
    #:define-constant
+
+   ;; Conditions
    #:font-error
    #:font-out-of-bounds-error
    #:font-format-error
    #:font-version-error
    #:unsupported-format-error
+   #:font-error-message
+   #:font-error-pos
+   #:font-error-size
+   #:font-error-length
+   #:font-error-table
+   #:font-error-expected
+   #:font-error-actual
+   #:font-error-format-id
 
    ;; Font data & slices
    #:font-data
@@ -42,16 +52,28 @@
    #:font-data-read-long-date-time
    #:font-data-read-u64
 
-   ;; Table & Record references
+   ;; Table & Record references and slot names
    #:table-ref
    #:table-ref-p
    #:table-ref-font-data
    #:table-ref-offset
    #:table-ref-length
+   #:table-ref-%table-font-data
+   #:table-ref-%table-offset
+   #:table-ref-%table-length
+   #:%table-font-data
+   #:%table-offset
+   #:%table-length
+
    #:record-ref
    #:record-ref-p
    #:record-ref-font-data
    #:record-ref-offset
+   #:record-ref-%record-font-data
+   #:record-ref-%record-offset
+   #:%record-font-data
+   #:%record-offset
+
    #:resolve-offset16
    #:resolve-offset32
    #:resolve-nullable-offset16

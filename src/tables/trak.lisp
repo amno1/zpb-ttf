@@ -22,6 +22,14 @@
      (:constructor %make-track-table-entry (%record-font-data %record-offset))))
 
 
+(define-constant +track-table-entry-size+ 8)
+
+
+(declaim
+ (inline track-table-entry-track track-table-entry-name-index
+  track-table-entry-offset))
+
+
 (defun track-table-entry-track (rec)
   "Track value for this record."
   (declare (type track-table-entry rec))
@@ -40,26 +48,21 @@
   (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 6)))
 
 
-(declaim
- (inline track-table-entry-track track-table-entry-name-index
-  track-table-entry-offset))
-
-
-(define-constant +track-table-entry-size+ 8)
-
-
 (defstruct
     (trak (:include table-ref)
      (:constructor %make-trak (%table-font-data %table-offset %table-length))))
+
+
+(declaim
+ (inline trak-version trak-format-table trak-horiz-offset
+  trak-horiz-offset-offset trak-vert-offset trak-vert-offset-offset
+  trak-reserved trak-version-raw trak-format-table-raw trak-reserved-raw))
 
 
 (defun trak-version (table)
   "Version number of the tracking table (0x00010000 for the current version)."
   (declare (type trak table))
   (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline trak-version-raw))
 
 
 (defun trak-version-raw (font-data offset)
@@ -71,9 +74,6 @@
   (declare (type trak table))
   (font-data-read-u16 (table-ref-font-data table)
                       (+ (table-ref-offset table) 4)))
-
-
-(declaim (inline trak-format-table-raw))
 
 
 (defun trak-format-table-raw (font-data offset)
@@ -119,15 +119,6 @@
                       (+ (table-ref-offset table) 10)))
 
 
-(declaim (inline trak-reserved-raw))
-
-
-(declaim
- (inline trak-version trak-format-table trak-horiz-offset
-  trak-horiz-offset-offset trak-vert-offset trak-vert-offset-offset
-  trak-reserved))
-
-
 (defun trak-reserved-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 10)))
 
@@ -155,13 +146,16 @@
       (%table-font-data %table-offset %table-length))))
 
 
+(declaim
+ (inline track-data-n-tracks track-data-n-sizes track-data-size-table-offset
+  track-data-track-table track-data-track-table-count track-data-n-tracks-raw
+  track-data-n-sizes-raw track-data-size-table-offset-raw))
+
+
 (defun track-data-n-tracks (table)
   "Number of separate tracks included in this table."
   (declare (type track-data table))
   (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
-
-
-(declaim (inline track-data-n-tracks-raw))
 
 
 (defun track-data-n-tracks-raw (font-data offset)
@@ -175,9 +169,6 @@
                       (+ (table-ref-offset table) 2)))
 
 
-(declaim (inline track-data-n-sizes-raw))
-
-
 (defun track-data-n-sizes-raw (font-data offset)
   (font-data-read-u16 font-data (+ offset 2)))
 
@@ -189,9 +180,6 @@
                       (+ (table-ref-offset table) 4)))
 
 
-(declaim (inline track-data-size-table-offset-raw))
-
-
 (defun track-data-size-table-offset-raw (font-data offset)
   (font-data-read-u32 font-data (+ offset 4)))
 
@@ -199,11 +187,6 @@
 (defun track-data-track-table-count (table)
   "Array of TrackTableEntry records."
   (track-data-n-tracks table))
-
-
-(declaim
- (inline track-data-n-tracks track-data-n-sizes track-data-size-table-offset
-  track-data-track-table track-data-track-table-count))
 
 
 (defun track-data-track-table-ref (table index)

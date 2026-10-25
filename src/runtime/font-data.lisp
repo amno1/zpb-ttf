@@ -5,9 +5,8 @@
 (in-package #:zpb-otf)
 
 (defmacro define-constant (name value &optional doc)
-  "Define a constant, avoiding SBCL's DEFCONSTANT-UNEQL on re-compilation/reloading."
-  `(defconstant ,name (if (boundp ',name) (symbol-value ',name) ,value)
-     ,@(when doc (list doc))))
+  "Define a constant using alexandria:define-constant with :test 'equal."
+  `(alexandria:define-constant ,name ,value :test 'equal ,@(when doc (list :documentation doc))))
 
 (defstruct (font-data (:constructor %make-font-data (bytes offset length)))
   "Zero-copy window into an in-memory font byte vector."
