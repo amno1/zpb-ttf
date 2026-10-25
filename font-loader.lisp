@@ -42,7 +42,7 @@
    ;; from 'kern' table
    (kerning-table :initform (make-hash-table) :accessor kerning-table)
    ;; from 'name' table
-   (name-entries :initform nil :accessor name-entries)
+   (name-entries :initform (vector) :accessor name-entries)
    ;; from 'post' table
    (italic-angle :accessor italic-angle :initform 0)
    (fixed-pitch-p :accessor fixed-pitch-p :initform nil)

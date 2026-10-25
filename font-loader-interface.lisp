@@ -101,7 +101,8 @@ unpaired surrogates become U+FFFD."
            (setf best-fmt 12 best-sub-off sub-off)
            (return))
           ((and (= fmt 4) (or (= plat 0) (and (= plat 3) (or (= enc 1) (= enc 10)))))
-           (unless (eql best-fmt 12)
+           ;; The first suitable format 4 subtable wins.
+           (unless best-fmt
              (setf best-fmt 4 best-sub-off sub-off))))))
 
     (cond
@@ -140,7 +141,9 @@ unpaired surrogates become U+FFFD."
        (let* ((sub-len (cmap-subtable-length fd best-sub-off 4 table-end))
               (sub-end (+ best-sub-off sub-len))
               (cmap4 (zpb-otf:read-cmap4 fd best-sub-off sub-len))
-              (seg-len (/ (zpb-otf:cmap4-seg-count-x2 cmap4) 2))
+              ;; Four u16 arrays of segCount entries follow the 16-byte header.
+              (seg-len (min (floor (zpb-otf:cmap4-seg-count-x2 cmap4) 2)
+                            (max 0 (floor (- sub-len 16) 8))))
               (ro-base (+ best-sub-off 16 (* 6 seg-len))))
          (labels ((segment-glyph (s cp)
                     (let ((start (zpb-otf:cmap4-start-code-ref cmap4 s))
@@ -227,11 +230,12 @@ Apple (version 1.0) 'kern' table into the loader's kerning table."
                (read-kerning-pairs loader (+ sub-off 14)
                                    (min (zpb-otf:font-data-read-u16 data (+ sub-off 6))
                                         (floor (- kend sub-off 14) 6))))
-             (when (zerop sub-len) (return))
+             (when (< sub-len 14) (return))
              (incf sub-off sub-len)))))
       (1
        (when (= (zpb-otf:font-data-read-u16 data (+ koff 2)) 0)
-         (let ((n-tables (zpb-otf:font-data-read-u32 data (+ koff 4)))
+         (let ((n-tables (min (zpb-otf:font-data-read-u32 data (+ koff 4))
+                              (floor (max 0 (- kend koff 8)) 16)))
                (sub-off (+ koff 8)))
            (dotimes (t-idx n-tables)
              (when (> (+ sub-off 16) kend) (return))
@@ -243,7 +247,7 @@ Apple (version 1.0) 'kern' table into the loader's kerning table."
                  (read-kerning-pairs loader (+ sub-off 16)
                                      (min (zpb-otf:font-data-read-u16 data (+ sub-off 8))
                                           (floor (- kend sub-off 16) 6))))
-               (when (zerop sub-len) (return))
+               (when (< sub-len 16) (return))
                (incf sub-off sub-len)))))))))
 
 (defparameter *sfnt-versions*

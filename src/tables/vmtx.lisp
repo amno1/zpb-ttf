@@ -4,42 +4,39 @@
 ;;;; Copyright (C) 2026 Arthur Miller and contributors
 ;;;; SPDX-License-Identifier: MIT
 
-
 (in-package #:zpb-otf)
 
-
 (export
- '(read-vmtx read-vmtx-extended sanitize-vmtx sanitize-vmtx-extended vmtx
-   vmtx-extended vmtx-extended-p vmtx-extended-top-side-bearings
+ '(+vmtx-extended-tag+ +vmtx-tag+ read-vmtx read-vmtx-extended sanitize-vmtx
+   sanitize-vmtx-extended vmtx vmtx-extended vmtx-extended-p
    vmtx-extended-top-side-bearings-count vmtx-extended-top-side-bearings-ref
-   vmtx-extended-v-metrics vmtx-extended-v-metrics-count
-   vmtx-extended-v-metrics-ref vmtx-p vmtx-top-side-bearings
-   vmtx-top-side-bearings-count vmtx-top-side-bearings-ref vmtx-v-metrics
-   vmtx-v-metrics-count vmtx-v-metrics-ref))
-
+   vmtx-extended-v-metrics-count vmtx-extended-v-metrics-ref vmtx-p
+   vmtx-top-side-bearings-count vmtx-top-side-bearings-ref vmtx-v-metrics-count
+   vmtx-v-metrics-ref))
 
 (defstruct
     (vmtx (:include table-ref)
-     (:constructor %make-vmtx (%table-font-data %table-offset %table-length))))
+     (:constructor %make-vmtx (%table-font-data %table-offset %table-length)))
+  "The [vmtx (Vertical Metrics)](https://docs.microsoft.com/en-us/typography/opentype/spec/vmtx) table")
 
+(declaim
+ (inline vmtx-v-metrics-count vmtx-v-metrics-ref vmtx-top-side-bearings-count
+  vmtx-top-side-bearings-ref))
 
-(declaim (inline vmtx-v-metrics-count vmtx-top-side-bearings-count))
+(define-constant +vmtx-tag+ "vmtx")
 
-
-(defun vmtx-v-metrics-count (table &optional number-of-long-ver-metrics)
-  "Paired advance height and top side bearing values for each glyph. Records are indexed by glyph ID."
-  (or number-of-long-ver-metrics
-      (max 0
-           (floor
-            (- (+ (table-ref-offset table) (table-ref-length table))
-               (table-ref-offset table))
-            4))))
-
-
-(defun vmtx-v-metrics-ref (table index)
+(defun vmtx-v-metrics-count (table number-of-long-ver-metrics)
   "Paired advance height and top side bearing values for each glyph. Records are indexed by glyph ID."
   (declare (type vmtx table)
-           (type (unsigned-byte 32) index))
+           (ignorable number-of-long-ver-metrics))
+  (declare (ignorable table))
+  number-of-long-ver-metrics)
+
+(defun vmtx-v-metrics-ref (table number-of-long-ver-metrics index)
+  "Paired advance height and top side bearing values for each glyph. Records are indexed by glyph ID."
+  (declare (type vmtx table)
+           (ignorable number-of-long-ver-metrics index))
+  (declare (type (unsigned-byte 32) index))
   (let ((pos (+ (table-ref-offset table) (* index 4))))
     (unless
         (<= (+ pos 4) (+ (table-ref-offset table) (table-ref-length table)))
@@ -47,29 +44,33 @@
              (table-ref-length table)))
     (%make-long-metric (table-ref-font-data table) pos)))
 
-
-(defun vmtx-top-side-bearings-count (table)
+(defun vmtx-top-side-bearings-count (table number-of-long-ver-metrics)
   "Top side bearings for glyph IDs greater than or equal to numberOfLongMetrics."
+  (declare (type vmtx table)
+           (ignorable number-of-long-ver-metrics))
+  (declare (ignorable table))
   (max 0
        (floor
         (- (+ (table-ref-offset table) (table-ref-length table))
-           (+ (table-ref-offset table) (* (vmtx-v-metrics-count table) 4)))
+           (+ (table-ref-offset table)
+              (* (vmtx-v-metrics-count table number-of-long-ver-metrics) 4)))
         2)))
 
-
-(defun vmtx-top-side-bearings-ref (table index)
+(defun vmtx-top-side-bearings-ref (table number-of-long-ver-metrics index)
   "Top side bearings for glyph IDs greater than or equal to numberOfLongMetrics."
   (declare (type vmtx table)
-           (type (unsigned-byte 32) index))
+           (ignorable number-of-long-ver-metrics index))
+  (declare (type (unsigned-byte 32) index))
   (let ((pos
-         (+ (+ (table-ref-offset table) (* (vmtx-v-metrics-count table) 4))
-            (* index 2))))
+         (+
+          (+ (table-ref-offset table)
+             (* (vmtx-v-metrics-count table number-of-long-ver-metrics) 4))
+          (* index 2))))
     (unless
         (<= (+ pos 2) (+ (table-ref-offset table) (table-ref-length table)))
       (error 'font-out-of-bounds-error :pos pos :size 2 :length
              (table-ref-length table)))
     (font-data-read-i16 (table-ref-font-data table) pos)))
-
 
 (defun sanitize-vmtx (font-data offset length)
   (declare (ignorable length)
@@ -80,37 +81,34 @@
            (font-data-length font-data)))
   t)
 
-
 (defun read-vmtx
        (font-data offset
         &optional (length (- (font-data-length font-data) offset)))
   (sanitize-vmtx font-data offset length)
   (%make-vmtx font-data offset length))
 
-
 (defstruct
     (vmtx-extended (:include table-ref)
      (:constructor %make-vmtx-extended
-      (%table-font-data %table-offset %table-length))))
-
+      (%table-font-data %table-offset %table-length)))
+  "VMTX vertical metrics (ISO/IEC 14496-22:2026, 5.6.14).")
 
 (declaim
- (inline vmtx-extended-v-metrics-count vmtx-extended-top-side-bearings-count))
+ (inline vmtx-extended-v-metrics-count vmtx-extended-v-metrics-ref
+  vmtx-extended-top-side-bearings-count vmtx-extended-top-side-bearings-ref))
 
+(define-constant +vmtx-extended-tag+ "VMTX")
 
-(defun vmtx-extended-v-metrics-count
-       (table &optional number-of-long-ver-metrics)
-  (or number-of-long-ver-metrics
-      (max 0
-           (floor
-            (- (+ (table-ref-offset table) (table-ref-length table))
-               (table-ref-offset table))
-            6))))
-
-
-(defun vmtx-extended-v-metrics-ref (table index)
+(defun vmtx-extended-v-metrics-count (table number-of-long-ver-metrics)
   (declare (type vmtx-extended table)
-           (type (unsigned-byte 32) index))
+           (ignorable number-of-long-ver-metrics))
+  (declare (ignorable table))
+  number-of-long-ver-metrics)
+
+(defun vmtx-extended-v-metrics-ref (table number-of-long-ver-metrics index)
+  (declare (type vmtx-extended table)
+           (ignorable number-of-long-ver-metrics index))
+  (declare (type (unsigned-byte 32) index))
   (let ((pos (+ (table-ref-offset table) (* index 6))))
     (unless
         (<= (+ pos 6) (+ (table-ref-offset table) (table-ref-length table)))
@@ -118,30 +116,36 @@
              (table-ref-length table)))
     (%make-long-metric-extended (table-ref-font-data table) pos)))
 
-
-(defun vmtx-extended-top-side-bearings-count (table)
+(defun vmtx-extended-top-side-bearings-count (table number-of-long-ver-metrics)
+  (declare (type vmtx-extended table)
+           (ignorable number-of-long-ver-metrics))
+  (declare (ignorable table))
   (max 0
        (floor
         (- (+ (table-ref-offset table) (table-ref-length table))
            (+ (table-ref-offset table)
-              (* (vmtx-extended-v-metrics-count table) 6)))
+              (*
+               (vmtx-extended-v-metrics-count table number-of-long-ver-metrics)
+               6)))
         2)))
 
-
-(defun vmtx-extended-top-side-bearings-ref (table index)
+(defun vmtx-extended-top-side-bearings-ref
+       (table number-of-long-ver-metrics index)
   (declare (type vmtx-extended table)
-           (type (unsigned-byte 32) index))
+           (ignorable number-of-long-ver-metrics index))
+  (declare (type (unsigned-byte 32) index))
   (let ((pos
          (+
           (+ (table-ref-offset table)
-             (* (vmtx-extended-v-metrics-count table) 6))
+             (*
+              (vmtx-extended-v-metrics-count table number-of-long-ver-metrics)
+              6))
           (* index 2))))
     (unless
         (<= (+ pos 2) (+ (table-ref-offset table) (table-ref-length table)))
       (error 'font-out-of-bounds-error :pos pos :size 2 :length
              (table-ref-length table)))
     (font-data-read-i16 (table-ref-font-data table) pos)))
-
 
 (defun sanitize-vmtx-extended (font-data offset length)
   (declare (ignorable length)
@@ -152,10 +156,8 @@
            (font-data-length font-data)))
   t)
 
-
 (defun read-vmtx-extended
        (font-data offset
         &optional (length (- (font-data-length font-data) offset)))
   (sanitize-vmtx-extended font-data offset length)
   (%make-vmtx-extended font-data offset length))
-

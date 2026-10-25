@@ -20,19 +20,24 @@
  (field entry-id-string-data-offset (offset32 id-string-data))
  (field url-template-length u16)
  (field url-template (array u8) :count url-template-length)
- (field cff-charstrings-offset u32) (field cff2-charstrings-offset u32))
+ (field cff-charstrings-offset u32 :when-flag (field-flags cff-charstrings-offset))
+ (field cff2-charstrings-offset u32 :when-flag (field-flags cff2-charstrings-offset)))
 
 
 (table mapping-entries (field entry-data (array u8) :count :remainder))
 
 
 (table entry-data (field format-flags entry-format-flags)
- (field feature-count u8) (field feature-tags (array tag) :count feature-count)
- (field design-space-count u16)
+ (field feature-count u8 :when-flag (format-flags features-and-design-space))
+ (field feature-tags (array tag) :count feature-count
+  :when-flag (format-flags features-and-design-space))
+ (field design-space-count u16 :when-flag (format-flags features-and-design-space))
  (field design-space-segments (array design-space-segment) :count
-  design-space-count)
- (field match-mode-and-count match-mode-and-count)
- (field child-indices (array uint24) :count (try_into match-mode-and-count))
+  design-space-count :when-flag (format-flags features-and-design-space))
+ (field match-mode-and-count match-mode-and-count
+  :when-flag (format-flags child-indices))
+ (field child-indices (array uint24) :count (try_into match-mode-and-count)
+  :when-flag (format-flags child-indices))
  (field trailing-data (array u8) :count :remainder))
 
 

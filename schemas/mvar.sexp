@@ -14,11 +14,11 @@
   "The number of value records — may be zero.")
  (field item-variation-store-offset (offset16 item-variation-store) :doc
   "Offset in bytes from the start of this table to the item variation store table. If valueRecordCount is zero, set to zero; if valueRecordCount is greater than zero, must be greater than zero.")
- (field value-records (array value-record) :count value-record-count :doc
+ (field value-records (array mvar-value-record) :count value-record-count :doc
   "Array of value records that identify target items and the associated delta-set index for each. The valueTag records must be in binary order of their valueTag field."))
 
 
-(record value-record
+(record mvar-value-record
  (:doc
   "[ValueRecord](https://learn.microsoft.com/en-us/typography/opentype/spec/mvar#table-formats) metrics variation record")
  (field value-tag tag :doc "Four-byte tag identifying a font-wide measure.")

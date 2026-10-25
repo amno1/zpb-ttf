@@ -89,7 +89,7 @@
  (field sub-table-count u16 :doc "Number of subtables for this lookup")
  (field subtable-offsets (array (offset16 t)) :count sub-table-count :doc
   "Array of offsets to lookup subtables, from beginning of Lookup table")
- (field mark-filtering-set u16 :when-flag (lookup-flag #x0010) :doc
+ (field mark-filtering-set u16 :when-flag (lookup-flag use-mark-filtering-set) :doc
   "Index (base 0) into GDEF mark glyph sets structure. This field is only present if the USE_MARK_FILTERING_SET lookup flag is set."))
 
 
@@ -756,3 +756,9 @@
  (field lookup-offsets (array (offset32 t)) :count lookup-count :doc
   "Array of offsets to Lookup tables, from beginning of LookupList2 — zero based (first lookup is Lookup index = 0)"))
 
+
+
+(flags u16 lookup-flag (:doc "[Lookup flags](https://docs.microsoft.com/en-us/typography/opentype/spec/chapter2#lookupFlags).")
+ (right-to-left #x0001) (ignore-base-glyphs #x0002) (ignore-ligatures #x0004)
+ (ignore-marks #x0008) (use-mark-filtering-set #x0010)
+ (mark-attachment-class-filter #xFF00))

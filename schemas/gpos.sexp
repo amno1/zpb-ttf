@@ -1,6 +1,10 @@
 ;;;; gpos.sexp — OpenType table schema
 ;;;; Generated from Fontations gpos.rs spec
 
+;; ValueRecord size depends on a ValueFormat stored in the parent table;
+;; it is decoded in src/extensions.lisp.
+(extern gpos-value-record)
+
 
 (table gpos (:tag "GPOS")
  (:doc
@@ -93,7 +97,7 @@
   "Offset to Coverage table, from beginning of SinglePos subtable.")
  (field value-format value-format :doc
   "Defines the types of data in the ValueRecord.")
- (field value-record value-record :doc
+ (field value-record gpos-value-record :doc
   "Defines positioning value(s) — applied to all glyphs in the Coverage table."))
 
 
@@ -107,7 +111,7 @@
   "Defines the types of data in the ValueRecords.")
  (field value-count u16 :doc
   "Number of ValueRecords — must equal glyphCount in the Coverage table.")
- (field value-records computed-array<value-record<a>> :doc
+ (field value-records computed-array<gpos-value-record<a>> :doc
   "Array of ValueRecords — positioning values applied to glyphs."))
 
 
@@ -142,10 +146,10 @@
 (record pair-value-record (:doc "Part of [PairSet]")
  (field second-glyph glyph-id16 :doc
   "Glyph ID of second glyph in the pair (first glyph is listed in the Coverage table).")
- (field value-record1 value-record :doc
+ (field value-record1 gpos-value-record :doc
   "Positioning data for the first glyph in the pair.")
- (field value-record2 value-record :doc
-  "Positioning data for the second glyph in the pair."))
+ ;; value-record2 follows the variable-size value-record1; see src/extensions.lisp.
+ )
 
 
 (table pair-pos-format2
@@ -176,10 +180,10 @@
 
 
 (record class2-record (:doc "Part of [PairPosFormat2]")
- (field value-record1 value-record :doc
+ (field value-record1 gpos-value-record :doc
   "Positioning for first glyph — empty if valueFormat1 = 0.")
- (field value-record2 value-record :doc
-  "Positioning for second glyph — empty if valueFormat2 = 0."))
+ ;; value-record2 follows the variable-size value-record1; see src/extensions.lisp.
+ )
 
 
 (table cursive-pos-format1
@@ -304,7 +308,7 @@
   "Offset to Coverage table, from beginning of SinglePos subtable.")
  (field value-format value-format :doc
   "Defines the types of data in the ValueRecord.")
- (field value-record value-record :doc
+ (field value-record gpos-value-record :doc
   "Defines positioning value(s) — applied to all glyphs in the Coverage table."))
 
 
@@ -316,7 +320,7 @@
   "Defines the types of data in the ValueRecords.")
  (field value-count uint24 :doc
   "Number of ValueRecords — must equal glyphCount in the Coverage table.")
- (field value-records computed-array<value-record<a>> :doc
+ (field value-records computed-array<gpos-value-record<a>> :doc
   "Array of ValueRecords — positioning values applied to glyphs."))
 
 
@@ -343,10 +347,10 @@
 (record pair-value-record2 (:doc "PairValueRecord2 (ISO/IEC 14496-22:2026).")
  (field second-glyph glyph-id24 :doc
   "Glyph ID of second glyph in the pair (first glyph is listed in the Coverage table).")
- (field value-record1 value-record :doc
+ (field value-record1 gpos-value-record :doc
   "Positioning data for the first glyph in the pair.")
- (field value-record2 value-record :doc
-  "Positioning data for the second glyph in the pair."))
+ ;; value-record2 follows the variable-size value-record1; see src/extensions.lisp.
+ )
 
 
 (table pair-pos-format4 (:doc "PairPosFormat4 (ISO/IEC 14496-22:2026).")

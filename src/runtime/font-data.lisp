@@ -36,11 +36,13 @@
 
 (declaim (inline font-data-valid-range-p))
 (defun font-data-valid-range-p (fd pos size)
-  "Return T if POS + SIZE is within the bounds of FD."
+  "Return T if POS + SIZE is within the bounds of FD. POS and SIZE may be any
+non-negative integers, such as sizes computed from untrusted counts."
   (declare (type font-data fd)
-           (type (unsigned-byte 32) pos size)
-           (optimize (speed 3) (safety 0)))
-  (<= (+ pos size) (font-data-length fd)))
+           (type unsigned-byte pos size)
+           (optimize (speed 3) (safety 1)))
+  (let ((len (font-data-length fd)))
+    (and (<= pos len) (<= size (- len pos)))))
 
 (defun ensure-font-data (source)
   "Convert a pathname, filespec, or byte vector into a FONT-DATA object."

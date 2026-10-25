@@ -317,6 +317,90 @@
       (test-assert glyph "find-glyph #\A in Cantarell returns glyph")
       (test-assert (= (zpb-ttf:advance-width glyph) 626) "glyph #\A advance width is 626"))))
 
+;;; Regression tests on synthetic tables, for layouts the bundled fonts don't exercise.
+
+(defun bytes->font-data (&rest items)
+  "Build a FONT-DATA from ITEMS: integers are bytes; (:u16 n), (:u24 n) and (:u32 n) are big-endian."
+  (let ((out '()))
+    (dolist (it items)
+      (if (integerp it)
+          (push it out)
+          (destructuring-bind (kind n) it
+            (let ((width (ecase kind (:u16 2) (:u24 3) (:u32 4))))
+              (loop for shift from (* 8 (1- width)) downto 0 by 8
+                    do (push (ldb (byte 8 shift) n) out))))))
+    (zpb-otf:make-font-data (coerce (nreverse out) '(simple-array (unsigned-byte 8) (*))))))
+
+(defun test-synthetic-layouts ()
+  (format t "~%--- Synthetic Layout Regressions ---~%")
+  ;; Device vs VariationIndex is decided by deltaFormat at offset 4.
+  (test-assert (typep (zpb-otf:read-device-or-variation-index
+                       (bytes->font-data '(:u16 1) '(:u16 2) '(:u16 #x8000)) 0)
+                      'zpb-otf:variation-index)
+               "deltaFormat #x8000 reads as VariationIndex")
+  (test-assert (typep (zpb-otf:read-device-or-variation-index
+                       (bytes->font-data '(:u16 10) '(:u16 12) '(:u16 1) '(:u16 0)) 0)
+                      'zpb-otf:device)
+               "deltaFormat 1 reads as Device")
+  ;; ValueRecord size and decoding follow the ValueFormat bits.
+  (test-assert (= (zpb-otf:value-format-size #x0045) 6) "ValueFormat #x45 is 6 bytes")
+  (let ((vr (zpb-otf:read-gpos-value-record (bytes->font-data '(:u16 #xFFF6) '(:u16 20)) 0 #x0005 0)))
+    (test-assert (and (= (zpb-otf:gpos-value-record-x-placement vr) -10)
+                      (= (zpb-otf:gpos-value-record-y-placement vr) 0)
+                      (= (zpb-otf:gpos-value-record-x-advance vr) 20))
+                 "ValueRecord with XPlacement|XAdvance decodes both fields"))
+  ;; Lookup.markFilteringSet exists only with USE_MARK_FILTERING_SET.
+  (test-assert (null (zpb-otf:lookup-mark-filtering-set
+                      (zpb-otf:read-lookup (bytes->font-data '(:u16 1) '(:u16 0) '(:u16 1) '(:u16 8)) 0)))
+               "markFilteringSet absent without the lookup flag")
+  (test-assert (eql 7 (zpb-otf:lookup-mark-filtering-set
+                       (zpb-otf:read-lookup (bytes->font-data '(:u16 1) '(:u16 #x10) '(:u16 1) '(:u16 8) '(:u16 7)) 0)))
+               "markFilteringSet read after the subtable offsets when flagged")
+  ;; CPAL v0 directly followed by its color records: no v1 fields.
+  (let ((v0 (zpb-otf:read-cpal (bytes->font-data '(:u16 0) '(:u16 1) '(:u16 2) '(:u16 1) '(:u32 16)
+                                                 '(:u16 0) '(:u16 0) '(:u32 #x11223344))
+                               0)))
+    (test-assert (null (zpb-otf:cpal-palette-types-array-offset-offset v0))
+                 "CPAL v0 has no paletteTypesArrayOffset"))
+  (let ((v1 (zpb-otf:read-cpal (bytes->font-data '(:u16 1) '(:u16 1) '(:u16 1) '(:u16 1) '(:u32 0)
+                                                 '(:u16 0) '(:u32 0) '(:u32 0) '(:u32 0))
+                               0)))
+    (test-assert (eql 0 (zpb-otf:cpal-palette-types-array-offset-offset v1))
+                 "CPAL v1 paletteTypesArrayOffset is read after colorRecordIndices"))
+  ;; IFT flag-conditional fields.
+  (flet ((patch-map (flags &rest tail)
+           (apply #'bytes->font-data 2 0 0 0 flags
+                  (append (make-list 16 :initial-element 0)
+                          (list 1 '(:u24 0) '(:u32 0) '(:u32 0) '(:u16 1) #x41)
+                          tail))))
+    (let ((only-cff2 (zpb-otf:read-ift-patch-map (patch-map 2 '(:u32 99)) 0)))
+      (test-assert (and (null (zpb-otf:ift-patch-map-cff-charstrings-offset only-cff2))
+                        (eql 99 (zpb-otf:ift-patch-map-cff2-charstrings-offset only-cff2)))
+                   "IFT cff2CharstringsOffset follows the URL template when cff is absent"))
+    (let ((both (zpb-otf:read-ift-patch-map (patch-map 3 '(:u32 5) '(:u32 6)) 0)))
+      (test-assert (and (eql 5 (zpb-otf:ift-patch-map-cff-charstrings-offset both))
+                        (eql 6 (zpb-otf:ift-patch-map-cff2-charstrings-offset both)))
+                   "IFT cff and cff2 charstring offsets with both flags")))
+  (let ((plain (zpb-otf:read-entry-data (bytes->font-data 0 9) 0))
+        (children (zpb-otf:read-entry-data (bytes->font-data 2 2 '(:u24 7) '(:u24 8)) 0)))
+    (test-assert (and (null (zpb-otf:entry-data-feature-count plain))
+                      (zerop (zpb-otf:entry-data-child-indices-count plain))
+                      (= 1 (zpb-otf:entry-data-trailing-data-count plain)))
+                 "IFT EntryData without flags has only trailing data")
+    (test-assert (and (= 2 (zpb-otf:entry-data-child-indices-count children))
+                      (= 8 (zpb-otf:entry-data-child-indices-ref children 1)))
+                 "IFT EntryData child indices when CHILD_INDICES is set"))
+  ;; Tuple sizes depend on TupleIndex flags and the caller's axis count.
+  (let ((tvh (zpb-otf:read-tuple-variation-header
+              (bytes->font-data '(:u16 0) '(:u16 #x8000) '(:u16 #x4000) '(:u16 #xC000)) 0)))
+    (test-assert (and (= 2 (zpb-otf:tuple-variation-header-peak-tuple-count tvh 2))
+                      (= 1.0 (zpb-otf:tuple-variation-header-peak-tuple-ref tvh 2 0))
+                      (= -1.0 (zpb-otf:tuple-variation-header-peak-tuple-ref tvh 2 1)))
+                 "TupleVariationHeader embedded peak tuple uses the axis count"))
+  ;; Range checks accept sizes beyond 32 bits.
+  (test-assert (not (zpb-otf:font-data-valid-range-p (bytes->font-data 0 0) 1 (expt 2 33)))
+               "valid-range-p rejects an oversized range"))
+
 (defun run-table-tests ()
   (setf *test-failures* 0
         *test-count* 0)
@@ -333,6 +417,7 @@
   (test-color-and-bitmap-tables)
   (test-math-table)
   (test-zpb-ttf-high-level)
+  (test-synthetic-layouts)
 
   (format t "~%========================================================~%")
   (format t "Results: ~D tests run, ~D failures.~%" *test-count* *test-failures*)
