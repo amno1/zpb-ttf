@@ -1,0 +1,63 @@
+;;;; cbdt.lisp — Generated OpenType tables
+;;;; Generated automatically from OpenType sexp schema
+;;;; DO NOT EDIT DIRECTLY
+
+
+(in-package #:zpb-otf)
+
+
+(export
+ '(cbdt cbdt-major-version cbdt-minor-version cbdt-p read-cbdt sanitize-cbdt))
+
+
+(defstruct
+    (cbdt (:include table-ref)
+     (:constructor %make-cbdt (%table-font-data %table-offset %table-length))))
+
+
+(defun cbdt-major-version (table)
+  "Major version of the CBDT table, = 3."
+  (declare (type cbdt table))
+  (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
+
+
+(declaim (inline cbdt-major-version-raw))
+
+
+(defun cbdt-major-version-raw (font-data offset)
+  (font-data-read-u16 font-data offset))
+
+
+(defun cbdt-minor-version (table)
+  "Minor version of CBDT table, = 0."
+  (declare (type cbdt table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 2)))
+
+
+(declaim (inline cbdt-minor-version-raw))
+
+
+(declaim (inline cbdt-major-version cbdt-minor-version))
+
+
+(defun cbdt-minor-version-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 2)))
+
+
+(defun sanitize-cbdt (font-data offset length)
+  (declare (ignorable length)
+           (type font-data font-data)
+           (type (unsigned-byte 32) offset length))
+  (unless (and (<= 4 length) (font-data-valid-range-p font-data offset 4))
+    (error 'font-out-of-bounds-error :pos offset :size 4 :length
+           (font-data-length font-data)))
+  t)
+
+
+(defun read-cbdt
+       (font-data offset
+        &optional (length (- (font-data-length font-data) offset)))
+  (sanitize-cbdt font-data offset length)
+  (%make-cbdt font-data offset length))
+

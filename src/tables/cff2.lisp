@@ -1,0 +1,311 @@
+;;;; cff2.lisp — Generated OpenType tables
+;;;; Generated automatically from OpenType sexp schema
+;;;; DO NOT EDIT DIRECTLY
+
+
+(in-package #:zpb-otf)
+
+
+(export
+ '(cff2-header cff2-header--padding cff2-header--padding-bytes
+   cff2-header--padding-count cff2-header--padding-ref cff2-header-header-size
+   cff2-header-major-version cff2-header-minor-version cff2-header-p
+   cff2-header-top-dict-data cff2-header-top-dict-data-bytes
+   cff2-header-top-dict-data-count cff2-header-top-dict-data-ref
+   cff2-header-top-dict-length cff2-header-trailing-data
+   cff2-header-trailing-data-bytes cff2-header-trailing-data-count
+   cff2-header-trailing-data-ref cff2-index cff2-index-count cff2-index-data
+   cff2-index-data-bytes cff2-index-data-count cff2-index-data-ref
+   cff2-index-off-size cff2-index-offsets cff2-index-offsets-bytes
+   cff2-index-offsets-count cff2-index-offsets-ref cff2-index-p
+   read-cff2-header read-cff2-index sanitize-cff2-header sanitize-cff2-index))
+
+
+(defstruct
+    (cff2-header (:include table-ref)
+     (:constructor %make-cff2-header
+      (%table-font-data %table-offset %table-length))))
+
+
+(defun cff2-header-major-version (table)
+  "Format major version (set to 2)."
+  (declare (type cff2-header table))
+  (font-data-read-u8 (table-ref-font-data table) (table-ref-offset table)))
+
+
+(declaim (inline cff2-header-major-version-raw))
+
+
+(defun cff2-header-major-version-raw (font-data offset)
+  (font-data-read-u8 font-data offset))
+
+
+(defun cff2-header-minor-version (table)
+  "Format minor version (set to 0)."
+  (declare (type cff2-header table))
+  (font-data-read-u8 (table-ref-font-data table)
+                     (+ (table-ref-offset table) 1)))
+
+
+(declaim (inline cff2-header-minor-version-raw))
+
+
+(defun cff2-header-minor-version-raw (font-data offset)
+  (font-data-read-u8 font-data (+ offset 1)))
+
+
+(defun cff2-header-header-size (table)
+  "Header size (bytes)."
+  (declare (type cff2-header table))
+  (font-data-read-u8 (table-ref-font-data table)
+                     (+ (table-ref-offset table) 2)))
+
+
+(declaim (inline cff2-header-header-size-raw))
+
+
+(defun cff2-header-header-size-raw (font-data offset)
+  (font-data-read-u8 font-data (+ offset 2)))
+
+
+(defun cff2-header-top-dict-length (table)
+  "Length of Top DICT structure in bytes."
+  (declare (type cff2-header table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 3)))
+
+
+(declaim (inline cff2-header-top-dict-length-raw))
+
+
+(defun cff2-header-top-dict-length-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 3)))
+
+
+(defun cff2-header--padding-count (table)
+  "Padding bytes before the start of the Top DICT."
+  (max 0 (- (cff2-header-header-size table) 5)))
+
+
+(defun cff2-header--padding-ref (table index)
+  "Padding bytes before the start of the Top DICT."
+  (declare (type cff2-header table)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (+ (table-ref-offset table) 5) (* index 1))))
+    (unless
+        (<= (+ pos 1) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 1 :length
+             (table-ref-length table)))
+    (font-data-read-u8 (table-ref-font-data table) pos)))
+
+
+(defun cff2-header--padding-bytes (table)
+  "Padding bytes before the start of the Top DICT."
+  (font-data-slice (table-ref-font-data table) (+ (table-ref-offset table) 5)
+                   (cff2-header--padding-count table)))
+
+
+(defun cff2-header-top-dict-data-count (table)
+  "Data containing the Top DICT."
+  (cff2-header-top-dict-length table))
+
+
+(defun cff2-header-top-dict-data-ref (table index)
+  "Data containing the Top DICT."
+  (declare (type cff2-header table)
+           (type (unsigned-byte 32) index))
+  (let ((pos
+         (+
+          (+ (table-ref-offset table) 5
+             (* (cff2-header--padding-count table) 1))
+          (* index 1))))
+    (unless
+        (<= (+ pos 1) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 1 :length
+             (table-ref-length table)))
+    (font-data-read-u8 (table-ref-font-data table) pos)))
+
+
+(defun cff2-header-top-dict-data-bytes (table)
+  "Data containing the Top DICT."
+  (font-data-slice (table-ref-font-data table)
+                   (+ (table-ref-offset table) 5
+                      (* (cff2-header--padding-count table) 1))
+                   (cff2-header-top-dict-data-count table)))
+
+
+(defun cff2-header-trailing-data-count (table)
+  "Remaining table data."
+  (max 0
+       (floor
+        (- (table-ref-length table)
+           (+ (table-ref-offset table) 5
+              (* (cff2-header-top-dict-data-count table) 1)
+              (* (cff2-header--padding-count table) 1)))
+        1)))
+
+
+(defun cff2-header-trailing-data-ref (table index)
+  "Remaining table data."
+  (declare (type cff2-header table)
+           (type (unsigned-byte 32) index))
+  (let ((pos
+         (+
+          (+ (table-ref-offset table) 5
+             (* (cff2-header-top-dict-data-count table) 1)
+             (* (cff2-header--padding-count table) 1))
+          (* index 1))))
+    (unless
+        (<= (+ pos 1) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 1 :length
+             (table-ref-length table)))
+    (font-data-read-u8 (table-ref-font-data table) pos)))
+
+
+(declaim
+ (inline cff2-header-major-version cff2-header-minor-version
+  cff2-header-header-size cff2-header-top-dict-length cff2-header--padding
+  cff2-header--padding-count cff2-header-top-dict-data
+  cff2-header-top-dict-data-count cff2-header-trailing-data
+  cff2-header-trailing-data-count))
+
+
+(defun cff2-header-trailing-data-bytes (table)
+  "Remaining table data."
+  (font-data-slice (table-ref-font-data table)
+                   (+ (table-ref-offset table) 5
+                      (* (cff2-header-top-dict-data-count table) 1)
+                      (* (cff2-header--padding-count table) 1))
+                   (cff2-header-trailing-data-count table)))
+
+
+(defun sanitize-cff2-header (font-data offset length)
+  (declare (ignorable length)
+           (type font-data font-data)
+           (type (unsigned-byte 32) offset length))
+  (unless (and (<= 5 length) (font-data-valid-range-p font-data offset 5))
+    (error 'font-out-of-bounds-error :pos offset :size 5 :length
+           (font-data-length font-data)))
+  t)
+
+
+(defun read-cff2-header
+       (font-data offset
+        &optional (length (- (font-data-length font-data) offset)))
+  (sanitize-cff2-header font-data offset length)
+  (%make-cff2-header font-data offset length))
+
+
+(defstruct
+    (cff2-index (:include table-ref)
+     (:constructor %make-cff2-index
+      (%table-font-data %table-offset %table-length))))
+
+
+(defun cff2-index-count (table)
+  "Number of objects stored in INDEX."
+  (declare (type cff2-index table))
+  (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
+
+
+(declaim (inline cff2-index-count-raw))
+
+
+(defun cff2-index-count-raw (font-data offset)
+  (font-data-read-u32 font-data offset))
+
+
+(defun cff2-index-off-size (table)
+  "Object array element size."
+  (declare (type cff2-index table))
+  (font-data-read-u8 (table-ref-font-data table)
+                     (+ (table-ref-offset table) 4)))
+
+
+(declaim (inline cff2-index-off-size-raw))
+
+
+(defun cff2-index-off-size-raw (font-data offset)
+  (font-data-read-u8 font-data (+ offset 4)))
+
+
+(defun cff2-index-offsets-count (table &optional count)
+  "Bytes containing `count + 1` offsets each of `off_size`."
+  (or count
+      (max 0
+           (floor (- (table-ref-length table) (+ (table-ref-offset table) 5))
+                  1))))
+
+
+(defun cff2-index-offsets-ref (table index)
+  "Bytes containing `count + 1` offsets each of `off_size`."
+  (declare (type cff2-index table)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (+ (table-ref-offset table) 5) (* index 1))))
+    (unless
+        (<= (+ pos 1) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 1 :length
+             (table-ref-length table)))
+    (font-data-read-u8 (table-ref-font-data table) pos)))
+
+
+(defun cff2-index-offsets-bytes (table)
+  "Bytes containing `count + 1` offsets each of `off_size`."
+  (font-data-slice (table-ref-font-data table) (+ (table-ref-offset table) 5)
+                   (cff2-index-offsets-count table)))
+
+
+(defun cff2-index-data-count (table)
+  "Array containing the object data."
+  (max 0
+       (floor
+        (- (table-ref-length table)
+           (+ (table-ref-offset table) 5
+              (* (cff2-index-offsets-count table) 1)))
+        1)))
+
+
+(defun cff2-index-data-ref (table index)
+  "Array containing the object data."
+  (declare (type cff2-index table)
+           (type (unsigned-byte 32) index))
+  (let ((pos
+         (+
+          (+ (table-ref-offset table) 5 (* (cff2-index-offsets-count table) 1))
+          (* index 1))))
+    (unless
+        (<= (+ pos 1) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 1 :length
+             (table-ref-length table)))
+    (font-data-read-u8 (table-ref-font-data table) pos)))
+
+
+(declaim
+ (inline cff2-index-count cff2-index-off-size cff2-index-offsets
+  cff2-index-offsets-count cff2-index-data cff2-index-data-count))
+
+
+(defun cff2-index-data-bytes (table)
+  "Array containing the object data."
+  (font-data-slice (table-ref-font-data table)
+                   (+ (table-ref-offset table) 5
+                      (* (cff2-index-offsets-count table) 1))
+                   (cff2-index-data-count table)))
+
+
+(defun sanitize-cff2-index (font-data offset length)
+  (declare (ignorable length)
+           (type font-data font-data)
+           (type (unsigned-byte 32) offset length))
+  (unless (and (<= 5 length) (font-data-valid-range-p font-data offset 5))
+    (error 'font-out-of-bounds-error :pos offset :size 5 :length
+           (font-data-length font-data)))
+  t)
+
+
+(defun read-cff2-index
+       (font-data offset
+        &optional (length (- (font-data-length font-data) offset)))
+  (sanitize-cff2-index font-data offset length)
+  (%make-cff2-index font-data offset length))
+

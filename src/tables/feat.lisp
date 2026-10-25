@@ -1,0 +1,236 @@
+;;;; feat.lisp — Generated OpenType tables
+;;;; Generated automatically from OpenType sexp schema
+;;;; DO NOT EDIT DIRECTLY
+
+
+(in-package #:zpb-otf)
+
+
+(export
+ '(+feature-name-size+ +setting-name-size+ feat feat--reserved1 feat--reserved2
+   feat-feature-name-count feat-names feat-names-count feat-names-ref feat-p
+   feat-version feature-name feature-name-feature feature-name-feature-flags
+   feature-name-n-settings feature-name-name-index feature-name-p
+   feature-name-setting-table-offset read-feat read-setting-name-array
+   sanitize-feat sanitize-setting-name-array setting-name setting-name-array
+   setting-name-array-p setting-name-array-settings
+   setting-name-array-settings-count setting-name-array-settings-ref
+   setting-name-name-index setting-name-p setting-name-setting))
+
+
+(defstruct
+    (feature-name (:include record-ref)
+     (:constructor %make-feature-name (%record-font-data %record-offset))))
+
+
+(defun feature-name-feature (rec)
+  "Feature type."
+  (declare (type feature-name rec))
+  (font-data-read-u16 (record-ref-font-data rec) (record-ref-offset rec)))
+
+
+(defun feature-name-n-settings (rec)
+  "The number of records in the setting name array."
+  (declare (type feature-name rec))
+  (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 2)))
+
+
+(defun feature-name-setting-table-offset (rec)
+  "Offset in bytes from the beginning of this table to this feature's setting name array. The actual type of record this offset refers to will depend on the exclusivity value, as described below."
+  (declare (type feature-name rec))
+  (font-data-read-u32 (record-ref-font-data rec) (+ (record-ref-offset rec) 4)))
+
+
+(defun feature-name-feature-flags (rec)
+  "Flags associated with the feature type."
+  (declare (type feature-name rec))
+  (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 8)))
+
+
+(defun feature-name-name-index (rec)
+  "The name table index for the feature's name."
+  (declare (type feature-name rec))
+  (font-data-read-u16 (record-ref-font-data rec)
+                      (+ (record-ref-offset rec) 10)))
+
+
+(declaim
+ (inline feature-name-feature feature-name-n-settings
+  feature-name-setting-table-offset feature-name-feature-flags
+  feature-name-name-index))
+
+
+(define-constant +feature-name-size+ 12)
+
+
+(defstruct
+    (setting-name (:include record-ref)
+     (:constructor %make-setting-name (%record-font-data %record-offset))))
+
+
+(defun setting-name-setting (rec)
+  "The setting."
+  (declare (type setting-name rec))
+  (font-data-read-u16 (record-ref-font-data rec) (record-ref-offset rec)))
+
+
+(defun setting-name-name-index (rec)
+  "The name table index for the setting's name."
+  (declare (type setting-name rec))
+  (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 2)))
+
+
+(declaim (inline setting-name-setting setting-name-name-index))
+
+
+(define-constant +setting-name-size+ 4)
+
+
+(defstruct
+    (feat (:include table-ref)
+     (:constructor %make-feat (%table-font-data %table-offset %table-length))))
+
+
+(defun feat-version (table)
+  "Version number of the feature name table (0x00010000 for the current version)."
+  (declare (type feat table))
+  (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
+
+
+(declaim (inline feat-version-raw))
+
+
+(defun feat-version-raw (font-data offset)
+  (font-data-read-u32 font-data offset))
+
+
+(defun feat-feature-name-count (table)
+  "The number of entries in the feature name array."
+  (declare (type feat table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 4)))
+
+
+(declaim (inline feat-feature-name-count-raw))
+
+
+(defun feat-feature-name-count-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 4)))
+
+
+(defun feat--reserved1 (table)
+  "Reserved (set to 0)."
+  (declare (type feat table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 6)))
+
+
+(declaim (inline feat--reserved1-raw))
+
+
+(defun feat--reserved1-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 6)))
+
+
+(defun feat--reserved2 (table)
+  "Reserved (set to 0)."
+  (declare (type feat table))
+  (font-data-read-u32 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 8)))
+
+
+(declaim (inline feat--reserved2-raw))
+
+
+(defun feat--reserved2-raw (font-data offset)
+  (font-data-read-u32 font-data (+ offset 8)))
+
+
+(defun feat-names-count (table)
+  "The feature name array, sorted by feature type."
+  (feat-feature-name-count table))
+
+
+(declaim
+ (inline feat-version feat-feature-name-count feat--reserved1 feat--reserved2
+  feat-names feat-names-count))
+
+
+(defun feat-names-ref (table index)
+  "The feature name array, sorted by feature type."
+  (declare (type feat table)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (+ (table-ref-offset table) 12) (* index 12))))
+    (unless
+        (<= (+ pos 12) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 12 :length
+             (table-ref-length table)))
+    (%make-feature-name (table-ref-font-data table) pos)))
+
+
+(defun sanitize-feat (font-data offset length)
+  (declare (ignorable length)
+           (type font-data font-data)
+           (type (unsigned-byte 32) offset length))
+  (unless (and (<= 12 length) (font-data-valid-range-p font-data offset 12))
+    (error 'font-out-of-bounds-error :pos offset :size 12 :length
+           (font-data-length font-data)))
+  (let ((cnt (feat-feature-name-count-raw font-data offset)))
+    (unless
+        (and (<= (+ 12 (* cnt 12)) length)
+             (font-data-valid-range-p font-data offset (+ 12 (* cnt 12))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 12 (* cnt 12))
+             :length (font-data-length font-data))))
+  t)
+
+
+(defun read-feat
+       (font-data offset
+        &optional (length (- (font-data-length font-data) offset)))
+  (sanitize-feat font-data offset length)
+  (%make-feat font-data offset length))
+
+
+(defstruct
+    (setting-name-array (:include table-ref)
+     (:constructor %make-setting-name-array
+      (%table-font-data %table-offset %table-length))))
+
+
+(defun setting-name-array-settings-count (table &optional n-settings)
+  "List of setting names for a feature."
+  (or n-settings
+      (max 0 (floor (- (table-ref-length table) (table-ref-offset table)) 4))))
+
+
+(declaim (inline setting-name-array-settings setting-name-array-settings-count))
+
+
+(defun setting-name-array-settings-ref (table index)
+  "List of setting names for a feature."
+  (declare (type setting-name-array table)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (table-ref-offset table) (* index 4))))
+    (unless
+        (<= (+ pos 4) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 4 :length
+             (table-ref-length table)))
+    (%make-setting-name (table-ref-font-data table) pos)))
+
+
+(defun sanitize-setting-name-array (font-data offset length)
+  (declare (ignorable length)
+           (type font-data font-data)
+           (type (unsigned-byte 32) offset length))
+  (unless (and (<= 0 length) (font-data-valid-range-p font-data offset 0))
+    (error 'font-out-of-bounds-error :pos offset :size 0 :length
+           (font-data-length font-data)))
+  t)
+
+
+(defun read-setting-name-array
+       (font-data offset
+        &optional (length (- (font-data-length font-data) offset)))
+  (sanitize-setting-name-array font-data offset length)
+  (%make-setting-name-array font-data offset length))
+

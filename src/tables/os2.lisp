@@ -1,0 +1,658 @@
+;;;; os2.lisp — Generated OpenType tables
+;;;; Generated automatically from OpenType sexp schema
+;;;; DO NOT EDIT DIRECTLY
+
+
+(in-package #:zpb-otf)
+
+
+(export
+ '(+selection-flags-bold+ +selection-flags-italic+ +selection-flags-negative+
+   +selection-flags-oblique+ +selection-flags-outlined+
+   +selection-flags-regular+ +selection-flags-strikeout+
+   +selection-flags-underscore+ +selection-flags-use-typo-metrics+
+   +selection-flags-wws+ os2 os2-ach-vend-id os2-fs-selection os2-fs-type os2-p
+   os2-panose-10 os2-panose-10-bytes os2-panose-10-count os2-panose-10-ref
+   os2-s-cap-height os2-s-family-class os2-s-typo-ascender os2-s-typo-descender
+   os2-s-typo-line-gap os2-sx-height os2-ul-code-page-range-1
+   os2-ul-code-page-range-2 os2-ul-unicode-range-1 os2-ul-unicode-range-2
+   os2-ul-unicode-range-3 os2-ul-unicode-range-4 os2-us-break-char
+   os2-us-default-char os2-us-first-char-index os2-us-last-char-index
+   os2-us-lower-optical-point-size os2-us-max-context
+   os2-us-upper-optical-point-size os2-us-weight-class os2-us-width-class
+   os2-us-win-ascent os2-us-win-descent os2-version os2-x-avg-char-width
+   os2-y-strikeout-position os2-y-strikeout-size os2-y-subscript-x-offset
+   os2-y-subscript-x-size os2-y-subscript-y-offset os2-y-subscript-y-size
+   os2-y-superscript-x-offset os2-y-superscript-x-size
+   os2-y-superscript-y-offset os2-y-superscript-y-size read-os2 sanitize-os2))
+
+
+(define-constant +selection-flags-italic+ 1)
+
+
+(define-constant +selection-flags-underscore+ 2)
+
+
+(define-constant +selection-flags-negative+ 4)
+
+
+(define-constant +selection-flags-outlined+ 8)
+
+
+(define-constant +selection-flags-strikeout+ 16)
+
+
+(define-constant +selection-flags-bold+ 32)
+
+
+(define-constant +selection-flags-regular+ 64)
+
+
+(define-constant +selection-flags-use-typo-metrics+ 128)
+
+
+(define-constant +selection-flags-wws+ 256)
+
+
+(define-constant +selection-flags-oblique+ 512)
+
+
+(defstruct
+    (os2 (:include table-ref)
+     (:constructor %make-os2 (%table-font-data %table-offset %table-length))))
+
+
+(defun os2-version (table)
+  (declare (type os2 table))
+  (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
+
+
+(declaim (inline os2-version-raw))
+
+
+(defun os2-version-raw (font-data offset) (font-data-read-u16 font-data offset))
+
+
+(defun os2-x-avg-char-width (table)
+  "[Average weighted escapement](https://learn.microsoft.com/en-us/typography/opentype/spec/os2#xavgcharwidth).  The Average Character Width parameter specifies the arithmetic average of the escapement (width) of all non-zero width glyphs in the font."
+  (declare (type os2 table))
+  (font-data-read-i16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 2)))
+
+
+(declaim (inline os2-x-avg-char-width-raw))
+
+
+(defun os2-x-avg-char-width-raw (font-data offset)
+  (font-data-read-i16 font-data (+ offset 2)))
+
+
+(defun os2-us-weight-class (table)
+  "[Weight class](https://learn.microsoft.com/en-us/typography/opentype/spec/os2#usweightclass).  Indicates the visual weight (degree of blackness or thickness of strokes) of the characters in the font. Values from 1 to 1000 are valid."
+  (declare (type os2 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 4)))
+
+
+(declaim (inline os2-us-weight-class-raw))
+
+
+(defun os2-us-weight-class-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 4)))
+
+
+(defun os2-us-width-class (table)
+  "[Width class](https://learn.microsoft.com/en-us/typography/opentype/spec/os2#uswidthclass).  Indicates a relative change from the normal aspect ratio (width to height ratio) as specified by a font designer for the glyphs in a font."
+  (declare (type os2 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 6)))
+
+
+(declaim (inline os2-us-width-class-raw))
+
+
+(defun os2-us-width-class-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 6)))
+
+
+(defun os2-fs-type (table)
+  "[Type flags](https://learn.microsoft.com/en-us/typography/opentype/spec/os2#fstype).  Indicates font embedding licensing rights for the font."
+  (declare (type os2 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 8)))
+
+
+(declaim (inline os2-fs-type-raw))
+
+
+(defun os2-fs-type-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 8)))
+
+
+(defun os2-y-subscript-x-size (table)
+  "The recommended horizontal size in font design units for subscripts for this font."
+  (declare (type os2 table))
+  (font-data-read-i16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 10)))
+
+
+(declaim (inline os2-y-subscript-x-size-raw))
+
+
+(defun os2-y-subscript-x-size-raw (font-data offset)
+  (font-data-read-i16 font-data (+ offset 10)))
+
+
+(defun os2-y-subscript-y-size (table)
+  "The recommended vertical size in font design units for subscripts for this font."
+  (declare (type os2 table))
+  (font-data-read-i16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 12)))
+
+
+(declaim (inline os2-y-subscript-y-size-raw))
+
+
+(defun os2-y-subscript-y-size-raw (font-data offset)
+  (font-data-read-i16 font-data (+ offset 12)))
+
+
+(defun os2-y-subscript-x-offset (table)
+  "The recommended horizontal offset in font design units for subscripts for this font."
+  (declare (type os2 table))
+  (font-data-read-i16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 14)))
+
+
+(declaim (inline os2-y-subscript-x-offset-raw))
+
+
+(defun os2-y-subscript-x-offset-raw (font-data offset)
+  (font-data-read-i16 font-data (+ offset 14)))
+
+
+(defun os2-y-subscript-y-offset (table)
+  "The recommended vertical offset in font design units for subscripts for this font."
+  (declare (type os2 table))
+  (font-data-read-i16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 16)))
+
+
+(declaim (inline os2-y-subscript-y-offset-raw))
+
+
+(defun os2-y-subscript-y-offset-raw (font-data offset)
+  (font-data-read-i16 font-data (+ offset 16)))
+
+
+(defun os2-y-superscript-x-size (table)
+  "The recommended horizontal size in font design units for superscripts for this font."
+  (declare (type os2 table))
+  (font-data-read-i16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 18)))
+
+
+(declaim (inline os2-y-superscript-x-size-raw))
+
+
+(defun os2-y-superscript-x-size-raw (font-data offset)
+  (font-data-read-i16 font-data (+ offset 18)))
+
+
+(defun os2-y-superscript-y-size (table)
+  "The recommended vertical size in font design units for superscripts for this font."
+  (declare (type os2 table))
+  (font-data-read-i16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 20)))
+
+
+(declaim (inline os2-y-superscript-y-size-raw))
+
+
+(defun os2-y-superscript-y-size-raw (font-data offset)
+  (font-data-read-i16 font-data (+ offset 20)))
+
+
+(defun os2-y-superscript-x-offset (table)
+  "The recommended horizontal offset in font design units for superscripts for this font."
+  (declare (type os2 table))
+  (font-data-read-i16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 22)))
+
+
+(declaim (inline os2-y-superscript-x-offset-raw))
+
+
+(defun os2-y-superscript-x-offset-raw (font-data offset)
+  (font-data-read-i16 font-data (+ offset 22)))
+
+
+(defun os2-y-superscript-y-offset (table)
+  "The recommended vertical offset in font design units for superscripts for this font."
+  (declare (type os2 table))
+  (font-data-read-i16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 24)))
+
+
+(declaim (inline os2-y-superscript-y-offset-raw))
+
+
+(defun os2-y-superscript-y-offset-raw (font-data offset)
+  (font-data-read-i16 font-data (+ offset 24)))
+
+
+(defun os2-y-strikeout-size (table)
+  "Thickness of the strikeout stroke in font design units."
+  (declare (type os2 table))
+  (font-data-read-i16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 26)))
+
+
+(declaim (inline os2-y-strikeout-size-raw))
+
+
+(defun os2-y-strikeout-size-raw (font-data offset)
+  (font-data-read-i16 font-data (+ offset 26)))
+
+
+(defun os2-y-strikeout-position (table)
+  "The position of the top of the strikeout stroke relative to the baseline in font design units."
+  (declare (type os2 table))
+  (font-data-read-i16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 28)))
+
+
+(declaim (inline os2-y-strikeout-position-raw))
+
+
+(defun os2-y-strikeout-position-raw (font-data offset)
+  (font-data-read-i16 font-data (+ offset 28)))
+
+
+(defun os2-s-family-class (table)
+  "[Font-family class and subclass](https://learn.microsoft.com/en-us/typography/opentype/spec/os2#sfamilyclass). This parameter is a classification of font-family design."
+  (declare (type os2 table))
+  (font-data-read-i16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 30)))
+
+
+(declaim (inline os2-s-family-class-raw))
+
+
+(defun os2-s-family-class-raw (font-data offset)
+  (font-data-read-i16 font-data (+ offset 30)))
+
+
+(defun os2-panose-10-count (table)
+  "[PANOSE classification number](https://learn.microsoft.com/en-us/typography/opentype/spec/os2#panose).  Additional specifications are required for PANOSE to classify non-Latin character sets."
+  (declare (ignore table))
+  10)
+
+
+(defun os2-panose-10-ref (table index)
+  "[PANOSE classification number](https://learn.microsoft.com/en-us/typography/opentype/spec/os2#panose).  Additional specifications are required for PANOSE to classify non-Latin character sets."
+  (declare (type os2 table)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (+ (table-ref-offset table) 32) (* index 1))))
+    (unless
+        (<= (+ pos 1) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 1 :length
+             (table-ref-length table)))
+    (font-data-read-u8 (table-ref-font-data table) pos)))
+
+
+(defun os2-panose-10-bytes (table)
+  "[PANOSE classification number](https://learn.microsoft.com/en-us/typography/opentype/spec/os2#panose).  Additional specifications are required for PANOSE to classify non-Latin character sets."
+  (font-data-slice (table-ref-font-data table) (+ (table-ref-offset table) 32)
+                   10))
+
+
+(defun os2-ul-unicode-range-1 (table)
+  "[Unicode Character Range](https://learn.microsoft.com/en-us/typography/opentype/spec/os2#ulunicoderange1-bits-031ulunicoderange2-bits-3263ulunicoderange3-bits-6495ulunicoderange4-bits-96127).  Unicode Character Range (bits 0-31)."
+  (declare (type os2 table))
+  (font-data-read-u32 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 42)))
+
+
+(declaim (inline os2-ul-unicode-range-1-raw))
+
+
+(defun os2-ul-unicode-range-1-raw (font-data offset)
+  (font-data-read-u32 font-data (+ offset 42)))
+
+
+(defun os2-ul-unicode-range-2 (table)
+  "Unicode Character Range (bits 32-63)."
+  (declare (type os2 table))
+  (font-data-read-u32 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 46)))
+
+
+(declaim (inline os2-ul-unicode-range-2-raw))
+
+
+(defun os2-ul-unicode-range-2-raw (font-data offset)
+  (font-data-read-u32 font-data (+ offset 46)))
+
+
+(defun os2-ul-unicode-range-3 (table)
+  "Unicode Character Range (bits 64-95)."
+  (declare (type os2 table))
+  (font-data-read-u32 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 50)))
+
+
+(declaim (inline os2-ul-unicode-range-3-raw))
+
+
+(defun os2-ul-unicode-range-3-raw (font-data offset)
+  (font-data-read-u32 font-data (+ offset 50)))
+
+
+(defun os2-ul-unicode-range-4 (table)
+  "Unicode Character Range (bits 96-127)."
+  (declare (type os2 table))
+  (font-data-read-u32 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 54)))
+
+
+(declaim (inline os2-ul-unicode-range-4-raw))
+
+
+(defun os2-ul-unicode-range-4-raw (font-data offset)
+  (font-data-read-u32 font-data (+ offset 54)))
+
+
+(defun os2-ach-vend-id (table)
+  "[Font Vendor Identification](https://learn.microsoft.com/en-us/typography/opentype/spec/os2#achvendid).  The four-character identifier for the vendor of the given type face."
+  (declare (type os2 table))
+  (font-data-read-tag-string (table-ref-font-data table)
+                             (+ (table-ref-offset table) 58)))
+
+
+(declaim (inline os2-ach-vend-id-raw))
+
+
+(defun os2-ach-vend-id-raw (font-data offset)
+  (font-data-read-tag-string font-data (+ offset 58)))
+
+
+(defun os2-fs-selection (table)
+  "[Font selection flags](https://learn.microsoft.com/en-us/typography/opentype/spec/os2#fsselection).  Contains information concerning the nature of the font patterns."
+  (declare (type os2 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 62)))
+
+
+(declaim (inline os2-fs-selection-raw))
+
+
+(defun os2-fs-selection-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 62)))
+
+
+(defun os2-us-first-char-index (table)
+  "The minimum Unicode index (character code) in this font."
+  (declare (type os2 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 64)))
+
+
+(declaim (inline os2-us-first-char-index-raw))
+
+
+(defun os2-us-first-char-index-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 64)))
+
+
+(defun os2-us-last-char-index (table)
+  "The maximum Unicode index (character code) in this font."
+  (declare (type os2 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 66)))
+
+
+(declaim (inline os2-us-last-char-index-raw))
+
+
+(defun os2-us-last-char-index-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 66)))
+
+
+(defun os2-s-typo-ascender (table)
+  "The typographic ascender for this font."
+  (declare (type os2 table))
+  (font-data-read-i16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 68)))
+
+
+(declaim (inline os2-s-typo-ascender-raw))
+
+
+(defun os2-s-typo-ascender-raw (font-data offset)
+  (font-data-read-i16 font-data (+ offset 68)))
+
+
+(defun os2-s-typo-descender (table)
+  "The typographic descender for this font."
+  (declare (type os2 table))
+  (font-data-read-i16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 70)))
+
+
+(declaim (inline os2-s-typo-descender-raw))
+
+
+(defun os2-s-typo-descender-raw (font-data offset)
+  (font-data-read-i16 font-data (+ offset 70)))
+
+
+(defun os2-s-typo-line-gap (table)
+  "The typographic line gap for this font."
+  (declare (type os2 table))
+  (font-data-read-i16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 72)))
+
+
+(declaim (inline os2-s-typo-line-gap-raw))
+
+
+(defun os2-s-typo-line-gap-raw (font-data offset)
+  (font-data-read-i16 font-data (+ offset 72)))
+
+
+(defun os2-us-win-ascent (table)
+  "The “Windows ascender” metric.  This should be used to specify the height above the baseline for a clipping region."
+  (declare (type os2 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 74)))
+
+
+(declaim (inline os2-us-win-ascent-raw))
+
+
+(defun os2-us-win-ascent-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 74)))
+
+
+(defun os2-us-win-descent (table)
+  "The “Windows descender” metric.  This should be used to specify the vertical extent below the baseline for a clipping region."
+  (declare (type os2 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 76)))
+
+
+(declaim (inline os2-us-win-descent-raw))
+
+
+(defun os2-us-win-descent-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 76)))
+
+
+(defun os2-ul-code-page-range-1 (table)
+  "Code page character range bits 0-31."
+  (declare (type os2 table))
+  (when (>= (table-ref-length table) 82)
+    (font-data-read-u32 (table-ref-font-data table)
+                        (+ (table-ref-offset table) 78))))
+
+
+(declaim (inline os2-ul-code-page-range-1-raw))
+
+
+(defun os2-ul-code-page-range-1-raw (font-data offset)
+  (font-data-read-u32 font-data (+ offset 78)))
+
+
+(defun os2-ul-code-page-range-2 (table)
+  "Code page character range bits 32-63."
+  (declare (type os2 table))
+  (when (>= (table-ref-length table) 86)
+    (font-data-read-u32 (table-ref-font-data table)
+                        (+ (table-ref-offset table) 82))))
+
+
+(declaim (inline os2-ul-code-page-range-2-raw))
+
+
+(defun os2-ul-code-page-range-2-raw (font-data offset)
+  (font-data-read-u32 font-data (+ offset 82)))
+
+
+(defun os2-sx-height (table)
+  "This metric specifies the distance between the baseline and the approximate height of non-ascending lowercase letters measured in FUnits."
+  (declare (type os2 table))
+  (when (>= (table-ref-length table) 88)
+    (font-data-read-i16 (table-ref-font-data table)
+                        (+ (table-ref-offset table) 86))))
+
+
+(declaim (inline os2-sx-height-raw))
+
+
+(defun os2-sx-height-raw (font-data offset)
+  (font-data-read-i16 font-data (+ offset 86)))
+
+
+(defun os2-s-cap-height (table)
+  "This metric specifies the distance between the baseline and the approximate height of uppercase letters measured in FUnits."
+  (declare (type os2 table))
+  (when (>= (table-ref-length table) 90)
+    (font-data-read-i16 (table-ref-font-data table)
+                        (+ (table-ref-offset table) 88))))
+
+
+(declaim (inline os2-s-cap-height-raw))
+
+
+(defun os2-s-cap-height-raw (font-data offset)
+  (font-data-read-i16 font-data (+ offset 88)))
+
+
+(defun os2-us-default-char (table)
+  "This is the Unicode codepoint, in UTF-16 encoding, of a character that can be used for a default glyph."
+  (declare (type os2 table))
+  (when (>= (table-ref-length table) 92)
+    (font-data-read-u16 (table-ref-font-data table)
+                        (+ (table-ref-offset table) 90))))
+
+
+(declaim (inline os2-us-default-char-raw))
+
+
+(defun os2-us-default-char-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 90)))
+
+
+(defun os2-us-break-char (table)
+  "This is the Unicode codepoint, in UTF-16 encoding, of a character that can be used as a default break character."
+  (declare (type os2 table))
+  (when (>= (table-ref-length table) 94)
+    (font-data-read-u16 (table-ref-font-data table)
+                        (+ (table-ref-offset table) 92))))
+
+
+(declaim (inline os2-us-break-char-raw))
+
+
+(defun os2-us-break-char-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 92)))
+
+
+(defun os2-us-max-context (table)
+  "This field is used for fonts with multiple optical styles."
+  (declare (type os2 table))
+  (when (>= (table-ref-length table) 96)
+    (font-data-read-u16 (table-ref-font-data table)
+                        (+ (table-ref-offset table) 94))))
+
+
+(declaim (inline os2-us-max-context-raw))
+
+
+(defun os2-us-max-context-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 94)))
+
+
+(defun os2-us-lower-optical-point-size (table)
+  "This field is used for fonts with multiple optical styles."
+  (declare (type os2 table))
+  (when (>= (table-ref-length table) 98)
+    (font-data-read-u16 (table-ref-font-data table)
+                        (+ (table-ref-offset table) 96))))
+
+
+(declaim (inline os2-us-lower-optical-point-size-raw))
+
+
+(defun os2-us-lower-optical-point-size-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 96)))
+
+
+(defun os2-us-upper-optical-point-size (table)
+  "This field is used for fonts with multiple optical styles."
+  (declare (type os2 table))
+  (when (>= (table-ref-length table) 100)
+    (font-data-read-u16 (table-ref-font-data table)
+                        (+ (table-ref-offset table) 98))))
+
+
+(declaim (inline os2-us-upper-optical-point-size-raw))
+
+
+(declaim
+ (inline os2-version os2-x-avg-char-width os2-us-weight-class
+  os2-us-width-class os2-fs-type os2-y-subscript-x-size os2-y-subscript-y-size
+  os2-y-subscript-x-offset os2-y-subscript-y-offset os2-y-superscript-x-size
+  os2-y-superscript-y-size os2-y-superscript-x-offset
+  os2-y-superscript-y-offset os2-y-strikeout-size os2-y-strikeout-position
+  os2-s-family-class os2-panose-10 os2-panose-10-count os2-ul-unicode-range-1
+  os2-ul-unicode-range-2 os2-ul-unicode-range-3 os2-ul-unicode-range-4
+  os2-ach-vend-id os2-fs-selection os2-us-first-char-index
+  os2-us-last-char-index os2-s-typo-ascender os2-s-typo-descender
+  os2-s-typo-line-gap os2-us-win-ascent os2-us-win-descent
+  os2-ul-code-page-range-1 os2-ul-code-page-range-2 os2-sx-height
+  os2-s-cap-height os2-us-default-char os2-us-break-char os2-us-max-context
+  os2-us-lower-optical-point-size os2-us-upper-optical-point-size))
+
+
+(defun os2-us-upper-optical-point-size-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 98)))
+
+
+(defun sanitize-os2 (font-data offset length)
+  (declare (ignorable length)
+           (type font-data font-data)
+           (type (unsigned-byte 32) offset length))
+  (unless (and (<= 78 length) (font-data-valid-range-p font-data offset 78))
+    (error 'font-out-of-bounds-error :pos offset :size 78 :length
+           (font-data-length font-data)))
+  t)
+
+
+(defun read-os2
+       (font-data offset
+        &optional (length (- (font-data-length font-data) offset)))
+  (sanitize-os2 font-data offset length)
+  (%make-os2 font-data offset length))
+

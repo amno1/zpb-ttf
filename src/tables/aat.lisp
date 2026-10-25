@@ -1,0 +1,1121 @@
+;;;; aat.lisp — Generated OpenType tables
+;;;; Generated automatically from OpenType sexp schema
+;;;; DO NOT EDIT DIRECTLY
+
+
+(in-package #:zpb-otf)
+
+
+(export
+ '(+lookup-segment4-size+ class-subtable class-subtable-class-array
+   class-subtable-class-array-bytes class-subtable-class-array-count
+   class-subtable-class-array-ref class-subtable-first-glyph
+   class-subtable-n-glyphs class-subtable-p lookup-segment4
+   lookup-segment4-first-glyph lookup-segment4-last-glyph lookup-segment4-p
+   lookup-segment4-value-offset lookup0 lookup0-format-table lookup0-p
+   lookup0-values-data lookup0-values-data-bytes lookup0-values-data-count
+   lookup0-values-data-ref lookup10 lookup10-first-glyph lookup10-format-table
+   lookup10-glyph-count lookup10-p lookup10-unit-size lookup10-values-data
+   lookup10-values-data-bytes lookup10-values-data-count
+   lookup10-values-data-ref lookup2 lookup2-entry-selector lookup2-format-table
+   lookup2-n-units lookup2-p lookup2-range-shift lookup2-search-range
+   lookup2-segments-data lookup2-segments-data-bytes
+   lookup2-segments-data-count lookup2-segments-data-ref lookup2-unit-size
+   lookup4 lookup4-entry-selector lookup4-format-table lookup4-n-units
+   lookup4-p lookup4-range-shift lookup4-search-range lookup4-segments
+   lookup4-segments-count lookup4-segments-ref lookup4-unit-size lookup6
+   lookup6-entries-data lookup6-entries-data-bytes lookup6-entries-data-count
+   lookup6-entries-data-ref lookup6-entry-selector lookup6-format-table
+   lookup6-n-units lookup6-p lookup6-range-shift lookup6-search-range
+   lookup6-unit-size lookup8 lookup8-first-glyph lookup8-format-table
+   lookup8-glyph-count lookup8-p lookup8-value-array lookup8-value-array-count
+   lookup8-value-array-ref raw-bytes raw-bytes-data raw-bytes-data-bytes
+   raw-bytes-data-count raw-bytes-data-ref raw-bytes-p raw-words raw-words-data
+   raw-words-data-count raw-words-data-ref raw-words-p read-aat-lookup
+   read-class-subtable read-lookup0 read-lookup10 read-lookup2 read-lookup4
+   read-lookup6 read-lookup8 read-raw-bytes read-raw-words read-state-header
+   read-stx-header sanitize-class-subtable sanitize-lookup0 sanitize-lookup10
+   sanitize-lookup2 sanitize-lookup4 sanitize-lookup6 sanitize-lookup8
+   sanitize-raw-bytes sanitize-raw-words sanitize-state-header
+   sanitize-stx-header state-header state-header-class-table-offset
+   state-header-class-table-offset-offset state-header-entry-table-offset
+   state-header-entry-table-offset-offset state-header-p
+   state-header-state-array-offset state-header-state-array-offset-offset
+   state-header-state-size stx-header stx-header-class-table-offset
+   stx-header-class-table-offset-offset stx-header-entry-table-offset
+   stx-header-entry-table-offset-offset stx-header-n-classes stx-header-p
+   stx-header-state-array-offset stx-header-state-array-offset-offset))
+
+
+(defstruct
+    (lookup-segment4 (:include record-ref)
+     (:constructor %make-lookup-segment4 (%record-font-data %record-offset))))
+
+
+(defun lookup-segment4-last-glyph (rec)
+  "Last glyph index in this segment."
+  (declare (type lookup-segment4 rec))
+  (font-data-read-u16 (record-ref-font-data rec) (record-ref-offset rec)))
+
+
+(defun lookup-segment4-first-glyph (rec)
+  "First glyph index in this segment."
+  (declare (type lookup-segment4 rec))
+  (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 2)))
+
+
+(defun lookup-segment4-value-offset (rec)
+  "A 16-bit offset from the start of the table to the data."
+  (declare (type lookup-segment4 rec))
+  (font-data-read-u16 (record-ref-font-data rec) (+ (record-ref-offset rec) 4)))
+
+
+(declaim
+ (inline lookup-segment4-last-glyph lookup-segment4-first-glyph
+  lookup-segment4-value-offset))
+
+
+(define-constant +lookup-segment4-size+ 6)
+
+
+(defun read-aat-lookup
+       (font-data offset
+        &optional (length (- (font-data-length font-data) offset)))
+  (declare (ignorable length))
+  (let ((fmt (font-data-read-u16 font-data (+ offset 0))))
+    (case fmt
+      (0 (read-lookup0 font-data offset length))
+      (2 (read-lookup2 font-data offset length))
+      (4 (read-lookup4 font-data offset length))
+      (6 (read-lookup6 font-data offset length))
+      (8 (read-lookup8 font-data offset length))
+      (10 (read-lookup10 font-data offset length))
+      (otherwise
+       (error 'unsupported-format-error :format fmt :table 'aat-lookup)))))
+
+
+(defstruct
+    (lookup0 (:include table-ref)
+     (:constructor %make-lookup0
+      (%table-font-data %table-offset %table-length))))
+
+
+(defun lookup0-format-table (table)
+  "Format number is set to 0."
+  (declare (type lookup0 table))
+  (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
+
+
+(declaim (inline lookup0-format-table-raw))
+
+
+(defun lookup0-format-table-raw (font-data offset)
+  (font-data-read-u16 font-data offset))
+
+
+(defun lookup0-values-data-count (table)
+  "Values, indexed by glyph index."
+  (max 0 (floor (- (table-ref-length table) (+ (table-ref-offset table) 2)) 1)))
+
+
+(defun lookup0-values-data-ref (table index)
+  "Values, indexed by glyph index."
+  (declare (type lookup0 table)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (+ (table-ref-offset table) 2) (* index 1))))
+    (unless
+        (<= (+ pos 1) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 1 :length
+             (table-ref-length table)))
+    (font-data-read-u8 (table-ref-font-data table) pos)))
+
+
+(declaim
+ (inline lookup0-format-table lookup0-values-data lookup0-values-data-count))
+
+
+(defun lookup0-values-data-bytes (table)
+  "Values, indexed by glyph index."
+  (font-data-slice (table-ref-font-data table) (+ (table-ref-offset table) 2)
+                   (lookup0-values-data-count table)))
+
+
+(defun sanitize-lookup0 (font-data offset length)
+  (declare (ignorable length)
+           (type font-data font-data)
+           (type (unsigned-byte 32) offset length))
+  (unless (and (<= 2 length) (font-data-valid-range-p font-data offset 2))
+    (error 'font-out-of-bounds-error :pos offset :size 2 :length
+           (font-data-length font-data)))
+  t)
+
+
+(defun read-lookup0
+       (font-data offset
+        &optional (length (- (font-data-length font-data) offset)))
+  (sanitize-lookup0 font-data offset length)
+  (%make-lookup0 font-data offset length))
+
+
+(defstruct
+    (lookup2 (:include table-ref)
+     (:constructor %make-lookup2
+      (%table-font-data %table-offset %table-length))))
+
+
+(defun lookup2-format-table (table)
+  "Format number is set to 2."
+  (declare (type lookup2 table))
+  (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
+
+
+(declaim (inline lookup2-format-table-raw))
+
+
+(defun lookup2-format-table-raw (font-data offset)
+  (font-data-read-u16 font-data offset))
+
+
+(defun lookup2-unit-size (table)
+  "Size of a lookup unit for this search in bytes."
+  (declare (type lookup2 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 2)))
+
+
+(declaim (inline lookup2-unit-size-raw))
+
+
+(defun lookup2-unit-size-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 2)))
+
+
+(defun lookup2-n-units (table)
+  "Number of units of the preceding size to be searched."
+  (declare (type lookup2 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 4)))
+
+
+(declaim (inline lookup2-n-units-raw))
+
+
+(defun lookup2-n-units-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 4)))
+
+
+(defun lookup2-search-range (table)
+  "The value of unitSize times the largest power of 2 that is less than or equal to the value of nUnits."
+  (declare (type lookup2 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 6)))
+
+
+(declaim (inline lookup2-search-range-raw))
+
+
+(defun lookup2-search-range-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 6)))
+
+
+(defun lookup2-entry-selector (table)
+  "The log base 2 of the largest power of 2 less than or equal to the value of nUnits."
+  (declare (type lookup2 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 8)))
+
+
+(declaim (inline lookup2-entry-selector-raw))
+
+
+(defun lookup2-entry-selector-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 8)))
+
+
+(defun lookup2-range-shift (table)
+  "The value of unitSize times the difference of the value of nUnits minus the largest power of 2 less than or equal to the value of nUnits."
+  (declare (type lookup2 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 10)))
+
+
+(declaim (inline lookup2-range-shift-raw))
+
+
+(defun lookup2-range-shift-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 10)))
+
+
+(defun lookup2-segments-data-count (table &optional count)
+  "Segments."
+  (or count
+      (max 0
+           (floor (- (table-ref-length table) (+ (table-ref-offset table) 12))
+                  1))))
+
+
+(defun lookup2-segments-data-ref (table index)
+  "Segments."
+  (declare (type lookup2 table)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (+ (table-ref-offset table) 12) (* index 1))))
+    (unless
+        (<= (+ pos 1) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 1 :length
+             (table-ref-length table)))
+    (font-data-read-u8 (table-ref-font-data table) pos)))
+
+
+(declaim
+ (inline lookup2-format-table lookup2-unit-size lookup2-n-units
+  lookup2-search-range lookup2-entry-selector lookup2-range-shift
+  lookup2-segments-data lookup2-segments-data-count))
+
+
+(defun lookup2-segments-data-bytes (table)
+  "Segments."
+  (font-data-slice (table-ref-font-data table) (+ (table-ref-offset table) 12)
+                   (lookup2-segments-data-count table)))
+
+
+(defun sanitize-lookup2 (font-data offset length)
+  (declare (ignorable length)
+           (type font-data font-data)
+           (type (unsigned-byte 32) offset length))
+  (unless (and (<= 12 length) (font-data-valid-range-p font-data offset 12))
+    (error 'font-out-of-bounds-error :pos offset :size 12 :length
+           (font-data-length font-data)))
+  t)
+
+
+(defun read-lookup2
+       (font-data offset
+        &optional (length (- (font-data-length font-data) offset)))
+  (sanitize-lookup2 font-data offset length)
+  (%make-lookup2 font-data offset length))
+
+
+(defstruct
+    (lookup4 (:include table-ref)
+     (:constructor %make-lookup4
+      (%table-font-data %table-offset %table-length))))
+
+
+(defun lookup4-format-table (table)
+  "Format number is set to 4."
+  (declare (type lookup4 table))
+  (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
+
+
+(declaim (inline lookup4-format-table-raw))
+
+
+(defun lookup4-format-table-raw (font-data offset)
+  (font-data-read-u16 font-data offset))
+
+
+(defun lookup4-unit-size (table)
+  "Size of a lookup unit for this search in bytes."
+  (declare (type lookup4 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 2)))
+
+
+(declaim (inline lookup4-unit-size-raw))
+
+
+(defun lookup4-unit-size-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 2)))
+
+
+(defun lookup4-n-units (table)
+  "Number of units of the preceding size to be searched."
+  (declare (type lookup4 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 4)))
+
+
+(declaim (inline lookup4-n-units-raw))
+
+
+(defun lookup4-n-units-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 4)))
+
+
+(defun lookup4-search-range (table)
+  "The value of unitSize times the largest power of 2 that is less than or equal to the value of nUnits."
+  (declare (type lookup4 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 6)))
+
+
+(declaim (inline lookup4-search-range-raw))
+
+
+(defun lookup4-search-range-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 6)))
+
+
+(defun lookup4-entry-selector (table)
+  "The log base 2 of the largest power of 2 less than or equal to the value of nUnits."
+  (declare (type lookup4 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 8)))
+
+
+(declaim (inline lookup4-entry-selector-raw))
+
+
+(defun lookup4-entry-selector-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 8)))
+
+
+(defun lookup4-range-shift (table)
+  "The value of unitSize times the difference of the value of nUnits minus the largest power of 2 less than or equal to the value of nUnits."
+  (declare (type lookup4 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 10)))
+
+
+(declaim (inline lookup4-range-shift-raw))
+
+
+(defun lookup4-range-shift-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 10)))
+
+
+(defun lookup4-segments-count (table) "Segments." (lookup4-n-units table))
+
+
+(declaim
+ (inline lookup4-format-table lookup4-unit-size lookup4-n-units
+  lookup4-search-range lookup4-entry-selector lookup4-range-shift
+  lookup4-segments lookup4-segments-count))
+
+
+(defun lookup4-segments-ref (table index)
+  "Segments."
+  (declare (type lookup4 table)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (+ (table-ref-offset table) 12) (* index 6))))
+    (unless
+        (<= (+ pos 6) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 6 :length
+             (table-ref-length table)))
+    (%make-lookup-segment4 (table-ref-font-data table) pos)))
+
+
+(defun sanitize-lookup4 (font-data offset length)
+  (declare (ignorable length)
+           (type font-data font-data)
+           (type (unsigned-byte 32) offset length))
+  (unless (and (<= 12 length) (font-data-valid-range-p font-data offset 12))
+    (error 'font-out-of-bounds-error :pos offset :size 12 :length
+           (font-data-length font-data)))
+  (let ((cnt (lookup4-n-units-raw font-data offset)))
+    (unless
+        (and (<= (+ 12 (* cnt 6)) length)
+             (font-data-valid-range-p font-data offset (+ 12 (* cnt 6))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 12 (* cnt 6))
+             :length (font-data-length font-data))))
+  t)
+
+
+(defun read-lookup4
+       (font-data offset
+        &optional (length (- (font-data-length font-data) offset)))
+  (sanitize-lookup4 font-data offset length)
+  (%make-lookup4 font-data offset length))
+
+
+(defstruct
+    (lookup6 (:include table-ref)
+     (:constructor %make-lookup6
+      (%table-font-data %table-offset %table-length))))
+
+
+(defun lookup6-format-table (table)
+  "Format number is set to 6."
+  (declare (type lookup6 table))
+  (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
+
+
+(declaim (inline lookup6-format-table-raw))
+
+
+(defun lookup6-format-table-raw (font-data offset)
+  (font-data-read-u16 font-data offset))
+
+
+(defun lookup6-unit-size (table)
+  "Size of a lookup unit for this search in bytes."
+  (declare (type lookup6 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 2)))
+
+
+(declaim (inline lookup6-unit-size-raw))
+
+
+(defun lookup6-unit-size-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 2)))
+
+
+(defun lookup6-n-units (table)
+  "Number of units of the preceding size to be searched."
+  (declare (type lookup6 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 4)))
+
+
+(declaim (inline lookup6-n-units-raw))
+
+
+(defun lookup6-n-units-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 4)))
+
+
+(defun lookup6-search-range (table)
+  "The value of unitSize times the largest power of 2 that is less than or equal to the value of nUnits."
+  (declare (type lookup6 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 6)))
+
+
+(declaim (inline lookup6-search-range-raw))
+
+
+(defun lookup6-search-range-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 6)))
+
+
+(defun lookup6-entry-selector (table)
+  "The log base 2 of the largest power of 2 less than or equal to the value of nUnits."
+  (declare (type lookup6 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 8)))
+
+
+(declaim (inline lookup6-entry-selector-raw))
+
+
+(defun lookup6-entry-selector-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 8)))
+
+
+(defun lookup6-range-shift (table)
+  "The value of unitSize times the difference of the value of nUnits minus the largest power of 2 less than or equal to the value of nUnits."
+  (declare (type lookup6 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 10)))
+
+
+(declaim (inline lookup6-range-shift-raw))
+
+
+(defun lookup6-range-shift-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 10)))
+
+
+(defun lookup6-entries-data-count (table &optional count)
+  "Values, indexed by glyph index."
+  (or count
+      (max 0
+           (floor (- (table-ref-length table) (+ (table-ref-offset table) 12))
+                  1))))
+
+
+(defun lookup6-entries-data-ref (table index)
+  "Values, indexed by glyph index."
+  (declare (type lookup6 table)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (+ (table-ref-offset table) 12) (* index 1))))
+    (unless
+        (<= (+ pos 1) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 1 :length
+             (table-ref-length table)))
+    (font-data-read-u8 (table-ref-font-data table) pos)))
+
+
+(declaim
+ (inline lookup6-format-table lookup6-unit-size lookup6-n-units
+  lookup6-search-range lookup6-entry-selector lookup6-range-shift
+  lookup6-entries-data lookup6-entries-data-count))
+
+
+(defun lookup6-entries-data-bytes (table)
+  "Values, indexed by glyph index."
+  (font-data-slice (table-ref-font-data table) (+ (table-ref-offset table) 12)
+                   (lookup6-entries-data-count table)))
+
+
+(defun sanitize-lookup6 (font-data offset length)
+  (declare (ignorable length)
+           (type font-data font-data)
+           (type (unsigned-byte 32) offset length))
+  (unless (and (<= 12 length) (font-data-valid-range-p font-data offset 12))
+    (error 'font-out-of-bounds-error :pos offset :size 12 :length
+           (font-data-length font-data)))
+  t)
+
+
+(defun read-lookup6
+       (font-data offset
+        &optional (length (- (font-data-length font-data) offset)))
+  (sanitize-lookup6 font-data offset length)
+  (%make-lookup6 font-data offset length))
+
+
+(defstruct
+    (lookup8 (:include table-ref)
+     (:constructor %make-lookup8
+      (%table-font-data %table-offset %table-length))))
+
+
+(defun lookup8-format-table (table)
+  "Format number is set to 8."
+  (declare (type lookup8 table))
+  (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
+
+
+(declaim (inline lookup8-format-table-raw))
+
+
+(defun lookup8-format-table-raw (font-data offset)
+  (font-data-read-u16 font-data offset))
+
+
+(defun lookup8-first-glyph (table)
+  "First glyph index included in the trimmed array."
+  (declare (type lookup8 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 2)))
+
+
+(declaim (inline lookup8-first-glyph-raw))
+
+
+(defun lookup8-first-glyph-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 2)))
+
+
+(defun lookup8-glyph-count (table)
+  "Total number of glyphs (equivalent to the last glyph minus the value of firstGlyph plus 1)."
+  (declare (type lookup8 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 4)))
+
+
+(declaim (inline lookup8-glyph-count-raw))
+
+
+(defun lookup8-glyph-count-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 4)))
+
+
+(defun lookup8-value-array-count (table)
+  "The lookup values (indexed by the glyph index minus the value of firstGlyph). Entries in the value array must be two bytes."
+  (lookup8-glyph-count table))
+
+
+(declaim
+ (inline lookup8-format-table lookup8-first-glyph lookup8-glyph-count
+  lookup8-value-array lookup8-value-array-count))
+
+
+(defun lookup8-value-array-ref (table index)
+  "The lookup values (indexed by the glyph index minus the value of firstGlyph). Entries in the value array must be two bytes."
+  (declare (type lookup8 table)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (+ (table-ref-offset table) 6) (* index 2))))
+    (unless
+        (<= (+ pos 2) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 2 :length
+             (table-ref-length table)))
+    (font-data-read-u16 (table-ref-font-data table) pos)))
+
+
+(defun sanitize-lookup8 (font-data offset length)
+  (declare (ignorable length)
+           (type font-data font-data)
+           (type (unsigned-byte 32) offset length))
+  (unless (and (<= 6 length) (font-data-valid-range-p font-data offset 6))
+    (error 'font-out-of-bounds-error :pos offset :size 6 :length
+           (font-data-length font-data)))
+  (let ((cnt (lookup8-glyph-count-raw font-data offset)))
+    (unless
+        (and (<= (+ 6 (* cnt 2)) length)
+             (font-data-valid-range-p font-data offset (+ 6 (* cnt 2))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 6 (* cnt 2))
+             :length (font-data-length font-data))))
+  t)
+
+
+(defun read-lookup8
+       (font-data offset
+        &optional (length (- (font-data-length font-data) offset)))
+  (sanitize-lookup8 font-data offset length)
+  (%make-lookup8 font-data offset length))
+
+
+(defstruct
+    (lookup10 (:include table-ref)
+     (:constructor %make-lookup10
+      (%table-font-data %table-offset %table-length))))
+
+
+(defun lookup10-format-table (table)
+  "Format number is set to 10."
+  (declare (type lookup10 table))
+  (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
+
+
+(declaim (inline lookup10-format-table-raw))
+
+
+(defun lookup10-format-table-raw (font-data offset)
+  (font-data-read-u16 font-data offset))
+
+
+(defun lookup10-unit-size (table)
+  "Size of a lookup unit for this lookup table in bytes. Allowed values are 1, 2, 4, and 8."
+  (declare (type lookup10 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 2)))
+
+
+(declaim (inline lookup10-unit-size-raw))
+
+
+(defun lookup10-unit-size-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 2)))
+
+
+(defun lookup10-first-glyph (table)
+  "First glyph index included in the trimmed array."
+  (declare (type lookup10 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 4)))
+
+
+(declaim (inline lookup10-first-glyph-raw))
+
+
+(defun lookup10-first-glyph-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 4)))
+
+
+(defun lookup10-glyph-count (table)
+  "Total number of glyphs (equivalent to the last glyph minus the value of firstGlyph plus 1)."
+  (declare (type lookup10 table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 6)))
+
+
+(declaim (inline lookup10-glyph-count-raw))
+
+
+(defun lookup10-glyph-count-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 6)))
+
+
+(defun lookup10-values-data-count (table &optional count)
+  "The lookup values (indexed by the glyph index minus the value of firstGlyph)."
+  (or count
+      (max 0
+           (floor (- (table-ref-length table) (+ (table-ref-offset table) 8))
+                  1))))
+
+
+(defun lookup10-values-data-ref (table index)
+  "The lookup values (indexed by the glyph index minus the value of firstGlyph)."
+  (declare (type lookup10 table)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (+ (table-ref-offset table) 8) (* index 1))))
+    (unless
+        (<= (+ pos 1) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 1 :length
+             (table-ref-length table)))
+    (font-data-read-u8 (table-ref-font-data table) pos)))
+
+
+(declaim
+ (inline lookup10-format-table lookup10-unit-size lookup10-first-glyph
+  lookup10-glyph-count lookup10-values-data lookup10-values-data-count))
+
+
+(defun lookup10-values-data-bytes (table)
+  "The lookup values (indexed by the glyph index minus the value of firstGlyph)."
+  (font-data-slice (table-ref-font-data table) (+ (table-ref-offset table) 8)
+                   (lookup10-values-data-count table)))
+
+
+(defun sanitize-lookup10 (font-data offset length)
+  (declare (ignorable length)
+           (type font-data font-data)
+           (type (unsigned-byte 32) offset length))
+  (unless (and (<= 8 length) (font-data-valid-range-p font-data offset 8))
+    (error 'font-out-of-bounds-error :pos offset :size 8 :length
+           (font-data-length font-data)))
+  t)
+
+
+(defun read-lookup10
+       (font-data offset
+        &optional (length (- (font-data-length font-data) offset)))
+  (sanitize-lookup10 font-data offset length)
+  (%make-lookup10 font-data offset length))
+
+
+(defstruct
+    (state-header (:include table-ref)
+     (:constructor %make-state-header
+      (%table-font-data %table-offset %table-length))))
+
+
+(defun state-header-state-size (table)
+  "Size of a state, in bytes. The size is limited to 8 bits, although the field is 16 bits for alignment."
+  (declare (type state-header table))
+  (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
+
+
+(declaim (inline state-header-state-size-raw))
+
+
+(defun state-header-state-size-raw (font-data offset)
+  (font-data-read-u16 font-data offset))
+
+
+(defun state-header-class-table-offset-offset (table)
+  "Byte offset from the beginning of the state table to the class subtable."
+  (declare (type state-header table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 2)))
+
+
+(defun state-header-class-table-offset (table)
+  "Byte offset from the beginning of the state table to the class subtable."
+  (declare (type state-header table))
+  (let ((off (state-header-class-table-offset-offset table)))
+    (when (and off (not (zerop off)))
+      (read-class-subtable (table-ref-font-data table)
+       (+ (table-ref-offset table) off)))))
+
+
+(defun state-header-state-array-offset-offset (table)
+  "Byte offset from the beginning of the state table to the state array."
+  (declare (type state-header table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 4)))
+
+
+(defun state-header-state-array-offset (table)
+  "Byte offset from the beginning of the state table to the state array."
+  (declare (type state-header table))
+  (let ((off (state-header-state-array-offset-offset table)))
+    (when (and off (not (zerop off)))
+      (read-raw-bytes (table-ref-font-data table)
+       (+ (table-ref-offset table) off)))))
+
+
+(defun state-header-entry-table-offset-offset (table)
+  "Byte offset from the beginning of the state table to the entry subtable."
+  (declare (type state-header table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 6)))
+
+
+(declaim
+ (inline state-header-state-size state-header-class-table-offset
+  state-header-class-table-offset-offset state-header-state-array-offset
+  state-header-state-array-offset-offset state-header-entry-table-offset
+  state-header-entry-table-offset-offset))
+
+
+(defun state-header-entry-table-offset (table)
+  "Byte offset from the beginning of the state table to the entry subtable."
+  (declare (type state-header table))
+  (let ((off (state-header-entry-table-offset-offset table)))
+    (when (and off (not (zerop off)))
+      (read-raw-bytes (table-ref-font-data table)
+       (+ (table-ref-offset table) off)))))
+
+
+(defun sanitize-state-header (font-data offset length)
+  (declare (ignorable length)
+           (type font-data font-data)
+           (type (unsigned-byte 32) offset length))
+  (unless (and (<= 8 length) (font-data-valid-range-p font-data offset 8))
+    (error 'font-out-of-bounds-error :pos offset :size 8 :length
+           (font-data-length font-data)))
+  t)
+
+
+(defun read-state-header
+       (font-data offset
+        &optional (length (- (font-data-length font-data) offset)))
+  (sanitize-state-header font-data offset length)
+  (%make-state-header font-data offset length))
+
+
+(defstruct
+    (class-subtable (:include table-ref)
+     (:constructor %make-class-subtable
+      (%table-font-data %table-offset %table-length))))
+
+
+(defun class-subtable-first-glyph (table)
+  "Glyph index of the first glyph in the class table."
+  (declare (type class-subtable table))
+  (font-data-read-u16 (table-ref-font-data table) (table-ref-offset table)))
+
+
+(declaim (inline class-subtable-first-glyph-raw))
+
+
+(defun class-subtable-first-glyph-raw (font-data offset)
+  (font-data-read-u16 font-data offset))
+
+
+(defun class-subtable-n-glyphs (table)
+  "Number of glyphs in class table."
+  (declare (type class-subtable table))
+  (font-data-read-u16 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 2)))
+
+
+(declaim (inline class-subtable-n-glyphs-raw))
+
+
+(defun class-subtable-n-glyphs-raw (font-data offset)
+  (font-data-read-u16 font-data (+ offset 2)))
+
+
+(defun class-subtable-class-array-count (table)
+  "The class codes (indexed by glyph index minus firstGlyph). Class codes range from 0 to the value of stateSize minus 1."
+  (class-subtable-n-glyphs table))
+
+
+(defun class-subtable-class-array-ref (table index)
+  "The class codes (indexed by glyph index minus firstGlyph). Class codes range from 0 to the value of stateSize minus 1."
+  (declare (type class-subtable table)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (+ (table-ref-offset table) 4) (* index 1))))
+    (unless
+        (<= (+ pos 1) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 1 :length
+             (table-ref-length table)))
+    (font-data-read-u8 (table-ref-font-data table) pos)))
+
+
+(declaim
+ (inline class-subtable-first-glyph class-subtable-n-glyphs
+  class-subtable-class-array class-subtable-class-array-count))
+
+
+(defun class-subtable-class-array-bytes (table)
+  "The class codes (indexed by glyph index minus firstGlyph). Class codes range from 0 to the value of stateSize minus 1."
+  (font-data-slice (table-ref-font-data table) (+ (table-ref-offset table) 4)
+                   (class-subtable-class-array-count table)))
+
+
+(defun sanitize-class-subtable (font-data offset length)
+  (declare (ignorable length)
+           (type font-data font-data)
+           (type (unsigned-byte 32) offset length))
+  (unless (and (<= 4 length) (font-data-valid-range-p font-data offset 4))
+    (error 'font-out-of-bounds-error :pos offset :size 4 :length
+           (font-data-length font-data)))
+  (let ((cnt (class-subtable-n-glyphs-raw font-data offset)))
+    (unless
+        (and (<= (+ 4 (* cnt 1)) length)
+             (font-data-valid-range-p font-data offset (+ 4 (* cnt 1))))
+      (error 'font-out-of-bounds-error :pos offset :size (+ 4 (* cnt 1))
+             :length (font-data-length font-data))))
+  t)
+
+
+(defun read-class-subtable
+       (font-data offset
+        &optional (length (- (font-data-length font-data) offset)))
+  (sanitize-class-subtable font-data offset length)
+  (%make-class-subtable font-data offset length))
+
+
+(defstruct
+    (raw-bytes (:include table-ref)
+     (:constructor %make-raw-bytes
+      (%table-font-data %table-offset %table-length))))
+
+
+(defun raw-bytes-data-count (table)
+  (max 0 (floor (- (table-ref-length table) (table-ref-offset table)) 1)))
+
+
+(defun raw-bytes-data-ref (table index)
+  (declare (type raw-bytes table)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (table-ref-offset table) (* index 1))))
+    (unless
+        (<= (+ pos 1) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 1 :length
+             (table-ref-length table)))
+    (font-data-read-u8 (table-ref-font-data table) pos)))
+
+
+(declaim (inline raw-bytes-data raw-bytes-data-count))
+
+
+(defun raw-bytes-data-bytes (table)
+  (font-data-slice (table-ref-font-data table) (table-ref-offset table)
+                   (raw-bytes-data-count table)))
+
+
+(defun sanitize-raw-bytes (font-data offset length)
+  (declare (ignorable length)
+           (type font-data font-data)
+           (type (unsigned-byte 32) offset length))
+  (unless (and (<= 0 length) (font-data-valid-range-p font-data offset 0))
+    (error 'font-out-of-bounds-error :pos offset :size 0 :length
+           (font-data-length font-data)))
+  t)
+
+
+(defun read-raw-bytes
+       (font-data offset
+        &optional (length (- (font-data-length font-data) offset)))
+  (sanitize-raw-bytes font-data offset length)
+  (%make-raw-bytes font-data offset length))
+
+
+(defstruct
+    (stx-header (:include table-ref)
+     (:constructor %make-stx-header
+      (%table-font-data %table-offset %table-length))))
+
+
+(defun stx-header-n-classes (table)
+  "Number of classes, which is the number of 16-bit entry indices in a single line in the state array."
+  (declare (type stx-header table))
+  (font-data-read-u32 (table-ref-font-data table) (table-ref-offset table)))
+
+
+(declaim (inline stx-header-n-classes-raw))
+
+
+(defun stx-header-n-classes-raw (font-data offset)
+  (font-data-read-u32 font-data offset))
+
+
+(defun stx-header-class-table-offset-offset (table)
+  "Byte offset from the beginning of the state table to the class subtable."
+  (declare (type stx-header table))
+  (font-data-read-u32 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 4)))
+
+
+(defun stx-header-class-table-offset (table)
+  "Byte offset from the beginning of the state table to the class subtable."
+  (declare (type stx-header table))
+  (let ((off (stx-header-class-table-offset-offset table)))
+    (when (and off (not (zerop off)))
+      (font-data-slice (table-ref-font-data table)
+                       (+ (table-ref-offset table) off)))))
+
+
+(defun stx-header-state-array-offset-offset (table)
+  "Byte offset from the beginning of the state table to the state array."
+  (declare (type stx-header table))
+  (font-data-read-u32 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 8)))
+
+
+(defun stx-header-state-array-offset (table)
+  "Byte offset from the beginning of the state table to the state array."
+  (declare (type stx-header table))
+  (let ((off (stx-header-state-array-offset-offset table)))
+    (when (and off (not (zerop off)))
+      (read-raw-words (table-ref-font-data table)
+       (+ (table-ref-offset table) off)))))
+
+
+(defun stx-header-entry-table-offset-offset (table)
+  "Byte offset from the beginning of the state table to the entry subtable."
+  (declare (type stx-header table))
+  (font-data-read-u32 (table-ref-font-data table)
+                      (+ (table-ref-offset table) 12)))
+
+
+(declaim
+ (inline stx-header-n-classes stx-header-class-table-offset
+  stx-header-class-table-offset-offset stx-header-state-array-offset
+  stx-header-state-array-offset-offset stx-header-entry-table-offset
+  stx-header-entry-table-offset-offset))
+
+
+(defun stx-header-entry-table-offset (table)
+  "Byte offset from the beginning of the state table to the entry subtable."
+  (declare (type stx-header table))
+  (let ((off (stx-header-entry-table-offset-offset table)))
+    (when (and off (not (zerop off)))
+      (read-raw-bytes (table-ref-font-data table)
+       (+ (table-ref-offset table) off)))))
+
+
+(defun sanitize-stx-header (font-data offset length)
+  (declare (ignorable length)
+           (type font-data font-data)
+           (type (unsigned-byte 32) offset length))
+  (unless (and (<= 16 length) (font-data-valid-range-p font-data offset 16))
+    (error 'font-out-of-bounds-error :pos offset :size 16 :length
+           (font-data-length font-data)))
+  t)
+
+
+(defun read-stx-header
+       (font-data offset
+        &optional (length (- (font-data-length font-data) offset)))
+  (sanitize-stx-header font-data offset length)
+  (%make-stx-header font-data offset length))
+
+
+(defstruct
+    (raw-words (:include table-ref)
+     (:constructor %make-raw-words
+      (%table-font-data %table-offset %table-length))))
+
+
+(defun raw-words-data-count (table)
+  (max 0 (floor (- (table-ref-length table) (table-ref-offset table)) 2)))
+
+
+(declaim (inline raw-words-data raw-words-data-count))
+
+
+(defun raw-words-data-ref (table index)
+  (declare (type raw-words table)
+           (type (unsigned-byte 32) index))
+  (let ((pos (+ (table-ref-offset table) (* index 2))))
+    (unless
+        (<= (+ pos 2) (+ (table-ref-offset table) (table-ref-length table)))
+      (error 'font-out-of-bounds-error :pos pos :size 2 :length
+             (table-ref-length table)))
+    (font-data-read-u16 (table-ref-font-data table) pos)))
+
+
+(defun sanitize-raw-words (font-data offset length)
+  (declare (ignorable length)
+           (type font-data font-data)
+           (type (unsigned-byte 32) offset length))
+  (unless (and (<= 0 length) (font-data-valid-range-p font-data offset 0))
+    (error 'font-out-of-bounds-error :pos offset :size 0 :length
+           (font-data-length font-data)))
+  t)
+
+
+(defun read-raw-words
+       (font-data offset
+        &optional (length (- (font-data-length font-data) offset)))
+  (sanitize-raw-words font-data offset length)
+  (%make-raw-words font-data offset length))
+
