@@ -1,46 +1,151 @@
-;;; Copyright (c) 2006 Zachary Beane, All Rights Reserved
-;;;
-;;; Redistribution and use in source and binary forms, with or without
-;;; modification, are permitted provided that the following conditions
-;;; are met:
-;;;
-;;;   * Redistributions of source code must retain the above copyright
-;;;     notice, this list of conditions and the following disclaimer.
-;;;
-;;;   * Redistributions in binary form must reproduce the above
-;;;     copyright notice, this list of conditions and the following
-;;;     disclaimer in the documentation and/or other materials
-;;;     provided with the distribution.
-;;;
-;;; THIS SOFTWARE IS PROVIDED BY THE AUTHOR 'AS IS' AND ANY EXPRESSED
-;;; OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-;;; WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-;;; ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-;;; DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-;;; DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
-;;; GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-;;; INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-;;; WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-;;; NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-;;; SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-;;;
-;;; An object for working with glyphs from the font. Some fields are
-;;; lazily loaded from the input-stream of the font-loader when needed.
-;;;
-;;; $Id: glyph.lisp,v 1.28 2007/08/08 16:21:19 xach Exp $
+;;;; glyph.lisp — Glyph objects, metrics, and contour extraction
+;;;; Copyright (c) 2006 Zachary Beane, 2026 Arthur Miller and contributors
+;;;; SPDX-License-Identifier: BSD-2-Clause
 
 (in-package #:zpb-ttf)
+
+(defclass control-point ()
+  ((x :initarg :x :accessor x)
+   (y :initarg :y :accessor y)
+   (on-curve-p :initarg :on-curve-p :reader on-curve-p)))
+
+(defun make-control-point (x y on-curve-p)
+  (make-instance 'control-point
+                 :x x
+                 :y y
+                 :on-curve-p on-curve-p))
+
+(defmethod print-object ((control-point control-point) stream)
+  (print-unreadable-object (control-point stream :type t)
+    (format stream "~D,~D~:[~;*~]"
+            (x control-point) (y control-point) (on-curve-p control-point))))
+
+;;; Contour iteration macros
+
+(defmacro do-contour-segments* ((p1 p2) contour &body body)
+  (let ((length (gensym))
+        (i (gensym))
+        (stack (gensym))
+        (next (gensym))
+        (next-point (gensym "NEXT-POINT"))
+        (midpoint (gensym "MIDPOINT"))
+        (contour* (gensym))
+        (loop (gensym "LOOP"))
+        (body-tag (gensym "BODY"))
+        (done-tag (gensym "DONE"))
+        (mid p1)
+        (end p2))
+    `(let* ((,i 1)
+            (,contour* ,contour)
+            (,length (length ,contour*))
+            ,stack ,next ,mid ,end)
+       (unless (zerop ,length)
+         (unless (on-curve-p (aref ,contour* 0))
+           (setf ,stack (aref ,contour* 0)))
+         (flet ((,next-point ()
+                  (when (< ,i ,length)
+                    (prog1 (aref ,contour* ,i) (incf ,i))))
+                (,midpoint (p0 p1)
+                  (make-control-point (/ (+ (x p0) (x p1)) 2)
+                                      (/ (+ (y p0) (y p1)) 2)
+                                      t)))
+           (tagbody
+              ,loop
+              (setf ,mid nil
+                    ,next (,next-point))
+              (unless ,next
+                (setf ,mid ,stack
+                      ,end (aref ,contour* 0))
+                (cond
+                  ((on-curve-p ,end)
+                   (go ,body-tag))
+                  (,stack
+                   (setf ,mid ,stack
+                         ,end (,midpoint ,stack ,end))
+                   (go ,body-tag))
+                  (t (go ,done-tag))))
+              (if (on-curve-p ,next)
+                  (setf ,end ,next
+                        ,mid ,stack
+                        ,stack nil)
+                  (cond (,stack
+                         (setf ,mid ,stack
+                               ,end (,midpoint ,stack ,next)
+                               ,stack ,next))
+                        (t
+                         (setf ,stack ,next)
+                         (go ,loop))))
+              ,body-tag
+              ,@body
+              (when ,next
+                (go ,loop))
+              ,done-tag))))))
+
+(defun start-of-contour (contour)
+  (let ((first (aref contour 0)))
+   (if (on-curve-p first)
+       first
+       (let ((last (aref contour (1- (length contour)))))
+         (if (on-curve-p last)
+             last
+             (make-control-point (/ (+ (x first) (x last)) 2)
+                                 (/ (+ (y first) (y last)) 2)
+                                 t))))))
+
+(defmacro do-contour-segments ((p0 p1 p2) contour &body body)
+  "A contour is made up of segments. A segment may be a straight line
+or a curve. For each segment, bind the P0 and P2 variables to the
+start and end points of the segment. If the segment is a curve, set P1
+to the control point of the curve, otherwise set P1 to NIL."
+  (let ((start p0)
+        (contour* (gensym "CONTOUR")))
+    `(let ((,contour* ,contour))
+       (when (plusp (length ,contour*))
+         (let ((,start (start-of-contour ,contour*)))
+           (do-contour-segments* (,p1 ,p2)
+               ,contour*
+             (progn ,@body)
+             (setf ,start ,p2)))))))
+
+(defun explicit-contour-points (contour)
+  (let ((new-contour (make-array (length contour)
+                                 :adjustable t
+                                 :fill-pointer 0)))
+    (when (and (plusp (length contour))
+               (on-curve-p (aref contour 0)))
+      (vector-push-extend (aref contour 0) new-contour))
+    (do-contour-segments* (p1 p2)
+        contour
+      (when p1
+        (vector-push-extend p1 new-contour))
+      (unless (eql p2 (aref contour 0))
+        (vector-push-extend p2 new-contour)))
+    new-contour))
+
+(defun explicit-contours (glyph)
+  (map 'vector #'explicit-contour-points (contours glyph)))
+
+(defparameter *empty-contours*
+  (make-array 0 :element-type 't))
+
+(defparameter *empty-bounding-box*
+  (make-array 4 :initial-element 0 :element-type '(signed-byte 16)))
+
+(defun empty-bounding-box ()
+  (copy-seq *empty-bounding-box*))
+
+(defun empty-contours ()
+  (copy-seq *empty-contours*))
+
+;;; The Glyph class
 
 (defclass glyph ()
   ((font-loader
     :initarg :font-loader
-    :reader font-loader
-    :documentation "The font-loader from which this glyph originates.")
+    :reader font-loader)
    (font-index
     :initarg :font-index
-    :accessor font-index
-    :documentation "The index of this glyph within the font file, used
-to look up information in various structures in the truetype file.")
+    :accessor font-index)
    (code-point
     :initarg :code-point
     :accessor code-point)
@@ -51,93 +156,50 @@ to look up information in various structures in the truetype file.")
     :initarg :bounding-box
     :accessor bounding-box)))
 
-(defmethod initialize-instance :after ((glyph glyph)
-                                       &key code-point font-index font-loader
-                                       &allow-other-keys)
-  (flet ((argument-error (name)
-           (error "Missing required initarg ~S" name)))
-    (unless font-loader
-      (argument-error :font-loader))
-    (cond ((and code-point font-index))  ;; do nothing
-          (code-point
-           (setf (font-index glyph)
-                 (code-point-font-index code-point font-loader)))
-          (font-index
-           (let ((code-point (font-index-code-point font-index font-loader)))
-             (when (zerop code-point)
-               (setf code-point
-                     (or (postscript-name-code-point (postscript-name glyph))
-                         code-point)))
-             (setf (code-point glyph) code-point)))
-          (t
-           (argument-error (list :font-index :code-point))))))
-
 (defmethod print-object ((glyph glyph) stream)
   (print-unreadable-object (glyph stream :type t :identity nil)
-    ;; FIXME: Is this really going to be Unicode?
-    (format stream "~S U+~4,'0X"
-            (postscript-name glyph)
+    (format stream "GID=~D U+~4,'0X"
+            (font-index glyph)
             (code-point glyph))))
 
-
-;;; Glyph-specific values determined from data in the font-loader
-
-;;; Horizontal metrics
+;;; Glyph metrics
 
 (defgeneric left-side-bearing (object)
   (:method ((glyph glyph))
     (bounded-aref (left-side-bearings (font-loader glyph))
                   (font-index glyph))))
 
-(defmethod (setf left-side-bearing) (new-value glyph)
-  (setf (bounded-aref (left-side-bearings (font-loader glyph))
-                      (font-index glyph))
-        new-value))
-
 (defgeneric advance-width (object)
   (:method ((glyph glyph))
     (bounded-aref (advance-widths (font-loader glyph))
                   (font-index glyph))))
-
-(defmethod (setf advance-width) (new-value (glyph glyph))
-  (setf (bounded-aref (advance-widths (font-loader glyph))
-                      (font-index glyph))
-        new-value))
-
-;;; Vertical metrics
 
 (defgeneric top-side-bearing (object)
   (:method ((glyph glyph))
     (let ((loader (font-loader glyph)))
       (if (vmtx-missing-p loader)
           (- (ascender loader) (ymax glyph))
-          (bounded-aref (top-side-bearings (font-loader glyph))
+          (bounded-aref (top-side-bearings loader)
                         (font-index glyph))))))
-
-(defmethod (setf top-side-bearing) (new-value glyph)
-  (setf (bounded-aref (top-side-bearings (font-loader glyph))
-                      (font-index glyph))
-        new-value))
 
 (defgeneric advance-height (object)
   (:method ((glyph glyph))
     (bounded-aref (advance-heights (font-loader glyph))
                   (font-index glyph))))
 
-(defmethod (setf advance-height) (new-value (glyph glyph))
-  (setf (bounded-aref (advance-heights (font-loader glyph))
-                      (font-index glyph))
-        new-value))
-
-;;; Kerning
+(defgeneric right-side-bearing (object)
+  (:method ((glyph glyph))
+    (- (advance-width glyph)
+       (- (+ (left-side-bearing glyph) (xmax glyph))
+          (xmin glyph)))))
 
 (defgeneric kerning-offset (left right loader))
 
 (defmethod kerning-offset ((left-glyph glyph) (right-glyph glyph)
                            (font-loader font-loader))
-  (let ((kerning-table-key (logior (ash (font-index left-glyph) 16)
-                                   (font-index right-glyph))))
-    (gethash kerning-table-key (kerning-table font-loader) 0)))
+  (let ((key (logior (ash (font-index left-glyph) 16)
+                     (font-index right-glyph))))
+    (gethash key (kerning-table font-loader) 0)))
 
 (defmethod kerning-offset ((left character) (right character)
                            (font-loader font-loader))
@@ -158,64 +220,11 @@ to look up information in various structures in the truetype file.")
     (+ (advance-width object)
        (kerning-offset object next (font-loader object)))))
 
-;;; LOCATION is already a generic function, made by the LOCATION accessor
-;;; of REGRETTABLE-VALUE in conditions.lisp; a DEFGENERIC here would
-;;; redefine it.
-(defmethod location ((glyph glyph))
-  (with-slots (font-index font-loader)
-      glyph
-    (+ (table-position "glyf" font-loader)
-       (glyph-location font-index font-loader))))
-
-(defgeneric data-size (object)
-  (:method ((glyph glyph))
-    (with-slots (font-index font-loader)
-        glyph
-      (- (glyph-location (1+ font-index) font-loader)
-         (glyph-location font-index font-loader)))))
-
-
-;;; Initializing delayed data
-
-(defmethod initialize-bounding-box ((glyph glyph))
-  (if (zerop (data-size glyph))
-      (setf (bounding-box glyph) (empty-bounding-box))
-      (let ((stream (input-stream (font-loader glyph))))
-        ;; skip contour-count
-        (file-position stream (+ (location glyph) 2))
-        (setf (bounding-box glyph)
-              (vector (read-fword stream)
-                      (read-fword stream)
-                      (read-fword stream)
-                      (read-fword stream))))))
-
-(defmethod initialize-contours ((glyph glyph))
-  (if (zerop (data-size glyph))
-      (setf (contours glyph) (empty-contours))
-      (let ((stream (input-stream (font-loader glyph))))
-        (file-position stream (location glyph))
-        (let ((contour-count (read-int16 stream)))
-          ;; skip glyph bounding box, 4 FWords
-          (advance-file-position stream 8)
-          (if (= contour-count -1)
-              (setf (contours glyph)
-                    (read-compound-contours (font-loader glyph)))
-              (setf (contours glyph)
-                    (read-simple-contours contour-count stream)))))))
-
-(defmethod bounding-box :before ((glyph glyph))
-  (unless (slot-boundp glyph 'bounding-box)
-    (initialize-bounding-box glyph)))
-
-(defmethod contours :before ((glyph glyph))
-  (unless (slot-boundp glyph 'contours)
-    (initialize-contours glyph)))
-
 (defgeneric contour-count (object)
   (:method (object)
     (length (contours object))))
 
-(defgeneric contour (object idex)
+(defgeneric contour (object index)
   (:method (object index)
     (aref (contours object) index)))
 
@@ -227,87 +236,224 @@ to look up information in various structures in the truetype file.")
          (let ((,contour (contour ,obj ,i)))
            ,@body)))))
 
-(defgeneric right-side-bearing (object)
-  (:method ((glyph glyph))
-    (- (advance-width glyph)
-       (- (+ (left-side-bearing glyph) (xmax glyph))
-          (xmin glyph)))))
+(defgeneric string-bounding-box (string loader &key kerning)
+  (:method (string (loader font-loader) &key (kerning t))
+    (if (zerop (length string))
+        (empty-bounding-box)
+        (let* ((first-glyph (find-glyph (char string 0) loader))
+               (bbox (copy-seq (bounding-box first-glyph)))
+               (x 0))
+          (dotimes (i (1- (length string)))
+            (let* ((c1 (char string i))
+                   (c2 (char string (1+ i)))
+                   (g1 (find-glyph c1 loader))
+                   (g2 (find-glyph c2 loader)))
+              (incf x (advance-width g1))
+              (when kerning
+                (incf x (kerning-offset g1 g2 loader)))
+              (let ((gb (bounding-box g2)))
+                (setf (xmin bbox) (min (xmin bbox) (+ x (xmin gb)))
+                      (ymin bbox) (min (ymin bbox) (ymin gb))
+                      (xmax bbox) (max (xmax bbox) (+ x (xmax gb)))
+                      (ymax bbox) (max (ymax bbox) (+ x (ymax gb)))))))
+          bbox))))
 
-
-;;; Producing a bounding box for a sequence of characters
+;;; Zero-copy TrueType contour extraction
 
-(defgeneric string-bounding-box (string loader &key kerning))
+(defun glyph-loca-info (loader gid)
+  (let ((loca (table-info "loca" loader)))
+    (if (null loca)
+        (values 0 0)
+        (let ((fd (font-data loader))
+              (loc-off (offset loca))
+              (is-short (eql (loca-offset-format loader) :short)))
+          (if is-short
+              (let ((off1 (* (zpb-otf:font-data-read-u16 fd (+ loc-off (* gid 2))) 2))
+                    (off2 (* (zpb-otf:font-data-read-u16 fd (+ loc-off (* (1+ gid) 2))) 2)))
+                (values off1 (- off2 off1)))
+              (let ((off1 (zpb-otf:font-data-read-u32 fd (+ loc-off (* gid 4))))
+                    (off2 (zpb-otf:font-data-read-u32 fd (+ loc-off (* (1+ gid) 4)))))
+                (values off1 (- off2 off1))))))))
 
-(defmethod string-bounding-box (string (font-loader font-loader)
-                                &key (kerning t))
-  (cond ((zerop (length string))
-         (empty-bounding-box))
-        ((= 1 (length string))
-         (copy-seq (bounding-box (find-glyph (char string 0) font-loader))))
-        (t
-         (let ((origin 0)
-               (left (find-glyph (char string 0) font-loader))
-               (xmin most-positive-fixnum) (ymin most-positive-fixnum)
-               (xmax most-negative-fixnum) (ymax most-negative-fixnum))
-           (flet ((update-bounds (glyph)
-                    (setf xmin (min (+ (xmin glyph) origin) xmin)
-                          xmax (max (+ (xmax glyph) origin) xmax)
-                          ymin (min (ymin glyph) ymin)
-                          ymax (max (ymax glyph) ymax))))
-             (update-bounds left)
-             (loop for i from 1 below (length string)
-                   for glyph = (find-glyph (char string i) font-loader)
-                   do
-                   (incf origin (advance-width left))
-                   (when kerning
-                     (incf origin (kerning-offset left glyph font-loader)))
-                   (setf left glyph)
-                   (update-bounds glyph)))
-           (vector xmin ymin xmax ymax)))))
+(defmethod initialize-bounding-box ((glyph glyph))
+  (let ((loader (font-loader glyph))
+        (gid (font-index glyph)))
+    (multiple-value-bind (g-off len) (glyph-loca-info loader gid)
+      (if (or (zerop len) (null (table-info "glyf" loader)))
+          (setf (bounding-box glyph) (empty-bounding-box))
+          (let* ((fd (font-data loader))
+                 (pos (+ (offset (table-info "glyf" loader)) g-off))
+                 (xmin (zpb-otf:font-data-read-i16 fd (+ pos 2)))
+                 (ymin (zpb-otf:font-data-read-i16 fd (+ pos 4)))
+                 (xmax (zpb-otf:font-data-read-i16 fd (+ pos 6)))
+                 (ymax (zpb-otf:font-data-read-i16 fd (+ pos 8))))
+            (setf (bounding-box glyph) (vector xmin ymin xmax ymax)))))))
 
-
-;;; Producing glyphs from loaders
+(defmethod initialize-contours ((glyph glyph))
+  (let ((loader (font-loader glyph))
+        (gid (font-index glyph)))
+    (multiple-value-bind (g-off len) (glyph-loca-info loader gid)
+      (if (or (zerop len) (null (table-info "glyf" loader)))
+          (setf (contours glyph) (empty-contours))
+          (let* ((fd (font-data loader))
+                 (pos (+ (offset (table-info "glyf" loader)) g-off))
+                 (nc (zpb-otf:font-data-read-i16 fd pos)))
+            (if (minusp nc)
+                (setf (contours glyph) (read-compound-contours-fd loader (+ pos 10)))
+                (setf (contours glyph) (read-simple-contours-fd fd (+ pos 10) nc))))))))
 
-(defgeneric glyph-exists-p (character font-loader)
-  (:method ((character glyph) font-loader)
-    (let ((index (font-index character)))
-      (not (zerop index))))
-  (:method (character font-loader)
-    (glyph-exists-p (find-glyph character font-loader) font-loader)))
+(defmethod bounding-box :before ((glyph glyph))
+  (unless (slot-boundp glyph 'bounding-box)
+    (initialize-bounding-box glyph)))
 
-(defgeneric find-glyph (character font-loader)
-  (:documentation "Find the glyph object for CHARACTER in FONT-LOADER
-and return it. If CHARACTER is an integer, treat it as a Unicode code
-point. If CHARACTER is a Lisp character, treat its char-code as a
-Unicode code point.")
-  (:method ((character integer) (font-loader font-loader))
-    (index-glyph (code-point-font-index character font-loader) font-loader))
-  (:method ((character character) (font-loader font-loader))
-    (find-glyph (char-code character) font-loader)))
+(defmethod contours :before ((glyph glyph))
+  (unless (slot-boundp glyph 'contours)
+    (initialize-contours glyph)))
 
-(defgeneric index-glyph (index font-loader)
-  (:documentation "Return the GLYPH object located at glyph index
-INDEX in FONT-LOADER, or NIL if no glyph is defined for that
-index. Despite the name, NOT the inverse of GLYPH-INDEX.")
-  (:method (index font-loader)
-    (let* ((cache (glyph-cache font-loader))
-           (glyph (aref cache index)))
-      (if glyph
-          glyph
-          (setf (aref cache index)
-                (make-instance 'glyph
-                               :font-index index
-                               :font-loader font-loader))))))
+(defun read-simple-contours-fd (fd pos contour-count)
+  (let ((end-pts (make-array contour-count :element-type '(unsigned-byte 16))))
+    (dotimes (i contour-count)
+      (setf (aref end-pts i) (zpb-otf:font-data-read-u16 fd pos))
+      (incf pos 2))
+    (let* ((n-points (1+ (aref end-pts (1- contour-count))))
+           (instruction-len (zpb-otf:font-data-read-u16 fd pos)))
+      (incf pos (+ 2 instruction-len))
+      ;; Read flags
+      (let ((flags (make-array n-points :element-type '(unsigned-byte 8)))
+            (i 0))
+        (loop while (< i n-points) do
+              (let ((fl (zpb-otf:font-data-read-u8 fd pos)))
+                (incf pos 1)
+                (setf (aref flags i) fl)
+                (incf i)
+                (when (logbitp 3 fl) ; repeat
+                  (let ((reps (zpb-otf:font-data-read-u8 fd pos)))
+                    (incf pos 1)
+                    (dotimes (r reps)
+                      (setf (aref flags i) fl)
+                      (incf i))))))
+        ;; Read X coordinates
+        (let ((x-coords (make-array n-points :element-type '(signed-byte 32)))
+              (curr-x 0))
+          (dotimes (j n-points)
+            (let* ((fl (aref flags j))
+                   (short-p (logbitp 1 fl))
+                   (same-p (logbitp 4 fl))
+                   (dx 0))
+              (cond
+                (short-p
+                 (let ((val (zpb-otf:font-data-read-u8 fd pos)))
+                   (incf pos 1)
+                   (setf dx (if same-p val (- val)))))
+                (t
+                 (if same-p
+                     (setf dx 0)
+                     (progn
+                       (setf dx (zpb-otf:font-data-read-i16 fd pos))
+                       (incf pos 2)))))
+              (incf curr-x dx)
+              (setf (aref x-coords j) curr-x)))
+          ;; Read Y coordinates
+          (let ((y-coords (make-array n-points :element-type '(signed-byte 32)))
+                (curr-y 0))
+            (dotimes (j n-points)
+              (let* ((fl (aref flags j))
+                     (short-p (logbitp 2 fl))
+                     (same-p (logbitp 5 fl))
+                     (dy 0))
+                (cond
+                  (short-p
+                   (let ((val (zpb-otf:font-data-read-u8 fd pos)))
+                     (incf pos 1)
+                     (setf dy (if same-p val (- val)))))
+                  (t
+                   (if same-p
+                       (setf dy 0)
+                       (progn
+                         (setf dy (zpb-otf:font-data-read-i16 fd pos))
+                         (incf pos 2)))))
+                (incf curr-y dy)
+                (setf (aref y-coords j) curr-y)))
+            ;; Build contour array
+            (let ((contours (make-array contour-count))
+                  (start 0))
+              (dotimes (c contour-count contours)
+                (let* ((end (aref end-pts c))
+                       (c-len (1+ (- end start)))
+                       (pts (make-array c-len)))
+                  (dotimes (p c-len)
+                    (let ((idx (+ start p)))
+                      (setf (aref pts p)
+                            (make-control-point (aref x-coords idx)
+                                                (aref y-coords idx)
+                                                (logbitp 0 (aref flags idx))))))
+                  (setf (aref contours c) pts)
+                  (setf start (1+ end)))))))))))
 
-
-;;; Misc
+(defun merge-contours (contours-list)
+  (let* ((total (loop for c in contours-list summing (length c)))
+         (merged (make-array total))
+         (i 0))
+    (dolist (cs contours-list merged)
+      (loop for c across cs do
+            (setf (aref merged i) c)
+            (incf i)))))
 
-(defmethod postscript-name ((glyph glyph))
-  (let* ((names (postscript-glyph-names (font-loader glyph)))
-         (index (font-index glyph))
-         (name (aref names index)))
-    (cond (name)
-          ((slot-boundp glyph 'code-point)
-           (setf (aref names index)
-                 (format nil "uni~4,'0X" (code-point glyph))))
-          (t "unknown"))))
+(defun read-compound-contours-fd (loader pos)
+  (let ((fd (font-data loader))
+        (contours-list '()))
+    (loop
+     (let ((flags (zpb-otf:font-data-read-u16 fd pos))
+           (glyph-index (zpb-otf:font-data-read-u16 fd (+ pos 2))))
+       (incf pos 4)
+       (let* ((sub-glyph (index-glyph glyph-index loader))
+              (contours (if sub-glyph (contours sub-glyph) (empty-contours)))
+              (args-words-p (logbitp 0 flags))
+              (args-xy-values-p (logbitp 1 flags))
+              (more-components-p (logbitp 5 flags))
+              arg1 arg2)
+         (cond
+           ((and args-words-p args-xy-values-p)
+            (setf arg1 (zpb-otf:font-data-read-i16 fd pos)
+                  arg2 (zpb-otf:font-data-read-i16 fd (+ pos 2)))
+            (incf pos 4))
+           (args-words-p
+            (setf arg1 (zpb-otf:font-data-read-u16 fd pos)
+                  arg2 (zpb-otf:font-data-read-u16 fd (+ pos 2)))
+            (incf pos 4))
+           (args-xy-values-p
+            (setf arg1 (zpb-otf:font-data-read-i8 fd pos)
+                  arg2 (zpb-otf:font-data-read-i8 fd (+ pos 1)))
+            (incf pos 2))
+           (t
+            (setf arg1 (zpb-otf:font-data-read-u8 fd pos)
+                  arg2 (zpb-otf:font-data-read-u8 fd (+ pos 1)))
+            (incf pos 2)))
+         ;; Read transformation
+         (let ((a 1.0) (b 0.0) (c 0.0) (d 1.0)
+               (e (if args-xy-values-p arg1 0))
+               (f (if args-xy-values-p arg2 0)))
+           (cond
+             ((logbitp 3 flags) ; WE_HAVE_A_SCALE
+              (let ((scale (read-fixed2.14-from-fd fd pos)))
+                (incf pos 2)
+                (setf a scale d scale)))
+             ((logbitp 6 flags) ; WE_HAVE_AN_X_AND_Y_SCALE
+              (setf a (read-fixed2.14-from-fd fd pos)
+                    d (read-fixed2.14-from-fd fd (+ pos 2)))
+              (incf pos 4))
+             ((logbitp 7 flags) ; WE_HAVE_A_TWO_BY_TWO
+              (setf a (read-fixed2.14-from-fd fd pos)
+                    b (read-fixed2.14-from-fd fd (+ pos 2))
+                    c (read-fixed2.14-from-fd fd (+ pos 4))
+                    d (read-fixed2.14-from-fd fd (+ pos 6)))
+              (incf pos 8)))
+           (let ((transformed (transform-contours (make-transformer a b c d e f)
+                                                  (map 'vector (lambda (c)
+                                                                 (map 'vector (lambda (p)
+                                                                                (make-control-point (x p) (y p) (on-curve-p p)))
+                                                                      c))
+                                                       contours))))
+             (push transformed contours-list)))
+         (unless more-components-p
+           (return (merge-contours (nreverse contours-list)))))))))
