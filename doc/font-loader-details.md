@@ -1,11 +1,11 @@
 [zpb-ttf](https://github.com/xach/zpb-ttf) is a library to read font files. The capability is somewhat limited, but it does handle the most
-important format, truetype fonts, however only a subset of those: TrueType-outline fonts (`.ttf`, and `.ttc` collections). It supports only 12 basic tables `head`, `hhea`, `hmtx`, `vhea`, `vmtx`, `maxp`, `name`, `post`, `glyf`, `loca`, `cmap`, and the legacy `kern` table (both the Microsoft and the Apple variant, formats 0 and 2).
+important format, truetype fonts, however only a subset of those: TrueType-outline fonts (`.ttf`, and `.ttc` collections). It supports 12 basic tables `head`, `hhea`, `hmtx`, `vhea`, `vmtx`, `maxp`, `name`, `post`, `glyf`, `loca`, `cmap`, and the legacy `kern` table (both the Microsoft and the Apple variant, formats 0 and 2).
 
 ## What does it mean in practice
 
 When it comes to some modern formats, older formats, or more advanced features, it is not covered. Anyhow, what it does get us far. I have used it in X11 demos, in Garnet and in my own colour picker and termometer app, to render test, via cl-vectors, a path rasterizer also by the author of zpb-ttf. However, for modern font support, we need more.
 
-With `zpb-otf`, we have expanded coverage from 12 tables to 52 table tags (46 distinct tables, plus 6 extended variants from ISO/IEC 14496-22:2026 such as `GVAR` and `HMTX`) and their shared sub-structures. The parsers are generated from the table definitions that Google's Fontations project feeds its own code generator, converted to s-expressions and compiled to Lisp. If you are wondering what "tables" are, it is various data needed to render fonts correctly on the screen. Modern font formats are like video or image formats, they act more like containers for various formats.
+`zpb-otf`, expands the coverage from 12 tables to 52 table tags (46 distinct tables, plus 6 extended variants from ISO/IEC 14496-22:2026 such as `GVAR` and `HMTX`) and their shared sub-structures. The parsers are generated from the table definitions that Google's Fontations project feeds its own code generator, converted to s-expressions and compiled to Lisp. If you are wondering what "tables" are, it is various data needed to render fonts correctly on the screen. Modern font formats are like video or image formats, they act more like containers for various formats.
 
 "Table" here means a named, offset-delimited byte region inside the font file — not a data table in the database sense. The usage is the same as in PDF or SQLite: a *chunk of structured data* identified by a name, at a known offset.
 
@@ -47,78 +47,7 @@ So these "tables" are counting how many distinct tags and byte layouts the parse
 
 Original `zpb-ttf` handled `cmap` format 4 and format 12. It rejects 0, 2, 6, 8, 10, 13, 14. BMP format-0 Mac cmaps were also not handled.
 
-Below is (sorry) machine-generated list of what we can handle now that was impossible before:
-
----
-
-### 1. PostScript OpenType Fonts (`.otf`)
-
-* **Now**: We can load data for **`CFF`** (Compact Font Format / PostScript Type 2) and modern **`CFF2`** (OpenType 1.8+ variable PostScript outlines). Fonts like Adobe Source Sans, Cantarell, Helvetica Neue, and system `.otf` fonts can now be parsed. Of course, you still have to provide your own **charstring interpreter**.
-
----
-
-### 2. Advanced Typography & Complex Text Shaping (`GSUB`, `GPOS`, `GDEF`, `BASE`)
-
-`zpb-ttf` could only perform 1:1 character-to-glyph mapping. It could not load data for modern font shaping. We now load:
-
-* **`GSUB` (Glyph Substitution)**: Ligatures (`fi`, `fl`, `ffi`), stylistic sets (`ss01`–`ss20`), fractions, small caps, and contextual alternates required for Arabic, Hebrew, and Indic scripts.
-* **`GPOS` (Glyph Positioning)**: True kerning pair tables, mark-to-base and mark-to-mark positioning (placing accents/diacritics accurately over base letters), and cursive attachment.
-* **`GDEF` (Glyph Definition)**: Classifying glyphs into base glyphs, ligature glyphs, and mark glyphs for the layout engine.
-* **`BASE`**: Baseline tables for multi-script alignment (e.g. aligning Latin baseline with ideographic or hanging Indic baselines).
-
-Obs: If you use HarfBuzz, it loads this data itself, but you can still use it to decide whether you need HarfBuzz or not. I am not aware of any shaper written in Common Lisp, so this is probably not very useful on its own, unless you want to write a shaper.
-
----
-
-### 3. Modern Variable Fonts (OpenType Variations 1.8+)
-
-`zpb-ttf` was created over a decade before variable fonts existed:
-
-* **`fvar` (Font Variations)**: Discovering design axes (Weight `wght`, Width `wdth`, Slant `slnt`, Optical Size `opsz`) and named font instances (Thin, SemiBold, ExtraBold, etc.).
-* **`avar` (Axis Variations)**: Non-linear design space coordinate mapping.
-* **`gvar` / `cvar`**: provides the per-glyph delta data needed for variable-font interpolation.
-* **`HVAR` / `VVAR` / `MVAR`**: Variation deltas for horizontal metrics (advance widths), vertical metrics, and font-wide metrics (ascender, descender, line gap).
-
----
-
-### 4. Color, Vector & Emoji Fonts
-
-`zpb-ttf` only loaded data for monochrome 1-bit outlines. You can now load tables for:
-
-* **`COLR` (v0 and v1) & `CPAL`**: Modern vector color fonts with color palettes, linear/radial gradients, compositing modes, and paint graphs (used by Google/Microsoft for modern emoji and colorful display typefaces).
-* **`CBDT` & `CBLC`**: Google color bitmap glyphs (Noto Color Emoji).
-* **`sbix`**: Apple PNG bitmap emoji table.
-* **`SVG`**: OpenType fonts with embedded raw SVG glyph definitions.
-
----
-
-### 5. Full Unicode Beyond Basic Multilingual Plane (`cmap` Formats 0–14)
-
-* **Before**: `zpb-ttf` handled `cmap` format 4 (16-bit BMP) and format 12 (32-bit, all Unicode planes), and rejected the rest.
-* **Now**: zpb-otf can read every `cmap` subtable format: 0, 2, 4, 6, 8, 10, 12, 13, **14** (Unicode Variation Selectors for ideographic variants and emoji presentation), and the ISO/IEC 14496-22:2026 format 15. The zpb-ttf character lookup itself still uses format 12, or else format 4.
-
----
-
-### 6. Math Layout & Apple Advanced Typography (AAT)
-
-* **`MATH` table**: Typesetting mathematical formulas (fractions, radical delimiters, large summation/integral operators, sub/superscript kerning) as used in TeX / Word OpenType Math.
-* **AAT tables**: Apple's typography engine tables: `morx` (extended glyph metamorphosis), `mort`, `trak` (tracking and point-size letter-spacing grids), `feat` (feature names), `ankr` (anchor points), and `kerx` (extended kerning).
-
----
-
-Observe, that that the above list just states which data you can now read with zpb-otf, you still have to do something with data, and that is up to your code.
-
-### 7. Performance
-
-When it comes to I/O, zpb-otf loads the whole file into a byte array with one read-sequence, and readers then just calculate offsets into that array, instead of the original stream-based parsing done in zpb-ttf. Each table or record you access is a small short-lived struct pointing into the buffer.
-
-Measured on Liberation Sans (SBCL, average of 20 runs): opening the font takes 0.15 ms instead of 0.50 ms, but conses slightly more (592 KB instead of 454 KB, since the file is now buffered in memory); opening it and loading the contours of all 2620 glyphs takes 3.6 ms instead of 12.5 ms and conses 31% less (6.7 MB instead of 9.7 MB).
-
-### 8. Potential bug
-
-In the old zpb-ttf, an uncaught EOF condition could terminate loading on truncated fonts. The new version performs bounds validation for all accesses.
-
-### 9. How is it done
+### How is it done
 
 Simply expressed: I have done a Picasso on Google's Fontations.
 
@@ -128,7 +57,7 @@ Why don't we parse the OpenType spec ourselves? There is no machine-readable spe
 
 zpb-otf replaces the parsers for various font tables and data but not the entire zpb-ttf. Only ~25–30% of zpb-ttf is byte-parsing that zpb-otf now generates. The other ~70% is the semantic API that downstream code actually calls: find-glyph, advance-width, contours, do-contours, kerning-offset, string-bounding-box, family-name, the glyph class, the font-loader lifecycle, TTC collection handling, the condition hierarchy, the glyph cache, lazy bounding-box/contour loading. We keep that high-level API code in zpb-ttf, but replace the loading code and the old stream-based parsers for the 12 tables that zpb-ttf already had. Nine of them are now read through zpb-otf's generated parsers; `glyf`, `kern` and `loca` are still decoded by hand in zpb-ttf, although generated `glyf` and `kern` readers exist.
 
-In other words, we are trying to be backwards compatible: the high-level API stays the same, so library clients should not need changes. A few results differ where the old code was wrong: `italic-angle` returns degrees (the old code returned the raw 16.16 bits), components of compound glyphs are returned in file order (the old code reversed them), compound glyphs made only of empty components have no contours, and an out-of-range glyph index signals an error instead of returning `nil`. CFF-based `.otf` fonts, which the old code rejected, now open, but their glyphs have no outlines since there is no charstring interpreter. As a bonus we get memory-safe parsing, more speed, and a lighter dependency than using FreeType via CFFI bindings, as I believe is the practice in the Common Lisp world. Note that a font-loader is not thread-safe: it fills its glyph cache lazily, so share one between threads only with your own locking.
+In other words, we are trying to be backwards compatible: the high-level API stays the same, so library clients should not need changes. A few results differ where the old code was wrong: `italic-angle` returns degrees (the old code returned the raw 16.16 bits), components of compound glyphs are returned in file order (the old code reversed them), compound glyphs made only of empty components have no contours, and an out-of-range glyph index signals an error instead of returning `nil`. CFF-based `.otf` fonts, which the old code rejected, now open, but their glyphs have no outlines since there is no charstring interpreter. As a bonus we get more memory-safe parsing, more speed, and a lighter dependency than using FreeType via CFFI bindings, as I believe is the practice in the Common Lisp world. Note that a font-loader is not thread-safe: it fills its glyph cache lazily, so share one between threads only with your own locking. However, it should be lighter on memory usage from multiple threads than FreeType.
 
 ### What we don't have
 
