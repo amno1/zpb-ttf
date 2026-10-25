@@ -14,14 +14,6 @@
   (when (and vector (plusp (length vector)))
     (setf (aref vector (min (1- (length vector)) (max 0 index))) new-value)))
 
-(defun read-fixed2.14-from-fd (fd pos)
-  (let* ((value (zpb-otf:font-data-read-u16 fd pos))
-         (integer (ash value -14))
-         (fraction (logand #x3FFF value)))
-    (when (logbitp 1 integer)
-      (setf integer (1- (- (logandc2 #b11 integer)))))
-    (+ integer (float (/ fraction #x4000)))))
-
 (defun make-transformer (a b c d e f)
   "Given the elements of the transformation matrix specified by A, B,
 C, D, E, and F, return a function of two arguments that returns the

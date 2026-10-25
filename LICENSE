@@ -1,10 +1,11 @@
 This repository contains two systems under two permissive licenses.
 
-  zpb-ttf  (the top-level *.lisp files and zpb-ttf.asd), derived from
-           Zachary Beane's ZPB-TTF: BSD 2-Clause, first notice below.
+  zpb-ttf  (zpb-ttf.asd and the *.lisp files directly in src/, except
+           src/extensions.lisp), derived from Zachary Beane's ZPB-TTF:
+           BSD 2-Clause, first notice below.
 
-  zpb-otf  (zpb-otf.asd, codegen/, schemas/, src/): MIT, second notice
-           below.
+  zpb-otf  (zpb-otf.asd, codegen/, schemas/, src/runtime/, src/tables/
+           and src/extensions.lisp): MIT, second notice below.
 
 The table schemas in schemas/ are derived from the codegen inputs of the
 Fontations project (https://github.com/googlefonts/fontations), which is

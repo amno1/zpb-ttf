@@ -8,6 +8,17 @@
   "Define a constant using alexandria:define-constant with :test 'equal."
   `(alexandria:define-constant ,name ,value :test 'equal ,@(when doc (list :documentation doc))))
 
+;; Fixed-point scales. Each is 2^N where N is the number of fractional bits
+;; in the format: Fixed / Version16Dot16 is 16.16 (N = 16), F2Dot14 is 2.14
+;; (N = 14). Written as float literals so the compiler can fold them and
+;; the readers avoid producing rationals.
+(define-constant +fixed-scale+ 65536.0f0
+  "Divisor that converts a 16.16 (Fixed, Version16Dot16) integer to a
+single-float.")
+
+(define-constant +f2dot14-scale+ 16384.0f0
+  "Divisor that converts a 2.14 (F2Dot14) integer to a single-float.")
+
 (defstruct (font-data (:constructor %make-font-data (bytes offset length)))
   "Zero-copy window into an in-memory font byte vector."
   (bytes  nil :type (simple-array (unsigned-byte 8) (*)) :read-only t)
@@ -120,7 +131,7 @@ non-negative integers, such as sizes computed from untrusted counts."
   (declare (type font-data fd) (type (unsigned-byte 32) pos) (optimize (speed 3) (safety 1)))
   (let ((u (font-data-read-u24 fd pos)))
     (if (logbitp 23 u)
-        (the fixnum (- u 16777216))
+        (the fixnum (- u #x1000000))
         (the fixnum u))))
 
 (declaim (inline font-data-read-u32))
@@ -141,20 +152,20 @@ non-negative integers, such as sizes computed from untrusted counts."
   (declare (type font-data fd) (type (unsigned-byte 32) pos) (optimize (speed 3) (safety 1)))
   (let ((u (font-data-read-u32 fd pos)))
     (if (logbitp 31 u)
-        (- u 4294967296)
+        (- u #x100000000)
         u)))
 
 (declaim (inline font-data-read-fixed))
 (defun font-data-read-fixed (fd pos)
-  "Read 16.16 Fixed point number."
+  "Read a 16.16 Fixed point number."
   (declare (type font-data fd) (type (unsigned-byte 32) pos))
-  (/ (font-data-read-i32 fd pos) 65536.0f0))
+  (/ (font-data-read-i32 fd pos) +fixed-scale+))
 
 (declaim (inline font-data-read-f2dot14))
 (defun font-data-read-f2dot14 (fd pos)
-  "Read 2.14 Fixed point number."
+  "Read a 2.14 Fixed point number."
   (declare (type font-data fd) (type (unsigned-byte 32) pos))
-  (/ (font-data-read-i16 fd pos) 16384.0f0))
+  (/ (font-data-read-i16 fd pos) +f2dot14-scale+))
 
 (declaim (inline font-data-read-fword))
 (defun font-data-read-fword (fd pos)

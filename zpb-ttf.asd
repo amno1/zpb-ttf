@@ -14,10 +14,12 @@
   :license "BSD-2-Clause"
   :depends-on (#:zpb-otf)
   :serial t
-  :components ((:file "package")
-               (:file "util")
-               (:file "conditions")
-               (:file "bounding-box")
-               (:file "font-loader")
-               (:file "glyph")
-               (:file "font-loader-interface")))
+  :components ((:module "src"
+                :serial t
+                :components ((:file "package")
+                             (:file "util")
+                             (:file "conditions")
+                             (:file "bounding-box")
+                             (:file "font-loader")
+                             (:file "glyph")
+                             (:file "font-loader-interface")))))

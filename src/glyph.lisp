@@ -471,18 +471,18 @@ to the control point of the curve, otherwise set P1 to NIL."
                (f (if args-xy-values-p arg2 0)))
            (cond
              ((logbitp 3 flags) ; WE_HAVE_A_SCALE
-              (let ((scale (read-fixed2.14-from-fd fd pos)))
+              (let ((scale (zpb-otf:font-data-read-f2dot14 fd pos)))
                 (incf pos 2)
                 (setf a scale d scale)))
              ((logbitp 6 flags) ; WE_HAVE_AN_X_AND_Y_SCALE
-              (setf a (read-fixed2.14-from-fd fd pos)
-                    d (read-fixed2.14-from-fd fd (+ pos 2)))
+              (setf a (zpb-otf:font-data-read-f2dot14 fd pos)
+                    d (zpb-otf:font-data-read-f2dot14 fd (+ pos 2)))
               (incf pos 4))
              ((logbitp 7 flags) ; WE_HAVE_A_TWO_BY_TWO
-              (setf a (read-fixed2.14-from-fd fd pos)
-                    b (read-fixed2.14-from-fd fd (+ pos 2))
-                    c (read-fixed2.14-from-fd fd (+ pos 4))
-                    d (read-fixed2.14-from-fd fd (+ pos 6)))
+              (setf a (zpb-otf:font-data-read-f2dot14 fd pos)
+                    b (zpb-otf:font-data-read-f2dot14 fd (+ pos 2))
+                    c (zpb-otf:font-data-read-f2dot14 fd (+ pos 4))
+                    d (zpb-otf:font-data-read-f2dot14 fd (+ pos 6)))
               (incf pos 8)))
            (let ((transformed (transform-contours (make-transformer a b c d e f)
                                                   (map 'vector (lambda (c)

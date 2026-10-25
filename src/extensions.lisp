@@ -33,19 +33,23 @@
 
 ;;; Tuple variation headers ('cvar', 'gvar')
 
-(define-constant +tuple-index-embedded-peak-tuple+ #x8000)
-(define-constant +tuple-index-intermediate-region+ #x4000)
+(define-constant +tuple-index-embedded-peak-tuple+   #x8000)
+(define-constant +tuple-index-intermediate-region+   #x4000)
 (define-constant +tuple-index-private-point-numbers+ #x2000)
-(define-constant +tuple-index-tuple-index-mask+ #x0FFF)
+(define-constant +tuple-index-tuple-index-mask+      #x0FFF)
 (define-constant +tuple-variation-count-shared-point-numbers+ #x8000)
-(define-constant +tuple-variation-count-count-mask+ #x0FFF)
+(define-constant +tuple-variation-count-count-mask+           #x0FFF)
 
 (defun tuple-variation-header-size (font-data pos axis-count)
   "Size in bytes of the TupleVariationHeader at POS."
   (let ((tuple-index (font-data-read-u16 font-data (+ pos 2))))
     (+ 4
-       (if (logtest tuple-index +tuple-index-embedded-peak-tuple+) (* 2 axis-count) 0)
-       (if (logtest tuple-index +tuple-index-intermediate-region+) (* 4 axis-count) 0))))
+       (if (logtest tuple-index +tuple-index-embedded-peak-tuple+)
+           (* 2 axis-count)
+           0)
+       (if (logtest tuple-index +tuple-index-intermediate-region+)
+           (* 4 axis-count)
+           0))))
 
 (defun map-tuple-variation-headers (fn font-data start count axis-count)
   "Call FN with each of the COUNT TupleVariationHeader tables starting at
@@ -88,7 +92,9 @@ decoded per the long-offsets flag: short offsets are stored halved."
          (end (gvar-glyph-variation-data-offset-ref gvar (1+ glyph-id)))
          (base (+ (table-ref-offset gvar) (gvar-glyph-variation-data-array-offset gvar))))
     (when (< start end)
-      (read-glyph-variation-data-header (table-ref-font-data gvar) (+ base start) (- end start)))))
+      (read-glyph-variation-data-header (table-ref-font-data gvar)
+                                        (+ base start)
+                                        (- end start)))))
 
 (defun glyph-variation-data-header-tuple-count (header)
   (logand (glyph-variation-data-header-tuple-variation-count header)
@@ -153,8 +159,12 @@ NUM-GLYPHS comes from 'maxp'."
                        (* region wide)
                        (+ (* words wide) (* (- region words) narrow))))))
       (if (< region words)
-          (if long-p (font-data-read-i32 fd pos) (font-data-read-i16 fd pos))
-          (if long-p (font-data-read-i16 fd pos) (font-data-read-i8 fd pos))))))
+          (if long-p
+              (font-data-read-i32 fd pos)
+              (font-data-read-i16 fd pos))
+          (if long-p
+              (font-data-read-i16 fd pos)
+              (font-data-read-i8 fd pos))))))
 
 ;;; GPOS ValueRecord
 ;;;
@@ -183,12 +193,12 @@ device offsets are relative to."
                  (read-device-or-variation-index font-data (+ parent-offset off))))))
       (when (logbitp 0 value-format) (setf (gpos-value-record-x-placement rec) (next-i16)))
       (when (logbitp 1 value-format) (setf (gpos-value-record-y-placement rec) (next-i16)))
-      (when (logbitp 2 value-format) (setf (gpos-value-record-x-advance rec) (next-i16)))
-      (when (logbitp 3 value-format) (setf (gpos-value-record-y-advance rec) (next-i16)))
+      (when (logbitp 2 value-format) (setf (gpos-value-record-x-advance rec)   (next-i16)))
+      (when (logbitp 3 value-format) (setf (gpos-value-record-y-advance rec)   (next-i16)))
       (when (logbitp 4 value-format) (setf (gpos-value-record-x-placement-device rec) (next-device)))
       (when (logbitp 5 value-format) (setf (gpos-value-record-y-placement-device rec) (next-device)))
-      (when (logbitp 6 value-format) (setf (gpos-value-record-x-advance-device rec) (next-device)))
-      (when (logbitp 7 value-format) (setf (gpos-value-record-y-advance-device rec) (next-device))))
+      (when (logbitp 6 value-format) (setf (gpos-value-record-x-advance-device rec)   (next-device)))
+      (when (logbitp 7 value-format) (setf (gpos-value-record-y-advance-device rec)   (next-device))))
     rec))
 
 (defun table-value-record (table pos value-format)
@@ -277,12 +287,19 @@ The value formats come from the parent PairPosFormat3 subtable."
 than the 8 bytes defined today are read correctly."
   (let ((size (mvar-value-record-size mvar)))
     (unless (>= size +mvar-value-record-size+)
-      (error 'font-out-of-bounds-error :pos (table-ref-offset mvar) :size +mvar-value-record-size+ :length size))
+      (error 'font-out-of-bounds-error :pos (table-ref-offset mvar)
+                                       :size +mvar-value-record-size+
+                                       :length size))
     (unless (< index (mvar-value-record-count mvar))
-      (error 'font-out-of-bounds-error :pos index :size 1 :length (mvar-value-record-count mvar)))
+      (error 'font-out-of-bounds-error :pos index
+                                       :size 1
+                                       :length (mvar-value-record-count mvar)))
     (let ((pos (+ (table-ref-offset mvar) 12 (* index size))))
-      (unless (<= (+ pos +mvar-value-record-size+) (+ (table-ref-offset mvar) (table-ref-length mvar)))
-        (error 'font-out-of-bounds-error :pos pos :size size :length (table-ref-length mvar)))
+      (unless (<= (+ pos +mvar-value-record-size+)
+                  (+ (table-ref-offset mvar) (table-ref-length mvar)))
+        (error 'font-out-of-bounds-error :pos pos
+                                         :size size
+                                         :length (table-ref-length mvar)))
       (%make-mvar-value-record (table-ref-font-data mvar) pos))))
 
 ;;; 'fvar'
@@ -299,7 +316,9 @@ than the 8 bytes defined today are read correctly."
   (let ((size (fvar-axis-size fvar))
         (arrays (fvar-axis-instance-arrays-table fvar)))
     (unless (< index (fvar-axis-count fvar))
-      (error 'font-out-of-bounds-error :pos index :size 1 :length (fvar-axis-count fvar)))
+      (error 'font-out-of-bounds-error :pos index
+                                       :size 1
+                                       :length (fvar-axis-count fvar)))
     (if (= size +variation-axis-record-size+)
         (axis-instance-arrays-axes-ref arrays (fvar-axis-count fvar) index)
         (%make-variation-axis-record (table-ref-font-data arrays)
@@ -314,10 +333,14 @@ COORDINATES is a vector of user-space axis values; POSTSCRIPT-NAME-ID is NIL whe
          (fd (table-ref-font-data arrays))
          (pos (+ (axis-instance-arrays-instances-start arrays axis-count) (* index size))))
     (unless (< index (fvar-instance-count fvar))
-      (error 'font-out-of-bounds-error :pos index :size 1 :length (fvar-instance-count fvar)))
+      (error 'font-out-of-bounds-error :pos index
+                                       :size 1
+                                       :length (fvar-instance-count fvar)))
     (unless (and (>= size (+ 4 (* 4 axis-count)))
                  (<= (+ pos size) (+ (table-ref-offset arrays) (table-ref-length arrays))))
-      (error 'font-out-of-bounds-error :pos pos :size size :length (table-ref-length arrays)))
+      (error 'font-out-of-bounds-error :pos pos
+                                       :size size
+                                       :length (table-ref-length arrays)))
     (let ((coords (make-array axis-count)))
       (dotimes (i axis-count)
         (setf (aref coords i) (font-data-read-fixed fd (+ pos 4 (* 4 i)))))
